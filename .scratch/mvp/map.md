@@ -53,12 +53,8 @@ An **MVP spec** for a two-person Household app, with every product and tech deci
 
 ## Not yet specified
 
-- **Tech stack and hosting**: framework, database, which AI model and provider, and where it runs. It must run scheduled jobs on the server (reflections, recaps, check-ins, alerts) in each Member's time zone, even when the app is closed (#05). The Grocery List must support offline ticking with sync, and update live across both Members' phones (#07).
-- **Signing in for two Members**: a shared phone vs. each person's own device and login, and how the app knows whose Calorie Log you're adding to.
-- **How the Agent's markdown files are organised**: one file per skill (planner, rebalance, weekly review)? Who edits them, and how?
-- **Running cost**: what AI calls and food-data APIs cost per month at two users. Depends on the calorie-data research and the stack.
-- **Notifications**: for example "you're over, here's tonight's new dinner", or "grocery list ready". Whether and how they happen.
-- **Weekly reflection and recap dashboards**: what each recap (daily, weekly, monthly, custom) shows. When they happen is settled in #05; the weekly one covers keeping to the plan (from the activity log), quick recommendations, and Grocery List items the Member added.
+- **The other pages**: Plan, Pantry, Grocery and Chat each open as a full page (#09), and Settings (Activity Log, Schedules, Calorie Target, Preferences, Kitchen Tools) is still to be designed. Which of these need a prototype before building, and which are settled enough by #04–#08?
+- **Adding food by chat vs. the + button**: how a free-text log ("2 eggs and toast") is confirmed before it lands in the Calorie Log, and how a Member corrects an estimate. Partly set by #02 and #09. It may need a small prototype once the stack is chosen.
 
 ## Out of scope
 
