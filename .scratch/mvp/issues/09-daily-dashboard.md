@@ -24,3 +24,5 @@ Make a rough, clickable mock-up of a Member's main screen and react to it. It sh
 - **Entry:** C's **+ quick entry** button stays, next to a **chat box for the Agent**.
 
 **Feedback round 2 (2026-09-29):** The header shows the weekday and date ("Wed · Sep 30") instead of the time. The Activity Log is taken off the dashboard and moves into Settings (☰ → Settings), alongside Schedules, Calorie Target, Preferences and Kitchen Tools. Settings will be designed later.
+
+**Feedback round 3 (2026-09-29):** Check-ins are no longer cards on the dashboard. They become notifications: a 🔔 button next to the Agent chat box, with a red badge showing how many Check-ins still need answering. Tapping it lists them. Each one can be answered with basic quick options (for example "Plan it" / "Not needed") or taken into chat ("Chat ›"), where the Agent raises it with the same quick replies. Answering one either way clears it and lowers the count. This replaces #05's "shown in chat and as a dashboard card".

@@ -282,7 +282,11 @@ const RB_REPLIES = [
   ["Happy with a lighter dinner", ["lighter","swap"]],
   ["Not very hungry tonight", ["smaller","drop"]],
 ];
+let chatCI = null; // check-in being discussed in chat
 function go(p){ page = p; render(); scrollTo(0,0); }
+function ciChat(id){ chatCI = id; closeSheet(); go("chat"); }
+function ciDone(id, yes){ chatCI = null; checkin(id, yes); if(document.getElementById("sheet").classList.contains("open") && S.checkins.length) openSheet("notifs"); else if(!S.checkins.length) closeSheet(); }
+SHEETS.notifs = () => head(`Check-ins (${S.checkins.length})`) + (S.checkins.length ? S.checkins.map(c=>`<div class="card"><div class="tag mute">${c.kind}</div><div style="margin:4px 0 10px">${c.text}</div><div class="row"><button class="btn" onclick="ciDone('${c.id}',true)">${c.yes}</button><button class="btn line" onclick="ciDone('${c.id}',false)">${c.no}</button><span class="sp"></span><button class="btn ghost" onclick="ciChat('${c.id}')">Chat ›</button></div></div>`).join("") : `<div class="card mute">All caught up ✓</div>`);
 function startRebalance(){ rb = "asked"; go("chat"); }
 function rbReply(i){ rb = i; render(); }
 function applyD(id){ applyOpt(id); rb = null; go("today"); }
@@ -313,7 +317,7 @@ function DToday(){
   const other = S.log.filter(l=>!S.meals.some(m=>m.slot===l.slot));
   return DCounter() + `
   <div class="card" style="padding:8px 14px"><div class="row small mute" style="padding:4px 0"><span class="sp tag">Meal</span><span class="tag" style="width:52px;text-align:right">Plan</span><span class="tag" style="width:48px;text-align:right">Eaten</span><span class="tag" style="width:44px;text-align:right">±</span></div>${rows}${other.length?`<div class="small">${other.map(l=>`• ${l.name} · ${l.kcal}`).join("<br>")}</div>`:""}</div>
-  ${S.checkins.length?`<div class="card small"><b>Check-ins</b>${S.checkins.map(c=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="sp">${c.text}</span><button class="btn ghost" onclick="checkin('${c.id}',true)">${c.yes}</button><button class="btn ghost mute" onclick="checkin('${c.id}',false)">✕</button></div>`).join("")}</div>`:""}`;
+`;
 }
 function DChat(){
   const T = totals();
@@ -323,6 +327,8 @@ function DChat(){
       ${rb==="asked" ? `<div class="row" style="flex-wrap:wrap">${RB_REPLIES.map(([t],i)=>`<button class="pill" onclick="rbReply(${i})">${t}</button>`).join("")}</div><p class="mute">…or type your own answer below.</p>`
       : `<p><b>You:</b> ${RB_REPLIES[rb][0]}</p><p><b>Agent:</b> Got it. These fit that best:</p>${RB_REPLIES[rb][1].map(id=>optBtn(OPTIONS.find(o=>o.id===id)).replace("applyOpt(","applyD(")).join("")}<button class="btn ghost" onclick="openSheet('options')">See all options</button>`}</div>`;
   } else if(S.applied) convo += `<div class="card small"><p><b>Agent:</b> Done. Today now lands at ${fmt(T.forecast)} (${fmt(TARGET-T.forecast)} under). You can undo it from the Activity Log.</p></div>`;
+  const c = chatCI && S.checkins.find(c=>c.id===chatCI);
+  if(c) convo += `<div class="card small"><p><b>Agent:</b> ${c.text}</p><div class="row"><button class="pill" onclick="ciDone('${c.id}',true)">${c.yes}</button><button class="pill" onclick="ciDone('${c.id}',false)">${c.no}</button></div><p class="mute">…or type an answer below.</p></div>`;
   return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div>` + convo;
 }
 SHEETS.moreD = () => head("Menu") + `<div class="card">${[["Favorites","favorites"],["Settings","settings"]].map(([n,k])=>`<button class="opt" onclick="openSheet('${k}')"><b class="sp">${n}</b>›</button>`).join("")}</div>`;
@@ -332,7 +338,8 @@ function VariantD(){
   return body + `
   <div class="composer" style="bottom:108px;padding:8px 12px;border-top:1px solid var(--line)"><div class="row">
     <button class="btn" style="border-radius:50%;width:44px;height:44px;padding:0;font-size:24px;flex:none" onclick="openSheet('log')" title="Quick entry">+</button>
-    <input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}"></div></div>
+    <input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}">
+    <button onclick="openSheet('notifs')" title="Check-ins" style="position:relative;flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px">🔔${S.checkins.length?`<span style="position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:#d62d20;color:#fff;font-size:12px;font-weight:700;line-height:20px;padding:0 5px">${S.checkins.length}</span>`:""}</button></div></div>
   <div class="tabs" style="padding-bottom:62px">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${page===k?'cur':''}" onclick="go('${k}')"><span class="i">${i}</span>${n}</button>`).join("")}</div>
   <div style="height:60px"></div>`;
 }
@@ -342,7 +349,7 @@ const VARIANTS = {D:["Combined (your picks)",VariantD], A:["Ring + timeline",Var
 const KEYS = Object.keys(VARIANTS);
 function setParam(){ const p=new URLSearchParams({variant,scenario}); history.replaceState(null,"","?"+p); }
 function cycle(d){ variant = KEYS[(KEYS.indexOf(variant)+d+KEYS.length)%KEYS.length]; setParam(); render(); scrollTo(0,0); }
-function setScenario(s){ scenario=s; S=fresh(); rb=null; page="today"; setParam(); render(); }
+function setScenario(s){ scenario=s; S=fresh(); rb=null; chatCI=null; page="today"; setParam(); render(); }
 function render(){
   if(!VARIANTS[variant]) variant="D";
   document.getElementById("app").innerHTML = VARIANTS[variant][1]();
