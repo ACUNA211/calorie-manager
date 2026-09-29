@@ -1,7 +1,7 @@
 # Which tech stacks fit the MVP?
 
 Type: research
-Status: claimed
+Status: resolved
 Assignee: ACUNA211 (research agent)
 Blocked by:
 
@@ -17,4 +17,15 @@ Find 2–4 realistic stacks (framework, database, hosting, scheduler, AI model a
 
 For each stack, cover setup effort, how each constraint is met, free-tier limits and the likely monthly cost at two users, and vendor lock-in. Also compare 2–3 AI models for this Agent (tool-use quality, cost per typical day of use, Spanish support for phase 3).
 
+## Answer
+
+- **Stack:** Supabase (Postgres, Auth, Realtime, Cron) with a Next.js PWA on Vercel Hobby. Per-Member Schedules run from one pg_cron job each minute that reads a Schedules table (Vercel Hobby cron is once a day only). Web push via standard VAPID Web Push. Hosting costs $0/month at two Members; move to Supabase Pro ($25) for backups and no pausing before real data matters.
+- **Runner-up:** Cloudflare Workers + D1 + Durable Objects ($5/month): per-Member alarms and one Durable Object per Household fit Schedules and live updates well, but it's SQLite, auth is DIY and it's all Cloudflare-only. Firebase is out (not relational); Vercel + Neon needs Vercel Pro for cron.
+- **AI model:** Claude Sonnet 5.5 ($2 / $10 per M tokens; about $14 per Member per month by a rough estimate). Sonnet 5 is now legacy at the same price. Haiku 4.5 is an option for cheap single-step parsing; Opus 5.5 for the weekly reflection if Sonnet falls short. Build on the AI SDK so the provider can be swapped.
+- **No stack meets cleanly:** offline Grocery List ticking. It's a hand-built service-worker queue everywhere except Firebase.
+
+Details and citations: [../research/stack-options.md](../research/stack-options.md)
+
 ## Comments
+
+**Research (2026-09-29):** Compared four stacks (Supabase + Vercel, Cloudflare, Firebase, Vercel + Neon) and seven AI models against the #01/#02/#05/#07 constraints. Findings, prices and sources are in [../research/stack-options.md](../research/stack-options.md).
