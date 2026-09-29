@@ -18,7 +18,7 @@ When a Member goes over (or is about to go over) their Calorie Target, for examp
 
 ### Trigger and timing
 - **Trigger:** the day forecast (logged so far + remaining planned) goes over the Calorie Target (#05). Propose only. Nothing changes until the Member picks an option.
-- **Where:** straight away in the chat reply to the log that caused it, plus a dashboard card.
+- **Where:** straight away in the chat reply to the log that caused it, plus a dashboard card (changed by #09: a red Rebalance button on Today and an item on the Chat tab badge).
 - **One live proposal at a time.** A new log recalculates it. It disappears if the forecast drops back under the target, and expires when its meal's slot time passes.
 
 ### Scope
@@ -32,7 +32,7 @@ The Agent offers every option that applies, each with the calories saved and whe
 4. **Lighter Dish swap** (a second one if the Pantry has a good one)
 5. **Drop the snack** (always last, and never the only option)
 
-- Chat shows all of them. The dashboard card shows the top 2 plus "See all options" (the layout is for #09).
+- Chat shows all of them. The dashboard card shows the top 2 plus "See all options" (changed by #09: the dashboard shows only a Rebalance button, and the Agent asks for the Member's input first, then offers the options that fit).
 - Options that don't apply are left out (for example, no snack drop when no snack is left).
 
 ### Pantry and store runs

@@ -60,14 +60,14 @@ Which of its changes apply straight away, and which wait for a Member to approve
 
 ### The Agent's follow-up questions
 - The Agent brings things up on its own: leftovers after a meal is cooked, a skipped meal, an ingredient not yet bought, and from phase 2 a missed weigh-in or workouts falling off ("Are you hurt? Should I plan around it for the coming weeks?").
-- They come up inside chat replies, at most one per reply, and also appear as dashboard cards. A check-in the Member dismisses doesn't come back for that same event.
+- They come up inside chat replies, at most one per reply, and also appear as dashboard cards (changed by #09: they're counted on the Chat tab badge and listed under "Needs you" on the Chat page, not shown as dashboard cards). A check-in the Member dismisses doesn't come back for that same event.
 - Phone notifications are still an open item on the map.
 
 ### Grocery List: always live
 - There is always one current Grocery List. Anything added through chat or by hand goes straight on, labelled as added by the Member with the date. The Member may shop more than once a week.
 - Approving a Meal Plan merges its Missing Ingredients and the Agent's suggestions (unticked by default) into that same list.
 - The weekly reflection asks about items the Member added themselves ("You added chickpeas. Want dishes that use them, or did you have something in mind?").
-- **Unbought-ingredient alert:** if a planned meal needs something that isn't in the Pantry and is still unticked on the Grocery List, the Agent warns at **3pm the day before** that meal, both as a dashboard card and in chat. Ticking the item clears the alert. If it's still missing on the day, the Agent proposes a swap using what's in the Pantry.
+- **Unbought-ingredient alert:** if a planned meal needs something that isn't in the Pantry and is still unticked on the Grocery List, the Agent warns at **3pm the day before** that meal, both as a dashboard card and in chat (#09: a Chat tab badge item, not a dashboard card). Ticking the item clears the alert. If it's still missing on the day, the Agent proposes a swap using what's in the Pantry.
 
 ### Taste: feedback, Preferences and Favorites
 - Feedback is about **dishes** (ingredients and amounts, no cooking steps). Recipes with steps are a future phase.

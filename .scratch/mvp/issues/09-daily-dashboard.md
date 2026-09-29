@@ -1,7 +1,7 @@
 # What does the daily dashboard show?
 
 Type: prototype
-Status: open
+Status: resolved
 Blocked by: 01, 05, 08
 
 ## Question
@@ -28,3 +28,24 @@ Make a rough, clickable mock-up of a Member's main screen and react to it. It sh
 **Feedback round 3 (2026-09-29):** Check-ins are no longer cards on the dashboard. They become notifications: a 🔔 button next to the Agent chat box, with a red badge showing how many Check-ins still need answering. Tapping it lists them. Each one can be answered with basic quick options (for example "Plan it" / "Not needed") or taken into chat ("Chat ›"), where the Agent raises it with the same quick replies. Answering one either way clears it and lowers the count. This replaces #05's "shown in chat and as a dashboard card".
 
 **Feedback round 4 (2026-09-29):** The 🔔 button is removed. The red badge sits on the **Chat tab** and counts open Check-ins **plus a live Rebalance**. The Chat page starts with a "Needs you (n)" list: the Rebalance (which opens the input-first flow) and each Check-in, with quick options or "Chat about it ›". The red Rebalance button stays at the top of Today.
+
+## Answer
+
+Settled with the prototype (`prototypes/09-daily-dashboard-PROTOTYPE.html`, variant D, hosted on GitHub Pages). No single layout won. The final screen combines parts of A, B and C.
+
+### Today (first screen)
+- **Header:** the weekday and date ("Wed · Sep 30"), then **Recap** and a **☰** menu. The time isn't shown.
+- **Calorie counter:** a big "left" number, "X eaten of Calorie Target", and a forecast bar (eaten + rest of today's plan, with a target line).
+- **Rebalance button:** a red button ("Rebalance · 195 over") appears only when the day forecast goes over the Calorie Target. No options are shown on the dashboard. Tapping it opens chat, where the Agent asks for the Member's input first ("how are you feeling about the rest of today?"), then offers the options that fit that answer, with "See all options" as well.
+- **Day table:** one row per meal slot with planned, eaten and the difference, showing the planned Dish. The **Calorie Log is merged in**: each food logged is listed under its meal with its calories, marked "est." for Agent estimates and "extra" for unplanned items. Rebalanced meals are tagged.
+- **Entry bar** (above the tabs, on every page): a **+** button for quick entry (Food Library search and recent foods) next to a **chat box for the Agent**.
+
+### Navigation
+- **Bottom tabs:** Today, Plan, Pantry, Grocery, Chat. **Each tab is its own full page**, not a pop-up.
+- **Chat tab badge:** a red badge counts what needs the Member: open **Check-ins plus a live Rebalance**. The Chat page starts with a "Needs you (n)" list. Each Check-in has basic quick options (for example "Plan it" / "Not needed") or "Chat about it ›", and the Rebalance item starts the input-first flow. Answering either way clears it and lowers the count. Check-ins are **not** cards on the dashboard.
+- **☰ menu:** Favorites and **Settings**. Settings holds the Activity Log, Schedules, Calorie Target, Preferences and Kitchen Tools, and will be designed later. The Activity Log is not on the dashboard.
+- **Recap** opens from the header (daily, weekly, monthly or custom).
+
+### Changes to earlier decisions
+- #05: Check-ins (including the unbought-ingredient alert) show in chat and on the Chat tab badge, not as dashboard cards.
+- #08: the dashboard shows only a Rebalance button. The Agent asks for input before offering options, and the "top 2 options" card is dropped. The Rebalance still appears straight away in the chat reply to the log that caused it.

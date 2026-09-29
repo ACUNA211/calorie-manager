@@ -84,7 +84,7 @@ A dashboard of how a Member did over a period (daily, weekly, monthly or a custo
 _Avoid_: report, summary
 
 **Check-in**:
-A question the Agent raises on its own (leftovers, a skipped meal, an unbought ingredient), shown in chat and as a dashboard card.
+A question the Agent raises on its own (leftovers, a skipped meal, an unbought ingredient), shown in chat and counted on the Chat tab's badge.
 _Avoid_: nudge, reminder
 
 **Activity Log**:
