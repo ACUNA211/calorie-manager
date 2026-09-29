@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Daily dashboard (#09)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/09-daily-dashboard.md
+  Question: what belongs on a Member's first screen, and what is one tap away?
+  Three structurally different variants, switchable via ?variant=A|B|C and the floating bar (or ← →).
+  Scenario toggle (?scenario=over|ok): "over" = 3 extra cookies at lunch, so the day forecast goes over and a Rebalance fires.
+  All state is in memory. Reload resets it. Open by double-clicking.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--hatch:#c9d3f5}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:140px}
+  button{font:inherit;cursor:pointer}
+  .row{display:flex;align-items:center;gap:8px}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .big{font-size:28px;font-weight:700}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .opt{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;display:flex;gap:10px;align-items:center;background:#fff;width:100%;text-align:left}
+  .opt:hover{border-color:var(--accent)}
+  .opt b{display:block}
+  .save{white-space:nowrap;text-align:right;font-weight:700}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px}
+  .strike{text-decoration:line-through;color:var(--mute)}
+  /* switcher */
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  #sw .on{background:#f5c542;color:#111}
+  /* sheet */
+  #sheet{position:fixed;inset:0;background:#0006;display:none;z-index:50}
+  #sheet.open{display:block}
+  #sheet .body{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:80vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;padding:6px 0 90px}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:10px;z-index:98;font-size:13px}
+  /* A */
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .tl{position:relative;padding-left:22px}
+  .tl:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+  .tli{position:relative;padding:8px 0}
+  .tli:before{content:"";position:absolute;left:-19px;top:13px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--mute)}
+  .tli.done:before{background:var(--good);border-color:var(--good)}
+  .tli.next:before{border-color:var(--accent);background:var(--soft)}
+  /* B */
+  .composer{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);padding:8px 12px 62px;z-index:10}
+  .composer input{width:100%;border:1px solid var(--line);border-radius:999px;padding:11px 14px;font:inherit}
+  .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}
+  .chips button{flex:none;font-size:13px}
+  .bar{height:10px;border-radius:5px;background:var(--line);position:relative;overflow:visible}
+  .bar i{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+  .bar .t{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+  details summary{cursor:pointer;list-style:none;font-weight:600}
+  /* C */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+  td:first-child,th:first-child{text-align:left}
+  th{font-size:11.5px;text-transform:uppercase;color:var(--mute);font-weight:600}
+  .fab{position:fixed;right:max(16px,calc(50% - 194px));bottom:70px;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:28px;box-shadow:0 4px 12px #0004;z-index:10}
+  .drawer{position:fixed;inset:0;background:#0006;display:none;z-index:40}
+  .drawer.open{display:block}
+  .drawer nav{position:absolute;top:0;bottom:0;right:max(0px,calc(50% - 210px));width:260px;background:#fff;padding:20px}
+  .drawer nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .stack{height:26px;border-radius:6px;background:var(--line);position:relative;overflow:hidden}
+  .stack i{position:absolute;top:0;bottom:0}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sheet"><div class="body" id="sheetBody"></div></div>
+<div id="sw"></div>
+
+<script>
+// ---------- data (in memory) ----------
+const TARGET = 2000; // planned to 95% = 1900 → 475/570/665/190
+const NOW = "2:15 pm";
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+let scenario = params.get("scenario") || "over";
+let S; // state
+
+function fresh(){
+  const over = scenario === "over";
+  return {
+    meals: [
+      {slot:"Breakfast", time:"8:00", dish:"Greek yogurt, berries & granola", planned:475, status:"eaten"},
+      {slot:"Lunch", time:"12:00", dish:"Leftover beef chili + cornbread", planned:570, status:"eaten"},
+      {slot:"Snack", time:"3:30", dish:"Apple + peanut butter", planned:190, status:"planned"},
+      {slot:"Dinner", time:"6:00", dish:"Chicken burrito bowl", planned:665, status:"planned"},
+    ],
+    log: [
+      {t:"8:10 am", slot:"Breakfast", name:"Greek yogurt, berries & granola", kcal:470},
+      {t:"12:20 pm", slot:"Lunch", name:"Beef chili, 1½ cups (leftover)", kcal:420},
+      {t:"12:20 pm", slot:"Lunch", name:"Cornbread, 1 piece", kcal:150, est:true},
+      ...(over ? [{t:"12:45 pm", slot:"Lunch", name:"Chocolate chip cookies × 3", kcal:300, extra:true}] : []),
+    ],
+    checkins: [
+      {id:"left", kind:"Leftovers", text:"There's 1 portion of chili left from lunch. Plan it for Thursday lunch?", yes:"Plan it", no:"Not needed"},
+      {id:"buy", kind:"Unbought ingredient", text:"Tomorrow's tacos need cilantro and limes. Still not ticked on the Grocery List.", yes:"Open list", no:"Got it"},
+    ],
+    applied: null, rejected: false, activity: [
+      {t:"Fri 3:12 pm", text:"Drafted next week's Meal Plan (approved by you)", undo:false},
+    ],
+  };
+}
+S = fresh();
+
+const OPTIONS = [
+  {id:"swap", kind:"Ingredient swap", title:"Lighter dinner bowl", detail:"Half the rice, skip the cheese", save:210, ch:{Dinner:{planned:455, dish:"Chicken burrito bowl · half rice, no cheese"}}},
+  {id:"smaller", kind:"Smaller next Portion", title:"Smaller dinner", detail:"70% portion: about 1⅓ cups instead of 2", save:200, ch:{Dinner:{planned:465, dish:"Chicken burrito bowl · 70%"}}},
+  {id:"spread", kind:"Spread across the day", title:"Trim snack and dinner a little", detail:"Half the peanut butter, 85% dinner portion", save:200, ch:{Snack:{planned:90, dish:"Apple + ½ tbsp peanut butter"}, Dinner:{planned:565, dish:"Chicken burrito bowl · 85%"}}},
+  {id:"lighter", kind:"Lighter Dish", title:"Turkey lettuce wraps instead", detail:"All ingredients in the Pantry · 15 min. Bowl can move to Thursday.", save:245, ch:{Dinner:{planned:420, dish:"Turkey lettuce wraps"}}},
+  {id:"drop", kind:"Drop the snack", title:"Skip today's snack", detail:"Apple + peanut butter stays in the Pantry", save:190, ch:{Snack:{planned:0, dish:"Apple + peanut butter", status:"dropped"}}},
+];
+
+// ---------- derived ----------
+const sum = a => a.reduce((x,y)=>x+y,0);
+const fmt = n => Math.round(n).toLocaleString();
+function meals(){ // meals with applied rebalance
+  return S.meals.map(m => {
+    const c = S.applied && OPTIONS.find(o=>o.id===S.applied).ch[m.slot];
+    return c ? {...m, ...c, was:m} : m;
+  });
+}
+function eatenFor(slot){ return sum(S.log.filter(l=>l.slot===slot).map(l=>l.kcal)); }
+function totals(){
+  const eaten = sum(S.log.map(l=>l.kcal));
+  const remaining = sum(meals().filter(m=>m.status==="planned").map(m=>m.planned));
+  const forecast = eaten + remaining;
+  return {eaten, remaining, forecast, left: TARGET - eaten, over: forecast - TARGET};
+}
+function landing(save){ const d = totals().forecast - save - TARGET; return d<=0 ? `day ends ${fmt(-d)} under` : `day ends ${fmt(d)} over`; }
+const rebalanceLive = () => !S.applied && totals().over > 0;
+function cause(){ const l = meals().find(m=>m.slot==="Lunch"); const d = eatenFor("Lunch") - l.planned; return d>0 ? `Lunch was ${fmt(d)} over` : "Today's forecast is over"; }
+
+// ---------- actions ----------
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); }
+function applyOpt(id){
+  const o = OPTIONS.find(o=>o.id===id);
+  S.applied = id;
+  S.activity.unshift({t:"Today "+NOW, text:`Rebalance: ${o.title} (−${o.save})`, undo:true, id});
+  closeSheet(); render(); toast(`Applied · ${landing(0)}`);
+}
+function undo(i){ const a=S.activity[i]; if(a.id===S.applied) S.applied=null; S.activity.splice(i,1); render(); openSheet("activity"); toast("Undone"); }
+function checkin(id, yes){
+  const c = S.checkins.find(c=>c.id===id);
+  S.checkins = S.checkins.filter(c=>c.id!==id);
+  if(yes && id==="left") S.activity.unshift({t:"Today "+NOW, text:"Planned leftover chili for Thursday lunch", undo:true});
+  render();
+  if(yes && id==="buy") openSheet("grocery");
+}
+function quickLog(name,kcal,slot){
+  S.log.push({t:NOW, slot, name, kcal});
+  const m = S.meals.find(m=>m.slot===slot); if(m && m.status==="planned") m.status="eaten";
+  closeSheet(); render(); toast(`Logged ${name} · ${kcal}`);
+}
+
+// ---------- shared bits (data widgets, not layouts) ----------
+function optBtn(o){ return `<button class="opt" onclick="applyOpt('${o.id}')"><div class="sp"><span class="tag mute">${o.kind}</span><b>${o.title}</b><span class="small mute">${o.detail}</span></div><div class="save good">−${o.save}<div class="small mute" style="font-weight:400">${landing(o.save)}</div></div></button>`; }
+function mealLine(m){
+  const e = eatenFor(m.slot);
+  if(m.status==="eaten") return `<span class="${e>m.planned+50?'warn':''}">${fmt(e)}</span> <span class="small mute">/ ${fmt(m.planned)} planned</span>`;
+  if(m.status==="dropped") return `<span class="small mute">dropped</span>`;
+  return `<span class="mute">${fmt(m.planned)} planned</span>${m.was?` <span class="small strike">${fmt(m.was.planned)}</span>`:""}`;
+}
+
+// ---------- sheets (one tap away) ----------
+function openSheet(k){ document.getElementById("sheetBody").innerHTML = SHEETS[k](); document.getElementById("sheet").classList.add("open"); }
+function closeSheet(){ document.getElementById("sheet").classList.remove("open"); }
+document.getElementById("sheet").onclick = e => { if(e.target.id==="sheet") closeSheet(); };
+const head = t => `<div class="row" style="padding:12px 16px"><h2>${t}</h2><span class="sp"></span><button class="btn ghost" onclick="closeSheet()">Close</button></div>`;
+const SHEETS = {
+  options: () => head("All Rebalance options") + `<div class="card"><div class="small mute">${cause()}. Forecast ${fmt(totals().forecast)} vs target ${fmt(TARGET)} (${fmt(totals().over)} over). Pick one, or ask the Agent for something else.</div>${OPTIONS.map(optBtn).join("")}<button class="btn line" style="width:100%;margin-top:10px" onclick="openSheet('chat')">Something else… (chat)</button></div>`,
+  log: () => head("Log food") + `<div class="card"><input placeholder="Search Food Library or describe it…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"><div class="small mute" style="margin:8px 0">Recent</div>${[["Apple + peanut butter",190,"Snack"],["Almonds, small handful",160,"Snack"],["Chicken burrito bowl",665,"Dinner"]].map(([n,k,s])=>`<button class="opt" onclick="quickLog('${n}',${k},'${s}')"><div class="sp"><b>${n}</b><span class="small mute">${s}</span></div><div class="save">${k}</div></button>`).join("")}</div>`,
+  chat: () => head("Chat with the Agent") + `<div class="card small"><p><b>You (12:45):</b> had 3 cookies after lunch</p><p><b>Agent:</b> Logged 300 kcal. ${cause()}, so today would end about ${fmt(totals().over)} over. Here are some ways to still land under… <i>(options shown in chat)</i></p></div><div class="card"><input placeholder="Message…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:999px;font:inherit"></div>`,
+  pantry: () => head("Pantry") + `<div class="card">${[["Chicken thighs","680 g · ~5 pieces"],["White rice","1.2 kg · ~6 cups"],["Ground turkey","450 g"],["Apples","4 pieces"],["Peanut butter","low"],["Olive oil","have"],["Cilantro","out"]].map(([a,b])=>`<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span class="sp">${a}</span><span class="mute small">${b}</span></div>`).join("")}</div>`,
+  grocery: () => head("Grocery List") + `<div class="card">${[["Produce","Cilantro · 1 bunch"],["Produce","Limes · 3 pieces"],["Dairy","Cheddar · 1 cup (113 g)"],["Pantry","Peanut butter · 1 jar (Agent suggests: low)"]].map(([s,i])=>`<label class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><input type="checkbox"><span class="sp">${i}</span><span class="small mute">${s}</span></label>`).join("")}</div>`,
+  plan: () => head("Meal Plan · this week") + `<div class="card small">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><b style="width:38px">${d}</b><span class="sp mute">${i===2?"Today · "+meals().map(m=>m.dish.split(" ·")[0]).join(", "):["Oats · Chili · Salmon & rice","Eggs · Tuesday work lunch (eating out) · Tacos","","Yogurt · Leftover chili · Stir-fry","Oats · Sandwich · Pizza night","Pancakes · Prep Session · Roast","Eggs · Leftovers · Soup"][i]}</span></div>`).join("")}</div>`,
+  activity: () => head("Activity Log") + `<div class="card">${S.activity.map((a,i)=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="sp"><div>${a.text}</div><div class="small mute">${a.t}</div></div>${a.undo?`<button class="btn ghost" onclick="undo(${i})">Undo</button>`:""}</div>`).join("")}</div>`,
+  schedules: () => head("Schedules") + `<div class="card">${[["Weekly reflection + planning","Fri 3:00 pm"],["Daily Recap","9:30 pm"],["Meal-slot Check-ins","8 am, 12 pm, 6 pm (+2h)"],["Unbought-ingredient alert","3:00 pm day before"]].map(([a,b])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="sp">${a}</span><span class="small mute">${b}</span><button class="btn ghost">Edit</button></div>`).join("")}</div>`,
+  favorites: () => head("Favorites") + `<div class="card">${["★ Chicken burrito bowl","★ Beef chili","★ Salmon & rice","★ Greek yogurt bowl","★ Avocado (ingredient)"].map(f=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)">${f}</div>`).join("")}</div>`,
+  recap: () => head("Recap") + `<div class="card"><div class="row"><button class="pill">Daily</button><button class="pill">Weekly</button><button class="pill">Monthly</button><button class="pill">Custom</button></div><p class="small mute">Yesterday: 1,860 / 2,000 · on plan 4 of 4 meals.<br>This week: 5 of 6 days under · 1 Rebalance accepted.</p><p class="small"><b>Agent:</b> Afternoon cookies showed up twice this week. Want a planned sweet snack instead?</p></div>`,
+};
+
+// ---------- VARIANT A: ring + timeline, bottom tabs ----------
+function VariantA(){
+  const T = totals(), pct = Math.min(T.eaten/TARGET,1), fpct = Math.min(T.forecast/TARGET,1.2);
+  const R=62, C=2*Math.PI*R;
+  const ring = `<svg width="160" height="160" viewBox="0 0 160 160"><circle cx="80" cy="80" r="${R}" fill="none" stroke="var(--line)" stroke-width="14"/>
+    <circle cx="80" cy="80" r="${R}" fill="none" stroke="var(--hatch)" stroke-width="14" stroke-dasharray="${C*Math.min(fpct,1)} ${C}" transform="rotate(-90 80 80)"/>
+    <circle cx="80" cy="80" r="${R}" fill="none" stroke="${T.over>0?'var(--warn)':'var(--good)'}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 80 80)"/>
+    <text x="80" y="76" text-anchor="middle" font-size="26" font-weight="700">${fmt(T.left)}</text><text x="80" y="96" text-anchor="middle" font-size="12" fill="#6b6a65">left of ${fmt(TARGET)}</text></svg>`;
+  const next = meals().find(m=>m.status==="planned");
+  return `
+  <div class="row" style="padding:16px 16px 0"><div><div class="small mute">Wednesday · ${NOW}</div><h1 style="font-size:20px">Today</h1></div><span class="sp"></span>
+    <button class="pill" onclick="openSheet('recap')">Recap</button><button class="pill" onclick="openSheet('activity')" title="Activity Log">⟲</button><button class="pill" onclick="openSheet('schedules')" title="Schedules">⚙</button></div>
+  <div class="card row" style="gap:14px">${ring}<div class="small">
+    <div>Eaten <b>${fmt(T.eaten)}</b></div><div>Still planned <b>${fmt(T.remaining)}</b></div>
+    <div style="margin-top:6px">Forecast <b class="${T.over>0?'warn':'good'}">${fmt(T.forecast)}</b></div>
+    <div class="${T.over>0?'warn':'good'}">${T.over>0?fmt(T.over)+" over target":fmt(-T.over)+" under target"}</div></div></div>
+  ${rebalanceLive()?`<div class="card" style="border:2px solid var(--warn)"><div class="tag warn">Rebalance</div><h2>${cause()}. Still time to land under.</h2>${OPTIONS.slice(0,2).map(optBtn).join("")}<div class="row" style="margin-top:6px"><button class="btn ghost" onclick="openSheet('options')">See all ${OPTIONS.length} options</button><span class="sp"></span><button class="btn ghost" onclick="openSheet('chat')">Talk it over</button></div></div>`:""}
+  ${S.checkins.map(c=>`<div class="card"><div class="tag mute">Check-in · ${c.kind}</div><div style="margin:4px 0 8px">${c.text}</div><div class="row"><button class="btn" onclick="checkin('${c.id}',true)">${c.yes}</button><button class="btn line" onclick="checkin('${c.id}',false)">${c.no}</button></div></div>`).join("")}
+  <div class="card"><div class="row"><h2>Meals</h2><span class="sp"></span><button class="btn ghost" onclick="openSheet('plan')">Week ›</button></div>
+    <div class="tl">${meals().map(m=>`<div class="tli ${m.status==='eaten'?'done':m===next?'next':''}"><div class="row"><span class="small mute" style="width:42px">${m.time}</span><b class="sp">${m.slot}</b><span class="small">${mealLine(m)}</span></div>
+      <div class="small ${m.status==='dropped'?'strike':'mute'}" style="margin-left:50px">${m.dish}${m.was?' <span class="tag good">rebalanced</span>':''}</div>
+      ${S.log.filter(l=>l.slot===m.slot).map(l=>`<div class="small" style="margin-left:50px">✓ ${l.name} · ${l.kcal}${l.est?' <span class="mute">(est.)</span>':''}${l.extra?' <span class="warn">extra</span>':''}</div>`).join("")}</div>`).join("")}</div>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="openSheet('log')">+ Log food</button></div>
+  <div class="card row small"><span class="sp mute">Favorites</span><button class="btn ghost" onclick="openSheet('favorites')">★ 5 ›</button></div>
+  <div class="tabs">${[["Today","◉","",1],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k,c])=>`<button class="${c?'cur':''}" onclick="${k?`openSheet('${k}')`:''}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+}
+
+// ---------- VARIANT B: "needs you" feed + chat composer ----------
+function VariantB(){
+  const T = totals();
+  const upcoming = meals().filter(m=>m.status==="planned");
+  const cards = [];
+  if(rebalanceLive()) cards.push(`<div class="card" style="background:#fff5f0"><div class="row"><span class="tag warn">Rebalance</span><span class="sp"></span><span class="small mute">expires 3:30 pm</span></div><div style="margin:4px 0"><b>${cause()}.</b> Forecast ${fmt(T.forecast)}, ${fmt(T.over)} over.</div>${OPTIONS.slice(0,2).map(optBtn).join("")}<button class="btn ghost" onclick="openSheet('options')">See all options</button></div>`);
+  S.checkins.forEach(c=>cards.push(`<div class="card"><span class="tag mute">${c.kind}</span><div style="margin:4px 0 8px">${c.text}</div><div class="row"><button class="btn" onclick="checkin('${c.id}',true)">${c.yes}</button><button class="btn line" onclick="checkin('${c.id}',false)">${c.no}</button></div></div>`));
+  return `
+  <div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)">
+    <div class="row"><b>Wed · ${NOW}</b><span class="sp"></span><button class="pill" onclick="openSheet('pantry')">Pantry</button><button class="pill" onclick="openSheet('grocery')">Grocery 4</button><button class="pill" onclick="openSheet('more')">☰</button></div>
+    <div class="row" style="margin:12px 0 6px"><span class="big">${fmt(T.left)}</span><span class="mute">left · ${fmt(T.eaten)} eaten of ${fmt(TARGET)}</span></div>
+    <div class="bar"><i style="width:${Math.min(T.forecast/TARGET*100/1.15,100)}%;background:var(--hatch)"></i><i style="width:${T.eaten/TARGET*100/1.15}%;background:${T.over>0?'var(--warn)':'var(--good)'}"></i><span class="t" style="left:${100/1.15}%"></span></div>
+    <div class="small mute" style="margin-top:4px">Forecast with the rest of today's plan: <b class="${T.over>0?'warn':'good'}">${fmt(T.forecast)}</b></div>
+  </div>
+  <div style="padding:14px 16px 0" class="tag mute">${cards.length?`Needs you (${cards.length})`:"All caught up ✓"}</div>
+  ${cards.join("")}
+  <div style="padding:14px 16px 0" class="tag mute">Up next</div>
+  ${upcoming.length?upcoming.map(m=>`<div class="card row"><div class="sp"><div class="small mute">${m.time} · ${m.slot}</div><b>${m.dish}</b></div><div class="small">${mealLine(m)}</div></div>`).join(""):`<div class="card mute">Nothing left planned today.</div>`}
+  <div class="card"><details><summary>Today's Calorie Log · ${S.log.length} items · ${fmt(T.eaten)} ›</summary>${S.log.map(l=>`<div class="row small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="mute" style="width:62px">${l.t}</span><span class="sp">${l.name}${l.est?' <span class="mute">(est.)</span>':''}${l.extra?' <span class="warn">extra</span>':''}</span><b>${l.kcal}</b></div>`).join("")}</details></div>
+  <div class="card"><details><summary>Earlier today (${meals().filter(m=>m.status==='eaten').length} meals) ›</summary>${meals().filter(m=>m.status==='eaten').map(m=>`<div class="row small" style="padding:6px 0"><span class="sp">${m.slot} · ${m.dish}</span>${mealLine(m)}</div>`).join("")}</details></div>
+  <div class="composer"><div class="chips"><button class="pill" onclick="quickLog('Apple + peanut butter',190,'Snack')">Ate my snack as planned</button><button class="pill" onclick="openSheet('log')">Search food</button><button class="pill" onclick="openSheet('plan')">This week</button></div>
+    <input placeholder="Tell the Agent what you ate, or ask anything…" onkeydown="if(event.key==='Enter')openSheet('chat')"></div>`;
+}
+SHEETS.more = () => head("More") + `<div class="card">${[["Meal Plan","plan"],["Recap","recap"],["Activity Log","activity"],["Schedules","schedules"],["Favorites","favorites"]].map(([n,k])=>`<button class="opt" onclick="openSheet('${k}')"><b class="sp">${n}</b>›</button>`).join("")}</div>`;
+
+// ---------- VARIANT C: plan-vs-eaten ledger, drawer + FAB ----------
+function VariantC(){
+  const T = totals(), max = Math.max(T.forecast, TARGET)*1.05;
+  const rows = meals().map(m=>{
+    const e = m.status==="eaten" ? eatenFor(m.slot) : null;
+    const diff = e!==null ? e - m.planned : null;
+    let r = `<tr><td><b>${m.slot}</b> <span class="small mute">${m.time}</span><div class="small ${m.status==='dropped'?'strike':'mute'}">${m.dish}${m.was?' <span class="tag good">rebalanced</span>':''}</div></td>
+      <td>${m.status==='dropped'?'—':fmt(m.planned)}${m.was?`<div class="small strike">${fmt(m.was.planned)}</div>`:''}</td><td>${e===null?'<span class="mute">·</span>':fmt(e)}</td>
+      <td class="${diff>50?'warn':diff!==null?'good':''}">${diff===null?'':(diff>0?'+':'')+fmt(diff)}</td></tr>`;
+    if(m.slot==="Lunch" && rebalanceLive()) r += `<tr><td colspan="4" style="text-align:left;background:#fff5f0"><div class="tag warn">Rebalance · ${cause()}, day forecast ${fmt(T.over)} over</div>
+      <div class="row" style="flex-wrap:wrap;margin-top:6px">${OPTIONS.slice(0,2).map(o=>`<button class="pill" onclick="applyOpt('${o.id}')">${o.title} <b class="good">−${o.save}</b></button>`).join("")}<button class="pill" onclick="openSheet('options')">All options…</button></div></td></tr>`;
+    return r;
+  }).join("");
+  return `
+  <div class="row" style="padding:16px"><button class="pill">‹</button><b class="sp" style="text-align:center">Wed, Sep 30 · ${NOW}</b><button class="pill">›</button><button class="pill" onclick="document.getElementById('drw').classList.add('open')">☰</button></div>
+  <div class="card">
+    <div class="row small"><span>Eaten <b>${fmt(T.eaten)}</b></span><span class="sp"></span><span>+ planned <b>${fmt(T.remaining)}</b></span><span class="sp"></span><span>= <b class="${T.over>0?'warn':'good'}">${fmt(T.forecast)}</b></span></div>
+    <div class="stack" style="margin:8px 0"><i style="left:0;width:${T.eaten/max*100}%;background:${T.over>0?'var(--warn)':'var(--good)'}"></i><i style="left:${T.eaten/max*100}%;width:${T.remaining/max*100}%;background:repeating-linear-gradient(45deg,var(--hatch) 0 6px,#e3e8fb 6px 12px)"></i><i style="left:${TARGET/max*100}%;width:2px;background:var(--ink)"></i></div>
+    <div class="row small mute"><span>0</span><span class="sp"></span><span>Target ${fmt(TARGET)}</span></div>
+  </div>
+  <div class="card" style="padding:6px 10px"><table><tr><th>Meal</th><th>Plan</th><th>Eaten</th><th>±</th></tr>${rows}
+    <tr><td><b>Day</b></td><td><b>${fmt(sum(meals().map(m=>m.status==='dropped'?0:m.planned)))}</b></td><td><b>${fmt(T.eaten)}</b></td><td></td></tr></table></div>
+  <div class="card"><div class="row"><h3>Calorie Log</h3><span class="sp"></span><span class="small mute">${S.log.length} entries</span></div>${S.log.map(l=>`<div class="row small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="mute" style="width:62px">${l.t}</span><span class="sp">${l.name}${l.est?' <span class="mute">(est.)</span>':''}${l.extra?' <span class="warn">extra</span>':''}</span><b>${l.kcal}</b></div>`).join("")}</div>
+  ${S.checkins.length?`<div class="card small"><b>Check-ins</b>${S.checkins.map(c=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="sp">${c.text}</span><button class="btn ghost" onclick="checkin('${c.id}',true)">${c.yes}</button><button class="btn ghost mute" onclick="checkin('${c.id}',false)">✕</button></div>`).join("")}</div>`:""}
+  <button class="fab" onclick="openSheet('log')">+</button>
+  <div class="drawer" id="drw" onclick="if(event.target.id==='drw')this.classList.remove('open')"><nav><h2 style="margin-bottom:10px">Menu</h2>${[["Chat with Agent","chat"],["Meal Plan","plan"],["Pantry","pantry"],["Grocery List","grocery"],["Recap","recap"],["Activity Log","activity"],["Favorites","favorites"],["Schedules","schedules"]].map(([n,k])=>`<button onclick="document.getElementById('drw').classList.remove('open');openSheet('${k}')">${n}</button>`).join("")}</nav></div>`;
+}
+
+// ---------- switcher ----------
+const VARIANTS = {A:["Ring + timeline",VariantA], B:["Needs-you feed + chat",VariantB], C:["Plan-vs-eaten ledger",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function setParam(){ const p=new URLSearchParams({variant,scenario}); history.replaceState(null,"","?"+p); }
+function cycle(d){ variant = KEYS[(KEYS.indexOf(variant)+d+KEYS.length)%KEYS.length]; setParam(); render(); scrollTo(0,0); }
+function setScenario(s){ scenario=s; S=fresh(); setParam(); render(); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  document.getElementById("app").innerHTML = VARIANTS[variant][1]();
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <span style="opacity:.5">|</span><button class="${scenario==='over'?'on':''}" onclick="setScenario('over')">Over</button><button class="${scenario==='ok'?'on':''}" onclick="setScenario('ok')">On track</button><button onclick="S=fresh();render()" title="Reset state">↺</button>`;
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
+render();
+</script>
+</body>
+</html>
