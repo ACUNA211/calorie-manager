@@ -283,6 +283,7 @@ const RB_REPLIES = [
   ["Not very hungry tonight", ["smaller","drop"]],
 ];
 let chatCI = null; // check-in being discussed in chat
+const pending = () => S.checkins.length + (rebalanceLive() ? 1 : 0); // badge on the Chat tab
 function go(p){ page = p; render(); scrollTo(0,0); }
 function ciChat(id){ chatCI = id; closeSheet(); go("chat"); }
 function ciDone(id, yes){ chatCI = null; checkin(id, yes); if(document.getElementById("sheet").classList.contains("open") && S.checkins.length) openSheet("notifs"); else if(!S.checkins.length) closeSheet(); }
@@ -329,7 +330,9 @@ function DChat(){
   } else if(S.applied) convo += `<div class="card small"><p><b>Agent:</b> Done. Today now lands at ${fmt(T.forecast)} (${fmt(TARGET-T.forecast)} under). You can undo it from the Activity Log.</p></div>`;
   const c = chatCI && S.checkins.find(c=>c.id===chatCI);
   if(c) convo += `<div class="card small"><p><b>Agent:</b> ${c.text}</p><div class="row"><button class="pill" onclick="ciDone('${c.id}',true)">${c.yes}</button><button class="pill" onclick="ciDone('${c.id}',false)">${c.no}</button></div><p class="mute">…or type an answer below.</p></div>`;
-  return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div>` + convo;
+  const needs = (rebalanceLive() && rb===null ? `<div class="card" style="border:2px solid var(--warn)"><div class="tag warn">Rebalance</div><div style="margin:4px 0 10px">${cause()}. Today would end about ${fmt(T.over)} over.</div><button class="btn" style="background:var(--warn)" onclick="startRebalance()">Rebalance</button></div>` : "")
+    + S.checkins.filter(x=>x.id!==chatCI).map(c=>`<div class="card"><div class="tag mute">Check-in · ${c.kind}</div><div style="margin:4px 0 10px">${c.text}</div><div class="row"><button class="btn" onclick="ciDone('${c.id}',true)">${c.yes}</button><button class="btn line" onclick="ciDone('${c.id}',false)">${c.no}</button><span class="sp"></span><button class="btn ghost" onclick="ciChat('${c.id}')">Chat about it ›</button></div></div>`).join("");
+  return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div>` + (needs ? `<div style="padding:0 16px" class="tag mute">Needs you (${pending()})</div>${needs}<div style="padding:10px 16px 0" class="tag mute">Conversation</div>` : "") + convo;
 }
 SHEETS.moreD = () => head("Menu") + `<div class="card">${[["Favorites","favorites"],["Settings","settings"]].map(([n,k])=>`<button class="opt" onclick="openSheet('${k}')"><b class="sp">${n}</b>›</button>`).join("")}</div>`;
 SHEETS.settings = () => head("Settings") + `<div class="card">${[["Calorie Target","2,000 / day"],["Preferences",""],["Kitchen Tools",""],["Schedules","schedules"],["Activity Log","activity"]].map(([n,k])=>`<button class="opt" onclick="${["schedules","activity"].includes(k)?`openSheet('${k}')`:""}"><b class="sp">${n}</b><span class="small mute">${["schedules","activity"].includes(k)?"":k}</span>›</button>`).join("")}<p class="small mute">Placeholder. Settings get designed later.</p></div>`;
@@ -338,9 +341,8 @@ function VariantD(){
   return body + `
   <div class="composer" style="bottom:108px;padding:8px 12px;border-top:1px solid var(--line)"><div class="row">
     <button class="btn" style="border-radius:50%;width:44px;height:44px;padding:0;font-size:24px;flex:none" onclick="openSheet('log')" title="Quick entry">+</button>
-    <input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}">
-    <button onclick="openSheet('notifs')" title="Check-ins" style="position:relative;flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px">🔔${S.checkins.length?`<span style="position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:#d62d20;color:#fff;font-size:12px;font-weight:700;line-height:20px;padding:0 5px">${S.checkins.length}</span>`:""}</button></div></div>
-  <div class="tabs" style="padding-bottom:62px">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${page===k?'cur':''}" onclick="go('${k}')"><span class="i">${i}</span>${n}</button>`).join("")}</div>
+    <input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}"></div></div>
+  <div class="tabs" style="padding-bottom:62px">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${page===k?'cur':''}" onclick="go('${k}')" style="position:relative"><span class="i">${i}</span>${n}${k==="chat"&&pending()?`<span style="position:absolute;top:-2px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:#d62d20;color:#fff;font-size:11px;font-weight:700;line-height:18px;padding:0 5px">${pending()}</span>`:""}</button>`).join("")}</div>
   <div style="height:60px"></div>`;
 }
 
