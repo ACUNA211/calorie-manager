@@ -22,3 +22,5 @@ Make a rough, clickable mock-up of a Member's main screen and react to it. It sh
 - **Day view:** C's table of planned vs. eaten per meal, **with the Calorie Log merged in**: each food is listed under its meal with its calories.
 - **Rebalance:** only a **Rebalance button** on the dashboard, with no options shown. Tapping it opens chat, where the Agent asks for the Member's input first ("how are you feeling about the rest of today?"), then offers the options that fit. This replaces the #08 input above about showing the top 2 options on the dashboard card.
 - **Entry:** C's **+ quick entry** button stays, next to a **chat box for the Agent**.
+
+**Feedback round 2 (2026-09-29):** The header shows the weekday and date ("Wed · Sep 30") instead of the time. The Activity Log is taken off the dashboard and moves into Settings (☰ → Settings), alongside Schedules, Calorie Target, Preferences and Kitchen Tools. Settings will be designed later.

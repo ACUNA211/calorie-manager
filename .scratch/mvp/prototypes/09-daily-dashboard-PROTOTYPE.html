@@ -290,7 +290,7 @@ const pageOf = k => SHEETS[k]().replace(`<button class="btn ghost" onclick="clos
 function DCounter(){
   const T = totals();
   return `<div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)">
-    <div class="row"><b>Wed · ${NOW}</b><span class="sp"></span><button class="pill" onclick="openSheet('recap')">Recap</button><button class="pill" onclick="openSheet('activity')" title="Activity Log">⟲</button><button class="pill" onclick="openSheet('more')">☰</button></div>
+    <div class="row"><b>Wed · Sep 30</b><span class="sp"></span><button class="pill" onclick="openSheet('recap')">Recap</button><button class="pill" onclick="openSheet('moreD')">☰</button></div>
     <div class="row" style="margin:12px 0 6px"><span class="big">${fmt(T.left)}</span><span class="mute">left · ${fmt(T.eaten)} eaten of ${fmt(TARGET)}</span></div>
     <div class="bar"><i style="width:${Math.min(T.forecast/TARGET*100/1.15,100)}%;background:var(--hatch)"></i><i style="width:${T.eaten/TARGET*100/1.15}%;background:${T.over>0?'var(--warn)':'var(--good)'}"></i><span class="t" style="left:${100/1.15}%"></span></div>
     <div class="row small" style="margin-top:6px"><span class="mute">Forecast with the rest of today's plan: <b class="${T.over>0?'warn':'good'}">${fmt(T.forecast)}</b></span><span class="sp"></span>
@@ -325,6 +325,8 @@ function DChat(){
   } else if(S.applied) convo += `<div class="card small"><p><b>Agent:</b> Done. Today now lands at ${fmt(T.forecast)} (${fmt(TARGET-T.forecast)} under). You can undo it from the Activity Log.</p></div>`;
   return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div>` + convo;
 }
+SHEETS.moreD = () => head("Menu") + `<div class="card">${[["Favorites","favorites"],["Settings","settings"]].map(([n,k])=>`<button class="opt" onclick="openSheet('${k}')"><b class="sp">${n}</b>›</button>`).join("")}</div>`;
+SHEETS.settings = () => head("Settings") + `<div class="card">${[["Calorie Target","2,000 / day"],["Preferences",""],["Kitchen Tools",""],["Schedules","schedules"],["Activity Log","activity"]].map(([n,k])=>`<button class="opt" onclick="${["schedules","activity"].includes(k)?`openSheet('${k}')`:""}"><b class="sp">${n}</b><span class="small mute">${["schedules","activity"].includes(k)?"":k}</span>›</button>`).join("")}<p class="small mute">Placeholder. Settings get designed later.</p></div>`;
 function VariantD(){
   const body = page==="today" ? DToday() : page==="chat" ? DChat() : `<div style="padding-top:4px">${pageOf(page)}</div>`;
   return body + `
