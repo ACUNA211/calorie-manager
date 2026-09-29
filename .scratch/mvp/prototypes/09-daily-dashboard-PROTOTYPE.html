@@ -7,7 +7,7 @@
 <!--
   THROWAWAY PROTOTYPE for .scratch/mvp/issues/09-daily-dashboard.md
   Question: what belongs on a Member's first screen, and what is one tap away?
-  Three structurally different variants, switchable via ?variant=A|B|C and the floating bar (or ← →).
+  Variant D (default) combines the picks from the first review. A, B and C are the original layouts, switchable via ?variant=D|A|B|C and the floating bar (or ← →).
   Scenario toggle (?scenario=over|ok): "over" = 3 extra cookies at lunch, so the day forecast goes over and a Rebalance fires.
   All state is in memory. Reload resets it. Open by double-clicking.
 -->
@@ -86,7 +86,7 @@
 const TARGET = 2000; // planned to 95% = 1900 → 475/570/665/190
 const NOW = "2:15 pm";
 const params = new URLSearchParams(location.search);
-let variant = params.get("variant") || "A";
+let variant = params.get("variant") || "D";
 let scenario = params.get("scenario") || "over";
 let S; // state
 
@@ -273,14 +273,76 @@ function VariantC(){
   <div class="drawer" id="drw" onclick="if(event.target.id==='drw')this.classList.remove('open')"><nav><h2 style="margin-bottom:10px">Menu</h2>${[["Chat with Agent","chat"],["Meal Plan","plan"],["Pantry","pantry"],["Grocery List","grocery"],["Recap","recap"],["Activity Log","activity"],["Favorites","favorites"],["Schedules","schedules"]].map(([n,k])=>`<button onclick="document.getElementById('drw').classList.remove('open');openSheet('${k}')">${n}</button>`).join("")}</nav></div>`;
 }
 
+// ---------- VARIANT D: combined from feedback (2026-09-29) ----------
+// B's calorie counter · A's bottom tabs, each opening a full page · C's plan-vs-eaten table with the Calorie Log merged in
+// (foods under each meal) · Rebalance is a button that asks for input before offering options · + quick entry next to an Agent chat box
+let page = "today", rb = null; // rb: null | "asked" | reply text
+const RB_REPLIES = [
+  ["Keep dinner, trim elsewhere", ["spread","drop"]],
+  ["Happy with a lighter dinner", ["lighter","swap"]],
+  ["Not very hungry tonight", ["smaller","drop"]],
+];
+function go(p){ page = p; render(); scrollTo(0,0); }
+function startRebalance(){ rb = "asked"; go("chat"); }
+function rbReply(i){ rb = i; render(); }
+function applyD(id){ applyOpt(id); rb = null; go("today"); }
+const pageOf = k => SHEETS[k]().replace(`<button class="btn ghost" onclick="closeSheet()">Close</button>`, "");
+function DCounter(){
+  const T = totals();
+  return `<div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)">
+    <div class="row"><b>Wed · ${NOW}</b><span class="sp"></span><button class="pill" onclick="openSheet('recap')">Recap</button><button class="pill" onclick="openSheet('activity')" title="Activity Log">⟲</button><button class="pill" onclick="openSheet('more')">☰</button></div>
+    <div class="row" style="margin:12px 0 6px"><span class="big">${fmt(T.left)}</span><span class="mute">left · ${fmt(T.eaten)} eaten of ${fmt(TARGET)}</span></div>
+    <div class="bar"><i style="width:${Math.min(T.forecast/TARGET*100/1.15,100)}%;background:var(--hatch)"></i><i style="width:${T.eaten/TARGET*100/1.15}%;background:${T.over>0?'var(--warn)':'var(--good)'}"></i><span class="t" style="left:${100/1.15}%"></span></div>
+    <div class="row small" style="margin-top:6px"><span class="mute">Forecast with the rest of today's plan: <b class="${T.over>0?'warn':'good'}">${fmt(T.forecast)}</b></span><span class="sp"></span>
+      ${rebalanceLive()?`<button class="btn" style="background:var(--warn);padding:6px 12px" onclick="startRebalance()">Rebalance · ${fmt(T.over)} over</button>`:""}</div>
+  </div>`;
+}
+function DToday(){
+  const rows = meals().map(m=>{
+    const items = S.log.filter(l=>l.slot===m.slot);
+    const e = eatenFor(m.slot), diff = items.length ? e - m.planned : null;
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">
+      <div class="row"><b>${m.slot}</b><span class="small mute">${m.time}</span>${m.was?'<span class="tag good">rebalanced</span>':''}<span class="sp"></span>
+        <span class="small mute" style="width:52px;text-align:right">${m.status==='dropped'?'—':fmt(m.planned)}</span>
+        <span class="small" style="width:48px;text-align:right"><b>${items.length?fmt(e):'·'}</b></span>
+        <span class="small ${diff>50?'warn':diff!==null?'good':''}" style="width:44px;text-align:right">${diff===null?'':(diff>0?'+':'')+fmt(diff)}</span></div>
+      <div class="small ${m.status==='dropped'?'strike':'mute'}">Plan: ${m.dish}${m.was?` <span class="strike">${fmt(m.was.planned)}</span>`:''}</div>
+      ${items.map(l=>`<div class="row small" style="padding:3px 0 0 12px"><span class="sp">• ${l.name}${l.est?' <span class="mute">(est.)</span>':''}${l.extra?' <span class="warn">extra</span>':''}</span><span>${l.kcal}</span></div>`).join("")}
+    </div>`;
+  }).join("");
+  const other = S.log.filter(l=>!S.meals.some(m=>m.slot===l.slot));
+  return DCounter() + `
+  <div class="card" style="padding:8px 14px"><div class="row small mute" style="padding:4px 0"><span class="sp tag">Meal</span><span class="tag" style="width:52px;text-align:right">Plan</span><span class="tag" style="width:48px;text-align:right">Eaten</span><span class="tag" style="width:44px;text-align:right">±</span></div>${rows}${other.length?`<div class="small">${other.map(l=>`• ${l.name} · ${l.kcal}`).join("<br>")}</div>`:""}</div>
+  ${S.checkins.length?`<div class="card small"><b>Check-ins</b>${S.checkins.map(c=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="sp">${c.text}</span><button class="btn ghost" onclick="checkin('${c.id}',true)">${c.yes}</button><button class="btn ghost mute" onclick="checkin('${c.id}',false)">✕</button></div>`).join("")}</div>`:""}`;
+}
+function DChat(){
+  const T = totals();
+  let convo = `<div class="card small"><p><b>You (12:45):</b> had 3 cookies after lunch</p><p><b>Agent:</b> Logged 300 kcal.</p></div>`;
+  if(rb !== null && !S.applied){
+    convo += `<div class="card small"><p><b>Agent:</b> ${cause()}, so today would end about <b>${fmt(T.over)} over</b>. Before I suggest anything: how are you feeling about the rest of today?</p>
+      ${rb==="asked" ? `<div class="row" style="flex-wrap:wrap">${RB_REPLIES.map(([t],i)=>`<button class="pill" onclick="rbReply(${i})">${t}</button>`).join("")}</div><p class="mute">…or type your own answer below.</p>`
+      : `<p><b>You:</b> ${RB_REPLIES[rb][0]}</p><p><b>Agent:</b> Got it. These fit that best:</p>${RB_REPLIES[rb][1].map(id=>optBtn(OPTIONS.find(o=>o.id===id)).replace("applyOpt(","applyD(")).join("")}<button class="btn ghost" onclick="openSheet('options')">See all options</button>`}</div>`;
+  } else if(S.applied) convo += `<div class="card small"><p><b>Agent:</b> Done. Today now lands at ${fmt(T.forecast)} (${fmt(TARGET-T.forecast)} under). You can undo it from the Activity Log.</p></div>`;
+  return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div>` + convo;
+}
+function VariantD(){
+  const body = page==="today" ? DToday() : page==="chat" ? DChat() : `<div style="padding-top:4px">${pageOf(page)}</div>`;
+  return body + `
+  <div class="composer" style="bottom:108px;padding:8px 12px;border-top:1px solid var(--line)"><div class="row">
+    <button class="btn" style="border-radius:50%;width:44px;height:44px;padding:0;font-size:24px;flex:none" onclick="openSheet('log')" title="Quick entry">+</button>
+    <input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}"></div></div>
+  <div class="tabs" style="padding-bottom:62px">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${page===k?'cur':''}" onclick="go('${k}')"><span class="i">${i}</span>${n}</button>`).join("")}</div>
+  <div style="height:60px"></div>`;
+}
+
 // ---------- switcher ----------
-const VARIANTS = {A:["Ring + timeline",VariantA], B:["Needs-you feed + chat",VariantB], C:["Plan-vs-eaten ledger",VariantC]};
+const VARIANTS = {D:["Combined (your picks)",VariantD], A:["Ring + timeline",VariantA], B:["Needs-you feed + chat",VariantB], C:["Plan-vs-eaten ledger",VariantC]};
 const KEYS = Object.keys(VARIANTS);
 function setParam(){ const p=new URLSearchParams({variant,scenario}); history.replaceState(null,"","?"+p); }
 function cycle(d){ variant = KEYS[(KEYS.indexOf(variant)+d+KEYS.length)%KEYS.length]; setParam(); render(); scrollTo(0,0); }
-function setScenario(s){ scenario=s; S=fresh(); setParam(); render(); }
+function setScenario(s){ scenario=s; S=fresh(); rb=null; page="today"; setParam(); render(); }
 function render(){
-  if(!VARIANTS[variant]) variant="A";
+  if(!VARIANTS[variant]) variant="D";
   document.getElementById("app").innerHTML = VARIANTS[variant][1]();
   document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
     <span style="opacity:.5">|</span><button class="${scenario==='over'?'on':''}" onclick="setScenario('over')">Over</button><button class="${scenario==='ok'?'on':''}" onclick="setScenario('ok')">On track</button><button onclick="S=fresh();render()" title="Reset state">↺</button>`;
