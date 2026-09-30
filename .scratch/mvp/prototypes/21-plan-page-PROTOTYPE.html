@@ -11,6 +11,8 @@
   edited, moved or cleared on the page? How does next week sit alongside this week?
   Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
     A: week grid (days as rows, slots as columns), This week / Next week toggle, tap a cell for a sheet.
+    D (default, from feedback round 1): A's grid is the week overview; tap a day or a meal to open C's day view to change it.
+       Repeated Dishes share a colour so batches for meal prep stand out (the cook slot is darker with 🔥), with a batch legend.
     B: list of days, one long scroll: this week, then next week's draft below a divider, with actions inline on each meal.
     C: one day at a time, a 14-day strip across both weeks, big meal cards, and a review screen for the draft.
   The swap / edit / move / clear sheets and the data are shared; only the layout differs.
@@ -127,7 +129,7 @@ const SL = ["B","L","D","S"];
 const TIME = ["8:00","12:00","18:00","any time"];
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const params = new URLSearchParams(location.search);
-let variant = params.get("variant") || "A";
+let variant = params.get("variant") || "D";
 
 // ---------- data ----------
 // m: d dish, k kcal, t minutes, ty cook|left|out|open|prep, from (leftover source), nw new, fav, needs [[item,status]] status need|list|bought,
@@ -141,7 +143,7 @@ function fresh(){
     days:[
       {n:"Mon", date:"Sep 28", past:true, m:[{...Y(),eaten:470}, M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session",eaten:770}), M("Burrito bowl",660,30,{eaten:660}), {...AP(),eaten:190}]},
       {n:"Tue", date:"Sep 29", past:true, m:[{...Y(),eaten:470}, M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650,eaten:650}), M("Turkey wraps",430,20,{eaten:430,fav:true,ch:{from:"Salmon & rice",by:"You",when:"Mon 9:12pm",why:"asked in chat; Pantry first"}}), {...AP(),eaten:190}]},
-      {n:"Wed", date:"Sep 30", past:true, busy:true, m:[{...Y(),eaten:470}, M("Chili & cornbread",570,5,{ty:"left",from:"Sunday's Prep Session",eaten:870}), M("Turkey wraps",420,15,{eaten:420,ch:{from:"Burrito bowl",by:"Rebalance",when:"Wed 2:10pm",why:"lunch went 300 over"}}), {...AP(),eaten:190}]},
+      {n:"Wed", date:"Sep 30", past:true, busy:true, m:[{...Y(),eaten:470}, M("Chili & cornbread",570,5,{grp:"Chili",ty:"left",from:"Sunday's Prep Session",eaten:870}), M("Turkey wraps",420,15,{eaten:420,ch:{from:"Burrito bowl",by:"Rebalance",when:"Wed 2:10pm",why:"lunch went 300 over"}}), {...AP(),eaten:190}]},
       {n:"Thu", date:"Oct 1", past:true, m:[{...Y(),eaten:470}, M("Chicken rice bowl",560,15,{eaten:560}), M("Beef stir-fry",640,30,{eaten:640}), M("Greek yogurt",150,1,{eaten:150,ch:{from:"Apple + peanut butter",by:"You",when:"Thu 3:05pm",why:"out of apples"}})]},
       {n:"Fri", date:"Oct 2", today:true, m:[{...Y(),eaten:470}, M("Beef stir-fry",480,5,{ty:"left",from:"Thursday's dinner",eaten:480}), M("Pizza night",800,0,{ty:"out",label:"Pizza night",aim:800}), AP()]},
       {n:"Sat", date:"Oct 3", m:[M("Eggs & toast",460,10), M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session"}), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
@@ -179,7 +181,7 @@ function fresh(){
 }
 let S = fresh();
 let undoStack = [];
-let ui = {wk: params.get("week") || "this", day: {w:"this", i:4}, open:{}, sheet:null, review:true, showChanges:false};
+let ui = {wk: params.get("week") || "this", day: {w:"this", i:4}, open:{}, sheet:null, review:true, showChanges:false, dv:false, focus:null, color:"batch", hl:null};
 
 // Swap pool per slot. Pantry fit first after approval (#06).
 const POOL = [
@@ -485,22 +487,115 @@ function stepDay(dir){
   ui.day={w,i}; render();
 }
 
+// ---------- Variant D: A's grid as the overview, C's day view to change a day, batch colours ----------
+const PAL = ["#0f8b8d","#2f6fd6","#4c9a2a","#c79a00","#d0447a","#8b5a2b","#1a9fc4","#56708a"];
+let BATCH = {}, SIZE = {};
+function cookText(w,L){
+  const cook=L.find(x=>x.m.ty==="cook"), wk=W(w);
+  if(cook && L.some(x=>x.m.ty==="left"||x.m.ty==="prep")) return `🔥 cook ${wk.days[cook.di].n} ${SLOT[cook.si].toLowerCase()}`;
+  const from=(L.find(x=>x.m.from)||{}).m;
+  if(from && from.from.includes("Prep Session")) return `🔥 cook at the Prep Session, ${w==="next"?"Sun Oct 4 (this week)":"Sun Sep 27 (last week)"}`;
+  return `planned ${L.length} times, made fresh each time`;
+}
+function computeBatches(){
+  BATCH={}; SIZE={}; let ci=0;
+  for(const w of ["this","next"]) W(w).days.forEach(d=>d.m.forEach(m=>{ const k=w+":"+(m.grp||m.d); SIZE[k]=(SIZE[k]||0)+1; }));
+  if(ui.color==="off") return;
+  for(const w of ["this","next"]){
+    const g={};
+    W(w).days.forEach((d,di)=>d.m.forEach((m,si)=>{ if(m.ty==="out"||m.ty==="open") return; (g[m.grp||m.d] ??= []).push({di,si,m}); }));
+    for(const k in g){
+      const L=g[k]; if(L.length<2) continue;
+      const isBatch=L.some(x=>x.m.ty==="left"||x.m.ty==="prep");
+      if(ui.color==="batch" && !isBatch) continue;
+      BATCH[w+":"+k]={key:w+":"+k,name:k,w,items:L,color:PAL[ci++%PAL.length],isBatch,cook:cookText(w,L)};
+    }
+  }
+}
+const batchOf = (w,m) => BATCH[w+":"+(m.grp||m.d)];
+const isCook = (b,m) => b && b.isBatch && m.ty==="cook";
+// a leftover whose cook meal was swapped away (prep portions come from the Prep Session, so they can't be orphaned here)
+const orphan = (w,m) => m.ty==="left" && !m.from.includes("Prep Session") && SIZE[w+":"+(m.grp||m.d)]<2;
+function colourMode(){
+  return `<div class="row" style="margin:8px 16px 0;gap:6px"><span class="xs mute">Colour</span>${[["batch","Batches"],["all","All repeats"],["off","Off"]].map(([k,n])=>`<button class="chip" style="border:0;${ui.color===k?'background:var(--ink);color:#fff':''}" onclick="ui.color='${k}';ui.hl=null;render()">${n}</button>`).join("")}</div>`;
+}
+function batchLegend(w){
+  const bs=Object.values(BATCH).filter(b=>b.w===w);
+  if(!bs.length) return ui.color==="off" ? "" : `<div class="card small mute">No repeated Dishes this week.</div>`;
+  const wk=W(w);
+  return `<div class="card" style="padding:10px 14px"><div class="row"><h3 class="sp">${ui.color==="batch"?"Batches to prep":"Repeated Dishes"}</h3>${ui.hl?`<button class="btn ghost xs" onclick="ui.hl=null;render()">Show all</button>`:`<span class="xs mute">tap to highlight</span>`}</div>
+    ${bs.map(b=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);cursor:pointer;${ui.hl&&ui.hl!==b.key?'opacity:.35':''}" onclick="ui.hl=ui.hl==='${b.key}'?null:'${b.key}';render()">
+      <span style="width:14px;height:14px;border-radius:4px;background:${b.color};flex:none"></span>
+      <div class="sp"><div class="small"><b>${b.name}</b> · ${b.items.length} meals</div>
+      <div class="xs mute">${b.cook} → ${b.items.filter(x=>!isCook(b,x.m)).map(x=>`${wk.days[x.di].n} ${SL[x.si]}`).join(" · ")}</div></div></div>`).join("")}</div>`;
+}
+function VariantD(){
+  computeBatches();
+  return ui.dv ? DayD() : GridD();
+}
+function GridD(){
+  const w=ui.wk, wk=W(w);
+  const head = `<div class="row" style="padding:16px 16px 10px"><h2 class="sp">Meal Plan</h2><button class="btn ghost" onclick="toast('Schedules and the meal split live in Settings')">☰</button></div>`;
+  const segs = `<div class="seg"><button class="${w==='this'?'on':''}" onclick="ui.wk='this';ui.hl=null;render()">This week · ${W('this').range}</button><button class="${w==='next'?'on':''}" onclick="ui.wk='next';ui.hl=null;render()">Next week ${W('next').approved?"":`<span class="tag" style="color:#8a6d00">· Draft</span>`}</button></div>`;
+  const status = w==="next" ? draftBanner() : `<div class="row wrap" style="margin:10px 16px 0;gap:6px"><span class="small mute">Approved ${wk.approvedAt}</span><span class="sp"></span>
+      <button class="chip chg" style="border:0" onclick="ui.showChanges=!ui.showChanges;render()">● ${wk.changes.length} changes since approval ${ui.showChanges?"▴":"▾"}</button></div>
+      ${ui.showChanges?`<div class="card" style="padding:6px 14px">${changesList(w)}</div>`:""}`;
+  const grid = `<div style="padding:8px 13px 0"><table class="grid"><tr><th></th>${SLOT.map((s,i)=>`<th>${s.slice(0,5)}<br><span style="font-weight:400">${SHARE[i]}</span></th>`).join("")}<th style="text-align:right">Day</th></tr>
+    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh" style="cursor:pointer" onclick="openDay('${w}',${di},null)">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]} ›</div>${d.busy?`<div class="xs" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17">🍳Prep</div>`:""}</td>
+      ${d.m.map((m,si)=>{ const b=batchOf(w,m), ck=isCook(b,m);
+        const ic=[orphan(w,m)?"⚠️":"",ck?"🔥":"",m.ty==="left"?"↺":"",m.ty==="prep"?"🍳":"",m.nw?"★":"",overTime(d,si,m)?"⏱":"",(m.needs||[]).some(n=>n[1]!=="bought")?"🛒":"",m_eaten(m)?"✓":""].join("");
+        const st = b ? `background:${b.color}${ck?"40":"1c"};box-shadow:inset 4px 0 0 ${b.color};` : "";
+        const dim = ui.hl && (!b || b.key!==ui.hl) ? "opacity:.2;" : "";
+        return `<td class="ty-${m.ty} ${d.past||m_eaten(m)?'past':''} ${m.ch&&wk.approved?'chg':''}" style="${st}${dim}" onclick="openDay('${w}',${di},${si})"><div style="font-weight:600">${title(m).replace("⌂ ","")}</div><div class="k">${fmt(kcal(m))}</div><div class="ic">${ic}</div></td>`; }).join("")}
+      <td class="tot ${dayTotal(d)>TARGET?'over':''}">${fmt(dayTotal(d))}</td></tr>`).join("")}
+    </table></div>
+    <div class="xs mute" style="margin:6px 16px">Same colour = same Dish (🔥 is where it's cooked, the lighter ones are leftovers or prepped portions) · ⚠️ leftover with nothing cooking it · ↺ leftover · 🍳 Prep Session · ★ new · ⏱ over time · 🛒 Missing Ingredient · ✓ logged · <span class="dot"></span> changed. Tap a day or a meal to open it.</div>`;
+  const miss = `<div class="row" style="margin:6px 16px">${missingCard(w)}<span class="sp"></span><span class="xs mute">${missingList(w).join(", ")}</span></div>`;
+  const prep = wk.days.filter(d=>d.prep).map(d=>`<div class="card small" style="background:#faf5e8">🍳 <b>${d.n} ${d.date}</b>: ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· part of next week's draft</span>`:""}</div>`).join("");
+  const approveBar = w==="next" && !wk.approved ? `<div class="sticky row" style="background:#fff;padding:8px"><button class="btn line sm" onclick="toast('Opens Chat: What do you want to change?')">Change something</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve next week</button></div>` : "";
+  return head + segs + status + miss + colourMode() + grid + batchLegend(w) + prep + approveBar;
+}
+function openDay(w,di,si){ ui.dv=true; ui.day={w,i:di}; ui.focus=si; ui.hl=null; render(); if(si==null) scrollTo(0,0); }
+function DayD(){
+  const {w,i}=ui.day, wk=W(w), d=wk.days[i], t=dayTotal(d);
+  const strip = `<div class="strip" id="strip"><span class="wk">This wk</span>${W("this").days.map((_,di)=>stripBtn("this",di)).join("")}
+    <span class="wk" style="color:${W('next').approved?'var(--mute)':'#8a6d00'}">Next${W("next").approved?"":" · draft"}</span>${W("next").days.map((_,di)=>stripBtn("next",di)).join("")}</div>`;
+  const head = `<div class="row" style="padding:16px 16px 0"><button class="btn line sm" onclick="ui.dv=false;ui.wk='${w}';render();scrollTo(0,0)">‹ Week</button><h2 class="sp" style="text-align:center">${{Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"}[d.n]} ${d.date}</h2><span style="width:62px"></span></div>
+    <div class="xs mute" style="text-align:center">${d.today?"Today · ":""}${w==="this"?"This week":"Next week"}${wk.approved?"":" · Draft"}${d.busy?" · Busy Day, 15-min meals":""}</div>`;
+  const tot = `<div class="card" style="padding:10px 14px"><div class="row"><span class="small sp">Planned</span><span class="small">${totalLine(d)}</span></div><div style="margin-top:6px">${totalBar(d)}</div>
+      ${t>TARGET?`<div class="xs warn" style="margin-top:4px">Over the Calorie Target by ${fmt(t-TARGET)}</div>`:`<div class="xs mute" style="margin-top:4px">${fmt(TARGET-t)} under</div>`}</div>
+    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}`;
+  const meals = d.m.map((m,si)=>{ const lk=locked(w,i,si), chg=m.ch&&wk.approved, b=batchOf(w,m), ck=isCook(b,m);
+    const others = b ? b.items.filter(x=>!(x.di===i&&x.si===si)).map(x=>`${wk.days[x.di].n} ${SL[x.si]}`).join(", ") : "";
+    return `<div class="bigm ty-${m.ty}" id="meal${si}" style="${b?`border-left:6px solid ${b.color};`:""}${chg?'box-shadow:0 0 0 2px var(--chg) inset':''}"><div class="row"><span class="tag mute sp">${SLOT[si]}${si<3?" · "+TIME[si]:""}</span><span>${fmt(kcal(m))}<span class="xs mute"> / ${SHARE[si]}</span></span></div>
+      ${chg?`<div class="xs" style="color:#9a5a00;margin-top:4px">Changed by ${m.ch.by}, ${m.ch.when} · was <span class="strike">${m.ch.from}</span></div>`:""}
+      <div class="nm">${title(m)}</div>${m_eaten(m)?`<div class="xs good">✓ logged ${fmt(m.eaten)}</div>`:""}
+      ${b?`<div class="xs" style="margin:2px 0;color:${b.color};font-weight:600;cursor:pointer" onclick="ui.dv=false;ui.wk='${w}';ui.hl='${b.key}';render()">● ${ck?"🔥 Cook here: makes "+b.items.length+" meals":b.isBatch?b.cook.replace("🔥 ",""):"Same Dish"} · also ${others} ›</div>`:""}
+      ${orphan(w,m)&&!lk?`<div class="small warn" style="margin:4px 0">⚠️ Nothing cooks this any more: ${m.from} was changed. Swap this meal too, or undo.</div>`:""}
+      <div>${chips(w,i,si)}</div>
+      ${lk?"":`<div class="acts"><button onclick="openSheet('${w}',${i},${si});sheetMode('swap')"><span>⇄</span>Swap</button><button onclick="openSheet('${w}',${i},${si});sheetMode('edit')"><span>✎</span>Edit</button><button onclick="openSheet('${w}',${i},${si});sheetMode('move')"><span>↔</span>Move</button><button onclick="doClear('${w}',${i},${si})"><span>✕</span>Clear</button></div>`}</div>`; }).join("");
+  const nav = `<div class="row" style="margin:6px 16px"><button class="btn line sm" onclick="stepDay(-1)">‹ Previous day</button><span class="sp"></span><button class="btn line sm" onclick="stepDay(1)">Next day ›</button></div>`;
+  const bar = w==="next"&&!wk.approved?`<div class="sticky row draftband" style="padding:8px 10px"><span class="small sp"><b>Draft</b> · ${missingCount("next")} Missing Ingredients</span><button class="btn good sm" onclick="approve()">Approve next week</button></div>`:"";
+  return head + strip + tot + meals + nav + bar;
+}
+
 // ---------- shell + switcher ----------
 function toast(msg, withUndo){
   const box=document.getElementById("toastbox");
   box.innerHTML = `<div class="toast"><span>${msg}</span>${withUndo?`<button onclick="undo()">Undo</button>`:""}</div>`;
   clearTimeout(toast.t); toast.t=setTimeout(()=>box.innerHTML="", withUndo?6000:2500);
 }
-const VARIANTS = {A:["Week grid",VariantA], B:["List of days",VariantB], C:["One day at a time",VariantC]};
+const VARIANTS = {D:["Grid + day view (your picks)",VariantD], A:["Week grid",VariantA], B:["List of days",VariantB], C:["One day at a time",VariantC]};
 const KEYS = Object.keys(VARIANTS);
-function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; ui.showChanges=false; history.replaceState(null,"","?variant="+variant); closeSheet(); render(); scrollTo(0,0); }
+function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; ui.showChanges=false; ui.dv=false; ui.hl=null; history.replaceState(null,"","?variant="+variant); closeSheet(); render(); scrollTo(0,0); }
 function render(){
-  if(!VARIANTS[variant]) variant="A";
+  if(!VARIANTS[variant]) variant="D";
   document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
     <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n==='Plan'?'cur':''}" onclick="${n==='Plan'?'':`toast('Not in this prototype')`}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
   document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
-    <button onclick="S=fresh();undoStack=[];ui.review=true;ui.day={w:'this',i:4};render()" title="Reset state">↺</button>`;
-  if(variant==="C"){ const s=document.getElementById("strip"), b=s&&s.querySelector("button.on"); if(b) s.scrollLeft=b.offsetLeft-s.offsetWidth/2+25; }
+    <button onclick="S=fresh();undoStack=[];ui.review=true;ui.dv=false;ui.hl=null;ui.day={w:'this',i:4};render()" title="Reset state">↺</button>`;
+  if(variant==="C"||(variant==="D"&&ui.dv)){ const s=document.getElementById("strip"), b=s&&s.querySelector("button.on"); if(b) s.scrollLeft=b.offsetLeft-s.offsetWidth/2+25; }
+  if(variant==="D"&&ui.dv&&ui.focus!=null){ const el=document.getElementById("meal"+ui.focus); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); ui.focus=null; }
 }
 addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
 render();

@@ -21,3 +21,8 @@ Scenario: Fri Oct 2, 3:40pm, after the reflection in #15. This week (Sep 28 – 
 **Open question the prototype raises:** a Sunday Prep Session that cooks for next week's lunches and snacks falls in *this* week. In the prototype, next week's draft adds it to this Sunday, and approving the draft confirms it. Is that right, or should the Prep Session belong to the week it feeds?
 
 Waiting for the Member's reaction.
+
+**Feedback round 1 (2026-09-30):** A works as the week overview, and C works for looking at one day in detail and changing it. Also wanted: colour coding for the same food, to help plan meal prep. These are combined into variant D (now the default):
+- **Week grid (A) is the Plan page.** Tapping a day name or a meal opens that day in C's view (the 14-day strip, big meal cards with Swap / Edit / Move / Clear, and next / previous day). "‹ Week" goes back to the grid.
+- **Batch colours:** every Dish that shows up more than once in the week gets its own colour, in the grid (a tinted cell with a stripe down the left) and on the day view's meal cards (a coloured left edge). The meal where it's cooked is darker with 🔥, and the leftovers and prepped portions are lighter. A "Batches to prep" legend under the grid lists each batch: where it's cooked and which meals it feeds. Tapping a batch highlights it and fades the rest of the grid. A colour switch offers Batches (default: Dishes with leftovers or Prep Session portions), All repeats (also things like yogurt five days a week), or Off.
+- **A leftover left without a source:** if the meal that cooks a batch is swapped or cleared, its leftovers get ⚠️ in the grid, and the day view says nothing cooks them any more.
