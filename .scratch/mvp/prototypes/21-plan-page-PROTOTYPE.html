@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Plan page (#21)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/21-plan-page.md
+  Question: what does the Plan tab look like? Grid, list of days, or one day at a time? How does Friday's draft look
+  before approval and where is Approve? How is "what changed" shown after approval? How are meals swapped (3 alternatives),
+  edited, moved or cleared on the page? How does next week sit alongside this week?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: week grid (days as rows, slots as columns), This week / Next week toggle, tap a cell for a sheet.
+    B: list of days, one long scroll: this week, then next week's draft below a divider, with actions inline on each meal.
+    C: one day at a time, a 14-day strip across both weeks, big meal cards, and a review screen for the draft.
+  The swap / edit / move / clear sheets and the data are shared; only the layout differs.
+  Scenario: 2,000 Calorie Target, planned to 95%. It's Fri Oct 2, 3:40pm, after the weekly reflection (#15).
+  This week (Sep 28 – Oct 4) was approved last Friday and has 4 changes since. Next week (Oct 5 – 11) is the Agent's draft,
+  built with the 4 recommendations accepted in the Recap. All state is in memory; reload or ↺ resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--out:#8a5cc2;--chg:#e08a1e;--draft:#fff6d6;--draftline:#e8cf73}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:200px}
+  button{font:inherit;cursor:pointer}
+  .row{display:flex;align-items:center;gap:8px}
+  .wrap{flex-wrap:wrap}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .btn.good{background:var(--good)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px}
+  .strike{text-decoration:line-through;color:var(--mute)}
+  .chip{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 6px;margin:2px 3px 0 0;background:#f0efea;color:#555;white-space:nowrap}
+  .chip.new{background:#e4ecff;color:var(--accent)} .chip.fav{background:#fde6ee;color:#b0335e}
+  .chip.left{background:#e6f3ea;color:var(--good)} .chip.time{background:#fdebd8;color:#a0561a}
+  .chip.need{background:#fbe3dc;color:var(--warn)} .chip.bought{background:#e6f3ea;color:var(--good)}
+  .chip.out{background:#ebe1f6;color:var(--out)} .chip.chg{background:#fdf0dc;color:#9a5a00}
+  .chip.prep{background:#f1ead9;color:#7a5a17}
+  .seg{display:flex;background:#e7e5df;border-radius:10px;padding:3px;margin:0 16px}
+  .seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px 4px;font-size:13.5px;color:var(--mute)}
+  .seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px #0002}
+  .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--good)}
+  .bar i.over{background:var(--warn)}
+  .draftband{background:var(--draft);border:1px solid var(--draftline)}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--chg);vertical-align:middle}
+  /* A: grid */
+  .grid{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+  .grid th{font-size:10.5px;color:var(--mute);text-transform:uppercase;font-weight:600;padding:2px}
+  .grid td{background:#fff;border-radius:8px;padding:5px 5px;vertical-align:top;font-size:11.5px;line-height:1.25;cursor:pointer;position:relative;height:62px}
+  .grid td.dayh{background:none;cursor:default;font-weight:700;font-size:12.5px;padding-left:0;width:44px}
+  .grid td.tot{background:none;cursor:default;text-align:right;font-weight:600;font-size:11.5px;width:44px;vertical-align:middle}
+  .grid td.tot.over{color:var(--warn)}
+  .grid td .k{color:var(--mute);font-size:10.5px}
+  .grid td.ty-out{background:#f3edf9} .grid td.ty-open{background:repeating-linear-gradient(135deg,#fff 0 6px,#f0efea 6px 12px);color:var(--mute)}
+  .grid td.past{opacity:.5}
+  .grid td.chg::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--chg)}
+  .grid tr.today td.dayh{color:var(--accent)}
+  .grid td .ic{font-size:10px;letter-spacing:1px}
+  /* B: list */
+  .dayc{background:#fff;border-radius:14px;margin:10px 16px;box-shadow:0 1px 2px #0001;overflow:hidden}
+  .dayc .hd{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+  .meal{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px}
+  .meal:last-child{border-bottom:0}
+  .meal .sl{width:58px;flex:none;font-size:11.5px;color:var(--mute);text-transform:uppercase;font-weight:600;padding-top:2px}
+  .meal .acts{display:flex;gap:6px;margin-top:8px}
+  .divider{margin:26px 16px 6px;display:flex;align-items:center;gap:8px;font-weight:700}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:#bdbab2}
+  /* C: day */
+  .strip{display:flex;gap:6px;overflow-x:auto;padding:8px 16px 10px;scrollbar-width:none}
+  .strip button{flex:none;width:50px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 0 5px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11px;color:var(--mute)}
+  .strip button b{font-size:16px;color:var(--ink)}
+  .strip button.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .strip button.dr{background:var(--draft);border-color:var(--draftline)}
+  .strip button.pastd{opacity:.55}
+  .strip .wk{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);font-size:10.5px;font-weight:700;color:var(--mute);text-transform:uppercase;text-align:center}
+  .bigm{background:#fff;border-radius:14px;margin:10px 16px;padding:14px;box-shadow:0 1px 2px #0001}
+  .bigm .nm{font-size:18px;font-weight:700;margin:2px 0}
+  .bigm .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+  .bigm .acts button{border:1px solid var(--line);background:#faf9f6;border-radius:10px;padding:8px 0;font-size:12.5px;display:flex;flex-direction:column;align-items:center}
+  .bigm .acts button span{font-size:17px}
+  .bigm.ty-out{background:#f7f2fc} .bigm.ty-open{background:repeating-linear-gradient(135deg,#fff 0 8px,#f4f3ef 8px 16px)}
+  /* shell */
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .sticky{position:fixed;bottom:124px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:388px;z-index:11;box-shadow:0 4px 14px #0003;border-radius:12px}
+  .shade{position:fixed;inset:0;background:#0006;z-index:50}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:420px;max-height:82vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;z-index:51;padding:16px 16px 80px}
+  .opt{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--accent)}
+  .step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .step button{border:0;background:#f4f3ef;width:30px;height:28px}
+  .step span{min-width:58px;text-align:center;font-size:13px}
+  .mv{display:grid;grid-template-columns:40px repeat(4,1fr);gap:4px;font-size:11.5px;margin-top:8px}
+  .mv button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 2px;min-height:40px;font-size:10.5px;line-height:1.15}
+  .mv button:disabled{opacity:.35}
+  .mv button.me{border-color:var(--accent);background:var(--soft)}
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 14px;border-radius:10px;z-index:98;font-size:13px;display:flex;gap:12px;align-items:center;max-width:92vw}
+  .toast button{background:none;border:0;color:#9db4ff;font-weight:700;padding:0}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sheet"></div>
+<div id="toastbox"></div>
+<div id="sw"></div>
+
+<script>
+// ---------- constants ----------
+const TARGET = 2000;
+const SHARE = [475, 570, 665, 190];              // 25/30/35/10 of 2,000, planned to 95%
+const SLOT = ["Breakfast","Lunch","Dinner","Snack"];
+const SL = ["B","L","D","S"];
+const TIME = ["8:00","12:00","18:00","any time"];
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+
+// ---------- data ----------
+// m: d dish, k kcal, t minutes, ty cook|left|out|open|prep, from (leftover source), nw new, fav, needs [[item,status]] status need|list|bought,
+//    eaten (logged kcal), label/aim for Eating Out, ch {from, by, when, why}
+const M = (d,k,t,x={}) => ({d,k,t,ty:"cook",...x});
+const Y = () => M("Yogurt & granola",470,5,{fav:true});
+const AP = () => M("Apple + peanut butter",190,3,{fav:true});
+function fresh(){
+  const thisWeek = {
+    key:"this", label:"This week", range:"Sep 28 – Oct 4", approved:true, approvedAt:"Fri Sep 25, 5:40pm",
+    days:[
+      {n:"Mon", date:"Sep 28", past:true, m:[{...Y(),eaten:470}, M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session",eaten:770}), M("Burrito bowl",660,30,{eaten:660}), {...AP(),eaten:190}]},
+      {n:"Tue", date:"Sep 29", past:true, m:[{...Y(),eaten:470}, M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650,eaten:650}), M("Turkey wraps",430,20,{eaten:430,fav:true,ch:{from:"Salmon & rice",by:"You",when:"Mon 9:12pm",why:"asked in chat; Pantry first"}}), {...AP(),eaten:190}]},
+      {n:"Wed", date:"Sep 30", past:true, busy:true, m:[{...Y(),eaten:470}, M("Chili & cornbread",570,5,{ty:"left",from:"Sunday's Prep Session",eaten:870}), M("Turkey wraps",420,15,{eaten:420,ch:{from:"Burrito bowl",by:"Rebalance",when:"Wed 2:10pm",why:"lunch went 300 over"}}), {...AP(),eaten:190}]},
+      {n:"Thu", date:"Oct 1", past:true, m:[{...Y(),eaten:470}, M("Chicken rice bowl",560,15,{eaten:560}), M("Beef stir-fry",640,30,{eaten:640}), M("Greek yogurt",150,1,{eaten:150,ch:{from:"Apple + peanut butter",by:"You",when:"Thu 3:05pm",why:"out of apples"}})]},
+      {n:"Fri", date:"Oct 2", today:true, m:[{...Y(),eaten:470}, M("Beef stir-fry",480,5,{ty:"left",from:"Thursday's dinner",eaten:480}), M("Pizza night",800,0,{ty:"out",label:"Pizza night",aim:800}), AP()]},
+      {n:"Sat", date:"Oct 3", m:[M("Eggs & toast",460,10), M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session"}), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
+      {n:"Sun", date:"Oct 4", prep:{text:"Prep Session, 2 pm, 1 h 50 min: chickpea curry (Mon + Wed lunch) and oatmeal cookies (weekday snacks)", draft:true}, m:[M("Pancakes & berries",480,20,{needs:[["berries","bought"]]}), M("Chicken rice bowl",560,15), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
+    ],
+    changes:[]
+  };
+  thisWeek.changes = [
+    {di:5,si:2,from:"Salmon & rice",to:"Shrimp tacos",by:"You",when:"Thu 8:30pm",why:"Asked in chat. Grocery List: − salmon, + shrimp"},
+    {di:3,si:3,from:"Apple + peanut butter",to:"Greek yogurt",by:"You",when:"Thu 3:05pm",why:"Out of apples. From the Pantry"},
+    {di:2,si:2,from:"Burrito bowl",to:"Turkey wraps",by:"Rebalance",when:"Wed 2:10pm",why:"Lunch went 300 over. Proposed by the Agent, you said yes"},
+    {di:1,si:2,from:"Salmon & rice",to:"Turkey wraps",by:"You",when:"Mon 9:12pm",why:"Asked in chat. From the Pantry"},
+  ];
+  const C = () => M("Oatmeal cookie",150,0,{ty:"prep",from:"Sunday's Prep Session"});
+  const nextWeek = {
+    key:"next", label:"Next week", range:"Oct 5 – 11", approved:false, draftAt:"Fri Oct 2, 3:25pm",
+    intro:[
+      "A 150-kcal sweet snack on weekdays: oatmeal cookies from Sunday's Prep Session",
+      "No salmon (saved as a soft Dislike)",
+      "One new chickpea Dish: chickpea curry, cooked Sunday, for Mon and Wed lunch",
+      "Pizza night aim raised to 1,000, with a lighter Friday lunch (lentil soup, 410)",
+    ],
+    days:[
+      {n:"Mon", date:"Oct 5", m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",nw:true,from:"Sunday's Prep Session",needs:[["chickpeas","bought"]]}), M("Turkey wraps",620,20,{fav:true}), C()]},
+      {n:"Tue", date:"Oct 6", m:[Y(), M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650}), M("Beef stir-fry",640,30,{fav:true,needs:[["bell pepper","need"]]}), C()]},
+      {n:"Wed", date:"Oct 7", busy:true, m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",from:"Sunday's Prep Session"}), M("Rotisserie chicken & salad",600,10,{needs:[["rotisserie chicken","need"]]}), C()]},
+      {n:"Thu", date:"Oct 8", m:[M("Eggs & toast",460,10), M("Beef stir-fry",560,5,{ty:"left",from:"Tuesday's dinner"}), M("Lemon chicken & orzo",650,55,{nw:true,needs:[["orzo","need"],["lemons","need"]]}), C()]},
+      {n:"Fri", date:"Oct 9", m:[Y(), M("Lentil soup",410,10), M("Pizza night",1000,0,{ty:"out",label:"Pizza night",aim:1000}), M("Open",100,0,{ty:"open"})]},
+      {n:"Sat", date:"Oct 10", m:[M("Pancakes & berries",480,20,{needs:[["berries","need"]]}), M("Lemon chicken & orzo",560,5,{ty:"left",from:"Thursday's dinner"}), M("Chili",650,90,{fav:true}), AP()]},
+      {n:"Sun", date:"Oct 11", m:[M("Eggs & toast",460,10), M("Chili",570,5,{ty:"left",from:"Saturday's dinner"}), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
+    ],
+    changes:[]
+  };
+  return {weeks:{this:thisWeek, next:nextWeek}};
+}
+let S = fresh();
+let undoStack = [];
+let ui = {wk: params.get("week") || "this", day: {w:"this", i:4}, open:{}, sheet:null, review:true, showChanges:false};
+
+// Swap pool per slot. Pantry fit first after approval (#06).
+const POOL = [
+  [M("Yogurt & granola",470,5,{fav:true}), M("Eggs & toast",460,10), M("Overnight oats",450,5,{nw:true,needs:[["chia seeds","need"]]}), M("Pancakes & berries",480,20,{needs:[["berries","need"]]}), M("Breakfast burrito",490,15)],
+  [M("Chicken rice bowl",560,15), M("Turkey wraps",540,10,{fav:true}), M("Lentil soup",410,10), M("Tuna salad sandwich",520,10,{needs:[["tuna","need"]]}), M("Chickpea salad",500,10,{nw:true})],
+  [M("Turkey wraps",620,20,{fav:true}), M("Beef stir-fry",640,30,{fav:true,needs:[["bell pepper","need"]]}), M("Sheet-pan chicken & veg",640,45,{fav:true}), M("Chickpea curry & rice",600,40,{nw:true}), M("Pork chops & potatoes",660,40,{nw:true,needs:[["pork chops","need"]]}), M("Chili",650,90,{fav:true})],
+  [M("Apple + peanut butter",190,3,{fav:true}), M("Greek yogurt",150,1), M("Hummus & carrots",170,3), M("Dark chocolate square",150,0,{needs:[["dark chocolate","list"]]})],
+];
+const WHY = {
+  "Yogurt & granola":"Favorite · all in Pantry", "Eggs & toast":"All in Pantry", "Overnight oats":"New · needs chia seeds", "Pancakes & berries":"Needs berries", "Breakfast burrito":"All in Pantry",
+  "Chicken rice bowl":"All in Pantry", "Turkey wraps":"Favorite · all in Pantry", "Lentil soup":"All in Pantry · light", "Tuna salad sandwich":"Needs tuna", "Chickpea salad":"New · chickpeas in Pantry",
+  "Beef stir-fry":"Favorite · needs bell pepper", "Sheet-pan chicken & veg":"Favorite · all in Pantry", "Chickpea curry & rice":"New · all in Pantry", "Pork chops & potatoes":"New · needs pork chops", "Chili":"Favorite · all in Pantry, 90 min",
+  "Apple + peanut butter":"Favorite · all in Pantry", "Greek yogurt":"All in Pantry", "Hummus & carrots":"All in Pantry", "Dark chocolate square":"On your Grocery List",
+};
+
+// ---------- helpers ----------
+const W = k => S.weeks[k];
+const kcal = m => m.ty==="out" ? m.aim : m.k;
+const dayTotal = d => d.m.reduce((a,m)=>a+kcal(m),0);
+const isWeekend = d => d.n==="Sat" || d.n==="Sun";
+function limit(d,si){ if(d.busy) return 15; return [10,15,isWeekend(d)?90:45,5][si]; }
+function overTime(d,si,m){ return (m.ty==="cook") && m.t > limit(d,si); }
+function locked(w,di,si){ const d=W(w).days[di]; return d.past || m_eaten(d.m[si]); }
+const m_eaten = m => m.eaten!=null;
+function title(m){ return m.ty==="out" ? "⌂ "+m.label : m.ty==="open" ? "Open" : m.d; }
+function needsHtml(m, w){
+  if(!m.needs || !m.needs.length) return "";
+  return m.needs.map(([it,st]) => st==="bought" ? `<span class="chip bought">${it} · bought ✓</span>`
+    : st==="list" ? `<span class="chip need">Needs: ${it} · on Grocery List</span>`
+    : `<span class="chip need">Needs: ${it}${W(w).approved?" · on Grocery List":" · goes on the list when approved"}</span>`).join("");
+}
+function chips(w,di,si,opt={}){
+  const d=W(w).days[di], m=d.m[si], c=[];
+  if(m.ty==="out") c.push(`<span class="chip out">Eating Out · aim ${fmt(m.aim)}</span>`);
+  if(m.ty==="open") c.push(`<span class="chip">${fmt(m.k)} set aside, nothing planned</span>`);
+  if(m.ty==="left") c.push(`<span class="chip left">↺ from ${m.from}</span>`);
+  if(m.ty==="prep") c.push(`<span class="chip prep">🍳 from ${m.from}</span>`);
+  if(m.nw) c.push(`<span class="chip new">★ New</span>`);
+  if(m.fav && !opt.short) c.push(`<span class="chip fav">♥ Favorite</span>`);
+  if(overTime(d,si,m)) c.push(`<span class="chip time">⏱ ${m.t} min · limit ${limit(d,si)}</span>`);
+  else if(m.t && m.ty==="cook" && !opt.short) c.push(`<span class="chip">${m.t} min</span>`);
+  c.push(needsHtml(m,w));
+  if(m.ch && W(w).approved) c.push(`<span class="chip chg">Changed · was ${m.ch.from}</span>`);
+  return c.join("");
+}
+function missingCount(w){
+  const set=new Set();
+  W(w).days.forEach(d=>{ if(d.past) return; d.m.forEach(m=>(m.needs||[]).forEach(([it,st])=>{ if(st!=="bought") set.add(it); })); });
+  return set.size;
+}
+function missingList(w){
+  const set=new Set();
+  W(w).days.forEach(d=>{ if(d.past) return; d.m.forEach(m=>(m.needs||[]).forEach(([it,st])=>{ if(st!=="bought") set.add(it); })); });
+  return [...set];
+}
+function totalLine(d){
+  const t=dayTotal(d), over=t>TARGET;
+  return `<span class="${over?'warn':''}" style="font-weight:600">${fmt(t)}</span><span class="mute"> / ${fmt(TARGET)}</span>`;
+}
+function totalBar(d){ const t=dayTotal(d); return `<div class="bar"><i class="${t>TARGET?'over':''}" style="width:${Math.min(100,t/TARGET*100)}%"></i></div>`; }
+
+// ---------- state changes (all undoable) ----------
+function snapshot(){ undoStack.push(JSON.stringify(S)); if(undoStack.length>30) undoStack.shift(); }
+function undo(){ if(!undoStack.length) return; S=JSON.parse(undoStack.pop()); closeSheet(); toast("Undone"); render(); }
+function record(w,di,si,from,to,why){
+  const wk=W(w); if(!wk.approved) return;
+  const m=wk.days[di].m[si];
+  m.ch = {from: m.ch ? m.ch.from : from, by:"You", when:"just now", why};
+  wk.changes.unshift({di,si,from,to,by:"You",when:"just now",why});
+}
+function groceryNote(w, oldM, newM){
+  if(!W(w).approved) return "";
+  const add=(newM.needs||[]).filter(([_,s])=>s!=="bought").map(([i])=>i);
+  newM.needs=(newM.needs||[]).map(([i,s])=>[i,s==="need"?"list":s]);
+  const drop=(oldM.needs||[]).filter(([_,s])=>s==="list").map(([i])=>i);
+  const bits=[]; if(add.length) bits.push("+ "+add.join(", ")); if(drop.length) bits.push("− "+drop.join(", ")+" (unticked)");
+  return bits.length ? ` Grocery List: ${bits.join(" · ")}.` : "";
+}
+function doSwap(w,di,si,pi){
+  snapshot();
+  const d=W(w).days[di], old=d.m[si], nm=JSON.parse(JSON.stringify(POOL[si][pi]));
+  const g=groceryNote(w,old,nm);
+  d.m[si]=nm; record(w,di,si,title(old),nm.d,"Swapped on the page."+g);
+  closeSheet(); toast(`${d.n} ${SLOT[si].toLowerCase()}: ${title(old)} → ${nm.d}.${g}`, true); render();
+}
+function doClear(w,di,si){
+  snapshot();
+  const d=W(w).days[di], old=d.m[si];
+  const g=groceryNote(w,old,{needs:[]});
+  d.m[si]=M("Open",SHARE[si],0,{ty:"open"}); record(w,di,si,title(old),"Open","Cleared on the page."+g);
+  closeSheet(); toast(`${d.n} ${SLOT[si].toLowerCase()} is now Open (${SHARE[si]} set aside).${g}`, true); render();
+}
+function doMove(w,di,si,dj,sj){
+  snapshot();
+  const wk=W(w), a=wk.days[di].m[si], b=wk.days[dj].m[sj];
+  wk.days[di].m[si]=b; wk.days[dj].m[sj]=a;
+  record(w,dj,sj,title(b),title(a),`Moved from ${wk.days[di].n} ${SLOT[si].toLowerCase()}.`);
+  record(w,di,si,title(a),title(b),`Moved from ${wk.days[dj].n} ${SLOT[sj].toLowerCase()}.`);
+  closeSheet(); toast(`Moved ${title(a)} to ${wk.days[dj].n} ${SLOT[sj].toLowerCase()}; ${title(b)} took its place.`, true); render();
+}
+function saveEdit(w,di,si){
+  const e=ui.sheet.edit, d=W(w).days[di], m=d.m[si];
+  const newK=Math.round(e.reduce((a,x)=>a+x.g*x.kpg,0));
+  if(newK===m.k){ closeSheet(); return; }
+  snapshot();
+  const was=m.k; m.k=newK; if(m.ty==="out") m.aim=newK;
+  record(w,di,si,`${m.d} (${fmt(was)})`,`${m.d} (${fmt(newK)})`,"Amounts edited on the page.");
+  closeSheet(); toast(`${m.d}: ${fmt(was)} → ${fmt(newK)} kcal. ${d.n} is now ${fmt(dayTotal(d))}.`, true); render();
+}
+function approve(){
+  snapshot();
+  const wk=W("next"); wk.approved=true; wk.approvedAt="Fri Oct 2, just now";
+  const items=missingList("next");
+  wk.days.forEach(d=>d.m.forEach(m=>{ if(m.needs) m.needs=m.needs.map(([i,s])=>[i,s==="need"?"list":s]); }));
+  W("this").days[6].prep.draft=false;
+  toast(`Next week approved. Grocery List: + ${items.join(", ")}.`, true); render();
+}
+
+// ---------- sheet (shared by all layouts) ----------
+function openSheet(w,di,si){ ui.sheet={w,di,si,mode:"menu"}; renderSheet(); }
+function closeSheet(){ ui.sheet=null; renderSheet(); }
+function sheetMode(mode){
+  ui.sheet.mode=mode;
+  if(mode==="edit"){
+    const m=W(ui.sheet.w).days[ui.sheet.di].m[ui.sheet.si];
+    const parts = m.ty==="out" ? [["Calorie aim",1]] : m.d.includes("&") ? [[m.d.split(" & ")[0],.6],[m.d.split(" & ")[1],.4]] : m.d.includes("+") ? [[m.d.split(" + ")[0],.5],[m.d.split(" + ")[1],.5]] : [[m.d,1]];
+    ui.sheet.edit = parts.map(([name,share])=>{ const k=m.k*share; const g = m.ty==="out" ? k : Math.round(k/1.6/5)*5; return {name, g, kpg: k/g, step: m.ty==="out"?50:10, unit: m.ty==="out"?"kcal":"g"}; });
+  }
+  renderSheet();
+}
+function editStep(i,dir){ const e=ui.sheet.edit[i]; e.g=Math.max(0,e.g+dir*e.step); renderSheet(); }
+function renderSheet(){
+  const el=document.getElementById("sheet");
+  if(!ui.sheet){ el.innerHTML=""; return; }
+  const {w,di,si,mode}=ui.sheet, wk=W(w), d=wk.days[di], m=d.m[si];
+  const head = `<div class="row"><div class="sp"><div class="tag mute">${d.n} ${d.date} · ${SLOT[si]}${si<3?" · "+TIME[si]:""}${wk.approved?"":" · Draft"}</div><h2>${title(m)}</h2></div><button class="btn ghost" onclick="closeSheet()">✕</button></div>`;
+  let body="";
+  if(mode==="menu"){
+    const lk=locked(w,di,si);
+    body = `<div class="small" style="margin:6px 0 4px"><b>${fmt(kcal(m))}</b> kcal · share ${SHARE[si]}${m.t?` · ${m.t} min`:""}</div><div>${chips(w,di,si)}</div>
+      ${m.ch && wk.approved ? `<div class="small mute" style="margin-top:8px">Changed by ${m.ch.by}, ${m.ch.when}: was <span class="strike">${m.ch.from}</span>. ${m.ch.why||""}</div>`:""}
+      ${lk ? `<div class="card" style="margin:12px 0 0;background:#f4f3ef">Already ${m_eaten(m)?"logged ("+fmt(m.eaten)+" kcal)":"past"}. Change what you ate on Today.</div>`
+      : `<div class="bigm" style="margin:12px 0 0;padding:0;box-shadow:none"><div class="acts" style="margin:0">
+          <button onclick="sheetMode('swap')"><span>⇄</span>Swap</button><button onclick="sheetMode('edit')"><span>✎</span>Edit</button>
+          <button onclick="sheetMode('move')"><span>↔</span>Move</button><button onclick="doClear('${w}',${di},${si})"><span>✕</span>Clear</button></div></div>`}
+      <button class="btn ghost" style="margin-top:10px" onclick="toast('Opens Chat with this meal attached')">Ask the Agent about this meal ›</button>`;
+  }
+  if(mode==="swap"){
+    let alts = POOL[si].map((x,i)=>({x,i})).filter(({x})=>x.d!==m.d);
+    if(wk.approved) alts.sort((a,b)=>(a.x.needs?1:0)-(b.x.needs?1:0));   // Pantry first after approval
+    alts = alts.slice(0,3);
+    body = `<div class="small mute" style="margin:6px 0">3 alternatives for ${SLOT[si].toLowerCase()} (share ${SHARE[si]})${wk.approved?", Pantry first":""}. Today stays ${fmt(dayTotal(d))} → shown per option.</div>
+      ${alts.map(({x,i})=>{ const nt=dayTotal(d)-kcal(m)+x.k; return `<div class="opt" onclick="doSwap('${w}',${di},${si},${i})"><div class="row"><b class="sp">${x.d}</b><span>${fmt(x.k)}</span></div>
+        <div class="small mute">${WHY[x.d]||""} · ${x.t} min · day → <span class="${nt>TARGET?'warn':''}">${fmt(nt)}</span></div>${x.needs&&wk.approved?`<div class="xs warn">Adds ${x.needs.map(n=>n[0]).join(", ")} to the Grocery List</div>`:""}</div>`; }).join("")}
+      <div class="row" style="margin-top:10px"><button class="btn ghost" onclick="toast('The Agent would offer 3 more')">Show 3 more</button><span class="sp"></span><button class="btn ghost" onclick="sheetMode('menu')">‹ Back</button></div>`;
+  }
+  if(mode==="edit"){
+    const e=ui.sheet.edit, nk=Math.round(e.reduce((a,x)=>a+x.g*x.kpg,0)), nt=dayTotal(d)-kcal(m)+nk;
+    body = `<div class="small mute" style="margin:6px 0">${m.ty==="out"?"Change the calorie aim for this Eating Out meal.":"Change the amounts. Calories update as you go."}</div>
+      ${e.map((x,i)=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="sp">${x.name}</span><span class="step"><button onclick="editStep(${i},-1)">−</button><span>${fmt(x.g)} ${x.unit}</span><button onclick="editStep(${i},1)">+</button></span></div>`).join("")}
+      ${m.ty!=="out"?`<button class="btn ghost" onclick="toast('Adds an ingredient line (search the Food Library)')">+ Add ingredient</button>`:""}
+      <div class="row" style="margin-top:8px"><span class="sp">Meal <b>${fmt(nk)}</b> · share ${SHARE[si]}</span><span>Day <b class="${nt>TARGET?'warn':''}">${fmt(nt)}</b> / ${fmt(TARGET)}</span></div>
+      ${nt>TARGET?`<div class="small warn">This puts ${d.n} over the Calorie Target.</div>`:""}
+      <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="sheetMode('menu')">‹ Back</button><span class="sp"></span><button class="btn" onclick="saveEdit('${w}',${di},${si})">Save</button></div>`;
+  }
+  if(mode==="move"){
+    body = `<div class="small mute" style="margin:6px 0">Tap a slot. The two meals trade places.</div>
+      <div class="mv"><span></span>${SL.map(s=>`<b class="xs mute" style="text-align:center">${s}</b>`).join("")}
+      ${wk.days.map((dd,j)=>`<b class="xs" style="align-self:center">${dd.n}</b>${dd.m.map((mm,k)=>`<button ${ (j===di&&k===si)?'class="me" disabled':''} ${locked(w,j,k)?"disabled":""} onclick="doMove('${w}',${di},${si},${j},${k})">${title(mm).slice(0,16)}</button>`).join("")}`).join("")}</div>
+      <div class="xs mute" style="margin-top:6px">Moving across slots changes the calorie share, so the portion is resized (not shown in this prototype).</div>
+      <button class="btn ghost" style="margin-top:8px" onclick="sheetMode('menu')">‹ Back</button>`;
+  }
+  el.innerHTML = `<div class="shade" onclick="closeSheet()"></div><div class="sheet">${head}${body}</div>`;
+}
+
+// ---------- shared bits for the week header ----------
+function draftBanner(){
+  const wk=W("next");
+  if(wk.approved) return `<div class="card small" style="background:#f3faf5;border:1px solid #bfe0cb">✓ Approved ${wk.approvedAt}. The Grocery List has its Missing Ingredients. Changes from now on are marked.</div>`;
+  return `<div class="card draftband"><div class="row"><span class="tag" style="color:#8a6d00">Draft · waiting for your yes</span><span class="sp"></span><span class="xs mute">${wk.draftAt}</span></div>
+    <div class="small" style="margin-top:6px">Built with what you accepted in the reflection:</div>
+    <ul class="small" style="margin:4px 0 0;padding-left:18px">${wk.intro.map(x=>`<li>${x}</li>`).join("")}</ul>
+    <div class="small mute" style="margin-top:6px">Plus: Busy Wednesday (15-min meals), 2 new Dishes, leftovers first. The Prep Session goes on this Sunday.</div></div>`;
+}
+function changesList(w, compact){
+  const wk=W(w);
+  if(!wk.approved) return "";
+  if(!wk.changes.length) return `<div class="small mute">No changes since approval.</div>`;
+  return wk.changes.map(c=>`<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);align-items:flex-start"><span class="dot" style="margin-top:6px"></span>
+    <div class="sp"><div class="small"><b>${wk.days[c.di].n} ${SLOT[c.si].toLowerCase()}</b>: <span class="strike">${c.from}</span> → ${c.to}</div>
+    <div class="xs mute">${c.by} · ${c.when}${compact?"":" · "+c.why}</div></div></div>`).join("");
+}
+function missingCard(w){
+  const n=missingCount(w), list=missingList(w), wk=W(w);
+  if(!n) return `<span class="chip bought">Missing Ingredients: none</span>`;
+  return `<span class="chip need" title="${list.join(', ')}">🛒 ${n} Missing Ingredient${n>1?"s":""}${wk.approved?" · on Grocery List":""}</span>`;
+}
+
+// ---------- Variant A: week grid ----------
+function VariantA(){
+  const w=ui.wk, wk=W(w);
+  const segs = `<div class="seg"><button class="${w==='this'?'on':''}" onclick="ui.wk='this';render()">This week · ${W('this').range}</button><button class="${w==='next'?'on':''}" onclick="ui.wk='next';render()">Next week ${W('next').approved?"":`<span class="tag" style="color:#8a6d00">· Draft</span>`}</button></div>`;
+  const head = `<div class="row" style="padding:16px 16px 10px"><h2 class="sp">Meal Plan</h2><button class="btn ghost" onclick="toast('Schedules and the meal split live in Settings')">☰</button></div>`;
+  const status = w==="next" ? draftBanner() : `<div class="row wrap" style="margin:10px 16px 0;gap:6px"><span class="small mute">Approved ${wk.approvedAt}</span><span class="sp"></span>
+      <button class="chip chg" style="border:0" onclick="ui.showChanges=!ui.showChanges;render()">● ${wk.changes.length} changes since approval ${ui.showChanges?"▴":"▾"}</button></div>
+      ${ui.showChanges?`<div class="card" style="padding:6px 14px">${changesList(w)}</div>`:""}`;
+  const grid = `<div style="padding:8px 13px 0"><table class="grid"><tr><th></th>${SLOT.map((s,i)=>`<th>${s.slice(0,5)}<br><span style="font-weight:400">${SHARE[i]}</span></th>`).join("")}<th style="text-align:right">Day</th></tr>
+    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]}</div>${d.busy?`<div class="xs" title="Busy Day" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17" title="${d.prep.text}">🍳Prep</div>`:""}</td>
+      ${d.m.map((m,si)=>{ const ic=[m.ty==="left"?"↺":"",m.ty==="prep"?"🍳":"",m.nw?"★":"",overTime(d,si,m)?"⏱":"",(m.needs||[]).some(n=>n[1]!=="bought")?"🛒":"",m_eaten(m)?"✓":""].join("");
+        return `<td class="ty-${m.ty} ${d.past||m_eaten(m)?'past':''} ${m.ch&&wk.approved?'chg':''}" onclick="openSheet('${w}',${di},${si})"><div style="font-weight:600">${title(m).replace("⌂ ","")}</div><div class="k">${fmt(kcal(m))}</div><div class="ic">${ic}</div></td>`; }).join("")}
+      <td class="tot ${dayTotal(d)>TARGET?'over':''}">${fmt(dayTotal(d))}</td></tr>`).join("")}
+    </table></div>
+    <div class="xs mute" style="margin:6px 16px">↺ leftover · 🍳 Prep Session · ★ new · ⏱ over time limit · 🛒 Missing Ingredient · ✓ logged · <span class="dot"></span> changed. Tap any meal to swap, edit, move or clear.</div>`;
+  const prep = wk.days.filter(d=>d.prep).map(d=>`<div class="card small" style="background:#faf5e8">🍳 <b>${d.n} ${d.date}</b>: ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· part of next week's draft</span>`:""}</div>`).join("");
+  const miss = `<div class="row" style="margin:6px 16px">${missingCard(w)}<span class="sp"></span><span class="xs mute">${missingList(w).join(", ")}</span></div>`;
+  const approveBar = w==="next" && !wk.approved ? `<div class="sticky row" style="background:#fff;padding:8px"><button class="btn line sm" onclick="toast('Opens Chat: What do you want to change?')">Change something</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve next week</button></div>` : "";
+  return head + segs + status + miss + grid + prep + approveBar;
+}
+
+// ---------- Variant B: list of days ----------
+function mealRow(w,di,si){
+  const d=W(w).days[di], m=d.m[si], lk=locked(w,di,si), key=w+di+si, open=ui.open[key];
+  const chg = m.ch && W(w).approved;
+  return `<div class="meal" style="${chg?'background:#fffaf1':''}"><div class="sl">${SLOT[si]}<div style="font-weight:400;text-transform:none">${si<3?TIME[si]:""}</div></div>
+    <div class="sp">
+      ${chg?`<div class="xs strike">${m.ch.from}</div>`:""}
+      <div class="row"><b class="sp">${title(m)}</b><span>${fmt(kcal(m))}<span class="xs mute"> / ${SHARE[si]}</span></span></div>
+      ${m_eaten(m)?`<div class="xs good">✓ logged ${fmt(m.eaten)}${m.eaten>kcal(m)?` <span class="warn">(+${m.eaten-kcal(m)})</span>`:""}</div>`:""}
+      <div>${chips(w,di,si,{short:true})}</div>
+      ${chg?`<div class="xs" style="color:#9a5a00;margin-top:3px">Changed by ${m.ch.by}, ${m.ch.when}</div>`:""}
+      ${lk?"":open?`<div class="acts"><button class="btn line sm" onclick="openSheet('${w}',${di},${si});sheetMode('swap')">⇄ Swap</button><button class="btn line sm" onclick="openSheet('${w}',${di},${si});sheetMode('edit')">✎ Edit</button><button class="btn line sm" onclick="openSheet('${w}',${di},${si});sheetMode('move')">↔ Move</button><button class="btn line sm" onclick="doClear('${w}',${di},${si})">✕</button></div>`
+        :`<button class="btn ghost xs" style="padding:4px 0" onclick="ui.open['${key}']=1;render()">Change ›</button>`}
+    </div></div>`;
+}
+function dayCard(w,di){
+  const wk=W(w), d=wk.days[di], k=w+"d"+di;
+  if(d.past && !ui.open[k]) return `<div class="dayc" style="opacity:.7"><div class="hd" style="border:0;cursor:pointer" onclick="ui.open['${k}']=1;render()"><b>${d.n} ${d.date}</b><span class="xs mute">done</span>${d.m.some(m=>m.ch)?`<span class="dot"></span>`:""}<span class="sp"></span><span class="small">${totalLine(d)}</span><span class="mute">▾</span></div></div>`;
+  return `<div class="dayc" id="${k}" style="${w==='next'&&!wk.approved?'border:1px dashed var(--draftline)':''}"><div class="hd" style="${d.today?'background:var(--soft)':''}"><div class="sp"><b>${d.n} ${d.date}</b>${d.today?` <span class="tag" style="color:var(--accent)">Today</span>`:""}${d.busy?` <span class="chip time">Busy Day · 15 min</span>`:""}
+    <div style="margin-top:5px;width:150px">${totalBar(d)}</div></div><span class="small">${totalLine(d)}</span></div>
+    ${d.prep?`<div class="meal" style="background:#faf5e8"><div class="sl">Prep</div><div class="small sp">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div></div>`:""}
+    ${d.m.map((_,si)=>mealRow(w,di,si)).join("")}</div>`;
+}
+function VariantB(){
+  const t=W("this"), n=W("next");
+  return `<div class="row" style="padding:16px 16px 6px"><h2 class="sp">Meal Plan</h2><button class="btn line sm" onclick="document.getElementById('next-top').scrollIntoView({behavior:'smooth'})">Next week ↓</button></div>
+    <div class="card small"><div class="row"><b class="sp">This week · ${t.range}</b>${missingCard("this")}</div>
+      <div class="mute" style="margin-top:4px">Approved ${t.approvedAt} · <span class="dot"></span> ${t.changes.length} changes since, marked on each meal</div>
+      <button class="btn ghost small" onclick="ui.showChanges=!ui.showChanges;render()">${ui.showChanges?"Hide":"See all"} changes</button>${ui.showChanges?changesList("this"):""}</div>
+    ${t.days.map((_,di)=>dayCard("this",di)).join("")}
+    <div class="divider" id="next-top">Next week · ${n.range}</div>
+    ${draftBanner()}
+    <div class="row" style="margin:0 16px">${missingCard("next")}<span class="sp"></span><span class="xs mute">${missingList("next").join(", ")}</span></div>
+    ${n.days.map((_,di)=>dayCard("next",di)).join("")}
+    ${n.approved?"":`<div class="card draftband"><b>Happy with next week?</b><div class="small mute" style="margin:4px 0 10px">Approving adds ${missingCount("next")} Missing Ingredients to the Grocery List and confirms this Sunday's Prep Session.</div>
+      <div class="row"><button class="btn line" onclick="toast('Opens Chat: What do you want to change?')">Change something</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve</button></div></div>
+      <div class="sticky row draftband" style="padding:8px 10px"><span class="small sp"><b>Next week is a draft</b></span><button class="btn good sm" onclick="approve()">Approve</button></div>`}`;
+}
+
+// ---------- Variant C: one day at a time ----------
+function stripBtn(w,di){
+  const wk=W(w), d=wk.days[di], t=dayTotal(d), on=ui.day.w===w&&ui.day.i===di;
+  const dots=[d.m.some(m=>m.ch)&&wk.approved?`<span class="dot"></span>`:"", d.m.some(m=>(m.needs||[]).some(n=>n[1]!=="bought"))?"🛒":"", t>TARGET?`<span style="color:var(--warn)">●</span>`:""].join("");
+  return `<button class="${on?'on':''} ${wk.approved?'':'dr'} ${d.past?'pastd':''}" onclick="ui.day={w:'${w}',i:${di}};ui.review=false;render()">${d.n}<b>${d.date.split(" ")[1]}</b><span style="height:12px;font-size:9px">${dots||"&nbsp;"}</span></button>`;
+}
+function VariantC(){
+  const {w,i}=ui.day, wk=W(w), d=wk.days[i];
+  const strip = `<div class="strip" id="strip"><span class="wk">This wk</span>${W("this").days.map((_,di)=>stripBtn("this",di)).join("")}
+    <span class="wk" style="color:${W('next').approved?'var(--mute)':'#8a6d00'}">Next${W("next").approved?"":" · draft"}</span>${W("next").days.map((_,di)=>stripBtn("next",di)).join("")}</div>`;
+  const head = `<div class="row" style="padding:16px 16px 0"><h2 class="sp">Meal Plan</h2>
+    ${W("this").changes.length?`<button class="chip chg" style="border:0" onclick="ui.showChanges=!ui.showChanges;render()">● ${W("this").changes.length} changes</button>`:""}
+    ${!W("next").approved?`<button class="btn sm" style="background:#8a6d00" onclick="ui.review=true;ui.day={w:'next',i:0};render()">Review draft</button>`:""}</div>`;
+  if(ui.showChanges) return head + strip + `<div class="card"><div class="row"><h3 class="sp">Changes since approval · this week</h3><button class="btn ghost" onclick="ui.showChanges=false;render()">✕</button></div>${changesList("this")}
+      <div class="small mute" style="margin-top:8px">Each change has undo in the Activity Log (Settings).</div></div>`;
+  if(ui.review && !W("next").approved){
+    const n=W("next");
+    return head + strip + `<div class="card draftband"><div class="tag" style="color:#8a6d00">Next week · ${n.range} · Draft</div>
+      <h2 style="margin:6px 0">Here's next week</h2>
+      <div class="small">From your reflection:</div><ul class="small" style="margin:4px 0;padding-left:18px">${n.intro.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <table style="width:100%;font-size:13px;margin-top:8px;border-collapse:collapse">${n.days.map((dd,di)=>`<tr style="border-top:1px solid var(--draftline);cursor:pointer" onclick="ui.day={w:'next',i:${di}};ui.review=false;render()"><td style="padding:5px 0"><b>${dd.n}</b></td><td class="small">${dd.m[2].ty==="out"?"⌂ "+dd.m[2].label:dd.m[2].d}${dd.busy?" · Busy":""}${dd.m.some(m=>m.nw)?" ★":""}${dd.m.some((m,si)=>overTime(dd,si,m))?" ⏱":""}</td><td style="text-align:right" class="${dayTotal(dd)>TARGET?'warn':''}">${fmt(dayTotal(dd))}</td><td class="mute">›</td></tr>`).join("")}</table>
+      <div class="row wrap" style="margin-top:10px">${missingCard("next")}<span class="xs mute">${missingList("next").join(", ")}</span></div>
+      <div class="small" style="margin-top:6px">🍳 Prep Session this Sunday (Oct 4), 1 h 50 min: chickpea curry and oatmeal cookies.</div>
+      <div class="row" style="margin-top:14px"><button class="btn line" onclick="ui.review=false;ui.day={w:'next',i:0};render()">Go day by day</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve</button></div>
+      <button class="btn ghost small" onclick="toast('Opens Chat: What do you want to change?')">Change something in chat ›</button></div>`;
+  }
+  const t=dayTotal(d);
+  const day = `<div class="row" style="margin:6px 16px 0"><button class="btn line sm" onclick="stepDay(-1)">‹</button><div class="sp" style="text-align:center"><b>${d.n==="Fri"&&w==="this"?"Today · ":""}${{Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"}[d.n]} ${d.date}</b>
+      <div class="xs mute">${w==="this"?"This week":"Next week"}${wk.approved?"":" · Draft"}${d.busy?" · Busy Day, 15-min meals":""}</div></div><button class="btn line sm" onclick="stepDay(1)">›</button></div>
+    <div class="card" style="padding:10px 14px"><div class="row"><span class="small sp">Planned</span><span class="small">${totalLine(d)}</span></div><div style="margin-top:6px">${totalBar(d)}</div>
+      ${t>TARGET?`<div class="xs warn" style="margin-top:4px">Over the Calorie Target by ${fmt(t-TARGET)}</div>`:`<div class="xs mute" style="margin-top:4px">${fmt(TARGET-t)} under</div>`}</div>
+    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}
+    ${d.m.map((m,si)=>{ const lk=locked(w,i,si), chg=m.ch&&wk.approved;
+      return `<div class="bigm ty-${m.ty}" style="${chg?'box-shadow:0 0 0 2px var(--chg) inset':''}"><div class="row"><span class="tag mute sp">${SLOT[si]}${si<3?" · "+TIME[si]:""}</span><span>${fmt(kcal(m))}<span class="xs mute"> / ${SHARE[si]}</span></span></div>
+        ${chg?`<div class="xs" style="color:#9a5a00;margin-top:4px">Changed by ${m.ch.by}, ${m.ch.when} · was <span class="strike">${m.ch.from}</span></div>`:""}
+        <div class="nm">${title(m)}</div>${m_eaten(m)?`<div class="xs good">✓ logged ${fmt(m.eaten)}</div>`:""}<div>${chips(w,i,si)}</div>
+        ${lk?"":`<div class="acts"><button onclick="openSheet('${w}',${i},${si});sheetMode('swap')"><span>⇄</span>Swap</button><button onclick="openSheet('${w}',${i},${si});sheetMode('edit')"><span>✎</span>Edit</button><button onclick="openSheet('${w}',${i},${si});sheetMode('move')"><span>↔</span>Move</button><button onclick="doClear('${w}',${i},${si})"><span>✕</span>Clear</button></div>`}</div>`; }).join("")}
+    ${w==="next"&&!wk.approved?`<div class="sticky row draftband" style="padding:8px 10px"><span class="small sp"><b>Draft</b> · ${missingCount("next")} Missing Ingredients</span><button class="btn line sm" onclick="ui.review=true;render()">Summary</button>&nbsp;<button class="btn good sm" onclick="approve()">Approve</button></div>`:""}`;
+  return head + strip + day;
+}
+function stepDay(dir){
+  let {w,i}=ui.day; i+=dir;
+  if(i>6){ if(w==="this"){w="next";i=0;} else i=6; }
+  if(i<0){ if(w==="next"){w="this";i=6;} else i=0; }
+  ui.day={w,i}; render();
+}
+
+// ---------- shell + switcher ----------
+function toast(msg, withUndo){
+  const box=document.getElementById("toastbox");
+  box.innerHTML = `<div class="toast"><span>${msg}</span>${withUndo?`<button onclick="undo()">Undo</button>`:""}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>box.innerHTML="", withUndo?6000:2500);
+}
+const VARIANTS = {A:["Week grid",VariantA], B:["List of days",VariantB], C:["One day at a time",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; ui.showChanges=false; history.replaceState(null,"","?variant="+variant); closeSheet(); render(); scrollTo(0,0); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
+    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n==='Plan'?'cur':''}" onclick="${n==='Plan'?'':`toast('Not in this prototype')`}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <button onclick="S=fresh();undoStack=[];ui.review=true;ui.day={w:'this',i:4};render()" title="Reset state">↺</button>`;
+  if(variant==="C"){ const s=document.getElementById("strip"), b=s&&s.querySelector("button.on"); if(b) s.scrollLeft=b.offsetLeft-s.offsetWidth/2+25; }
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
+render();
+</script>
+</body>
+</html>
