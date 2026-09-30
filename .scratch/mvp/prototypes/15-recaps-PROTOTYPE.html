@@ -336,11 +336,13 @@ const customPick = () => period==="custom"?`<div class="card row small"><span>Fr
 const statsLink = `<button class="btn ghost sm" style="margin-top:4px" onclick="go('stats')">Full breakdown in Stats ›</button>`;
 function planCard(){ // followed the plan + ate out (week from real data; month/custom are canned numbers)
   const s = weekStats();
-  const [kept, slots, out, outPlanned, outOver] = period==="week" ? [s.kept+s.out, s.slots, s.out, s.out, 1] : period==="month" ? [86, 120, 9, 8, 3] : [41, 56, 4, 4, 2];
+  // Eating Out counts as following the plan only when it lands within its calorie aim
+  const outs = WEEK.flatMap(w=>w.m.filter(x=>x[0]==="o")), outOk = outs.filter(x=>x[1] <= (x[2].startsWith("Pizza")?800:650)).length;
+  const [kept, slots, out, outPlanned, outOver] = period==="week" ? [s.kept+outOk, s.slots, s.out, s.out, s.out-outOk] : period==="month" ? [83, 120, 9, 8, 3] : [39, 56, 4, 4, 2];
   return `<div class="card row" style="gap:0;padding:12px 0">
     <div class="sp" style="padding:0 14px;border-right:1px solid var(--line)"><span class="small mute">Followed the plan</span><b style="display:block;font-size:20px">${kept} / ${slots} <span class="small mute" style="font-weight:400">meals</span></b>
       <div class="bar" style="height:6px;border-radius:3px;background:var(--line);margin-top:6px;position:relative"><i style="position:absolute;left:0;top:0;bottom:0;border-radius:3px;width:${kept/slots*100}%;background:var(--good)"></i></div>
-      <span class="small mute">${Math.round(kept/slots*100)}%${period==="week"?` · ${s.swapped} swapped, ${s.unlogged} missing`:""}</span></div>
+      <span class="small mute">${Math.round(kept/slots*100)}%${period==="week"?` · ${s.swapped} swapped, ${outOver} ate out over, ${s.unlogged} missing`:""}</span></div>
     <div class="sp" style="padding:0 14px"><span class="small mute">Ate out</span><b style="display:block;font-size:20px">${out} <span class="small mute" style="font-weight:400">time${out===1?"":"s"}</span></b>
       <span class="small mute">${outPlanned===out?"all planned":`${outPlanned} planned, ${out-outPlanned} unplanned`}</span><br><span class="small ${outOver?"warn":"good"}">${outOver?`${outOver} over the aim`:"all within the aim"}</span></div></div>`;
 }

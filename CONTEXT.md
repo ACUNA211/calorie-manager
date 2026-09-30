@@ -83,6 +83,10 @@ _Avoid_: cron, timer
 A dashboard of how a Member did over a period (daily, weekly, monthly or a custom range), with the Agent's quick recommendations. The weekly Recap is the reflection that leads into planning.
 _Avoid_: report, summary
 
+**Stats**:
+The full breakdown behind a Recap: each day's meals against the Meal Plan, a month calendar, and weekly tables. Opened from the Recap or the ☰ menu.
+_Avoid_: analytics, history
+
 **Check-in**:
 A question the Agent raises on its own (leftovers, a skipped meal, an unbought ingredient), shown in chat and counted on the Chat tab's badge.
 _Avoid_: nudge, reminder
