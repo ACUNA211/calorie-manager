@@ -12,10 +12,12 @@ What is the structure of a week's Meal Plan: which meal slots (breakfast, lunch,
 
 **Input from #05 (2026-09-27):** The draft is made after the Friday 3pm reflection (default; the Schedule is editable) and approved whenever the Member is ready. It is never approved automatically, and there's one reminder at 7pm. Default meal slots are 8:00 / 12:00 / 18:00. Planning mixes Favorites with new Dishes, asks for confirmation, and asks "What do you want to change?" on a no. Meal Plan edits the Member asks for in chat apply straight away with undo. Each meal needs a calorie share so the day forecast can be calculated.
 
+**Change from #21 (2026-09-30):** The week now runs Sunday to Saturday instead of Monday to Sunday. The Sunday Prep Session now belongs to the week it feeds, not the week before. The catch: after Friday planning, only Saturday (and Sunday morning) is left to shop.
+
 ## Answer
 
 ### Week and slots
-- The week runs **Monday to Sunday**. It's planned Friday at 3pm (#05), which leaves the weekend to shop.
+- The week runs **Sunday to Saturday** (changed from Monday to Sunday in #21). It's planned Friday at 3pm (#05), which leaves Saturday to shop before it starts. The Sunday Prep Session is the first day of the week it cooks for.
 - Every day has **breakfast, lunch, dinner and a snack**. Meals are at 8:00 / 12:00 / 18:00. Slots can be added or removed on any day.
 - Every snack is **timestamped**. The recap says when it was eaten (between which meals, or after dinner). Snacks outside the plan, or extra ones, are logged, count toward the day forecast, and can lead to a Rebalance being proposed.
 

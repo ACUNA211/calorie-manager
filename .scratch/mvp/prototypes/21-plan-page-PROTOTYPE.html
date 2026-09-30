@@ -17,7 +17,7 @@
     C: one day at a time, a 14-day strip across both weeks, big meal cards, and a review screen for the draft.
   The swap / edit / move / clear sheets and the data are shared; only the layout differs.
   Scenario: 2,000 Calorie Target, planned to 95%. It's Fri Oct 2, 3:40pm, after the weekly reflection (#15).
-  This week (Sep 28 – Oct 4) was approved last Friday and has 4 changes since. Next week (Oct 5 – 11) is the Agent's draft,
+  Weeks run Sunday to Saturday (changed in feedback round 2). This week (Sep 27 – Oct 3) was approved last Friday and has 4 changes since. Next week (Oct 4 – 10) is the Agent's draft,
   built with the 4 recommendations accepted in the Recap. All state is in memory; reload or ↺ resets it.
 -->
 <style>
@@ -139,27 +139,27 @@ const Y = () => M("Yogurt & granola",470,5,{fav:true});
 const AP = () => M("Apple + peanut butter",190,3,{fav:true});
 function fresh(){
   const thisWeek = {
-    key:"this", label:"This week", range:"Sep 28 – Oct 4", approved:true, approvedAt:"Fri Sep 25, 5:40pm",
+    key:"this", label:"This week", range:"Sep 27 – Oct 3", approved:true, approvedAt:"Fri Sep 25, 5:40pm",
     days:[
+      {n:"Sun", date:"Sep 27", past:true, prep:{text:"Prep Session, 2 pm, 1 h 30 min: chili (tonight, then Mon and Wed lunch) and oatmeal cookies"}, m:[M("Pancakes & berries",480,20), M("Chicken rice bowl",560,15,{eaten:570}), M("Chili",650,0,{ty:"prep",from:"today's Prep Session",eaten:650}), M("Oatmeal cookie",150,0,{ty:"prep",from:"today's Prep Session",eaten:180})]},
       {n:"Mon", date:"Sep 28", past:true, m:[{...Y(),eaten:470}, M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session",eaten:770}), M("Burrito bowl",660,30,{eaten:660}), {...AP(),eaten:190}]},
       {n:"Tue", date:"Sep 29", past:true, m:[{...Y(),eaten:470}, M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650,eaten:650}), M("Turkey wraps",430,20,{eaten:430,fav:true,ch:{from:"Salmon & rice",by:"You",when:"Mon 9:12pm",why:"asked in chat; Pantry first"}}), {...AP(),eaten:190}]},
       {n:"Wed", date:"Sep 30", past:true, busy:true, m:[{...Y(),eaten:470}, M("Chili & cornbread",570,5,{grp:"Chili",ty:"left",from:"Sunday's Prep Session",eaten:870}), M("Turkey wraps",420,15,{eaten:420,ch:{from:"Burrito bowl",by:"Rebalance",when:"Wed 2:10pm",why:"lunch went 300 over"}}), {...AP(),eaten:190}]},
       {n:"Thu", date:"Oct 1", past:true, m:[{...Y(),eaten:470}, M("Chicken rice bowl",560,15,{eaten:560}), M("Beef stir-fry",640,30,{eaten:640}), M("Greek yogurt",150,1,{eaten:150,ch:{from:"Apple + peanut butter",by:"You",when:"Thu 3:05pm",why:"out of apples"}})]},
       {n:"Fri", date:"Oct 2", today:true, m:[{...Y(),eaten:470}, M("Beef stir-fry",480,5,{ty:"left",from:"Thursday's dinner",eaten:480}), M("Pizza night",800,0,{ty:"out",label:"Pizza night",aim:800}), AP()]},
-      {n:"Sat", date:"Oct 3", m:[M("Eggs & toast",460,10), M("Chili",570,5,{ty:"left",from:"Sunday's Prep Session"}), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
-      {n:"Sun", date:"Oct 4", prep:{text:"Prep Session, 2 pm, 1 h 50 min: chickpea curry (Mon + Wed lunch) and oatmeal cookies (weekday snacks)", draft:true}, m:[M("Pancakes & berries",480,20,{needs:[["berries","bought"]]}), M("Chicken rice bowl",560,15), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
+      {n:"Sat", date:"Oct 3", m:[M("Eggs & toast",460,10), M("Chicken rice bowl",560,15), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
     ],
     changes:[]
   };
   thisWeek.changes = [
-    {di:5,si:2,from:"Salmon & rice",to:"Shrimp tacos",by:"You",when:"Thu 8:30pm",why:"Asked in chat. Grocery List: − salmon, + shrimp"},
-    {di:3,si:3,from:"Apple + peanut butter",to:"Greek yogurt",by:"You",when:"Thu 3:05pm",why:"Out of apples. From the Pantry"},
-    {di:2,si:2,from:"Burrito bowl",to:"Turkey wraps",by:"Rebalance",when:"Wed 2:10pm",why:"Lunch went 300 over. Proposed by the Agent, you said yes"},
-    {di:1,si:2,from:"Salmon & rice",to:"Turkey wraps",by:"You",when:"Mon 9:12pm",why:"Asked in chat. From the Pantry"},
+    {di:6,si:2,from:"Salmon & rice",to:"Shrimp tacos",by:"You",when:"Thu 8:30pm",why:"Asked in chat. Grocery List: − salmon, + shrimp"},
+    {di:4,si:3,from:"Apple + peanut butter",to:"Greek yogurt",by:"You",when:"Thu 3:05pm",why:"Out of apples. From the Pantry"},
+    {di:3,si:2,from:"Burrito bowl",to:"Turkey wraps",by:"Rebalance",when:"Wed 2:10pm",why:"Lunch went 300 over. Proposed by the Agent, you said yes"},
+    {di:2,si:2,from:"Salmon & rice",to:"Turkey wraps",by:"You",when:"Mon 9:12pm",why:"Asked in chat. From the Pantry"},
   ];
   const C = () => M("Oatmeal cookie",150,0,{ty:"prep",from:"Sunday's Prep Session"});
   const nextWeek = {
-    key:"next", label:"Next week", range:"Oct 5 – 11", approved:false, draftAt:"Fri Oct 2, 3:25pm",
+    key:"next", label:"Next week", range:"Oct 4 – 10", approved:false, draftAt:"Fri Oct 2, 3:25pm",
     intro:[
       "A 150-kcal sweet snack on weekdays: oatmeal cookies from Sunday's Prep Session",
       "No salmon (saved as a soft Dislike)",
@@ -167,13 +167,13 @@ function fresh(){
       "Pizza night aim raised to 1,000, with a lighter Friday lunch (lentil soup, 410)",
     ],
     days:[
+      {n:"Sun", date:"Oct 4", prep:{text:"Prep Session, 2 pm, 1 h 50 min: chickpea curry (Mon + Wed lunch) and oatmeal cookies (weekday snacks)"}, m:[M("Pancakes & berries",480,20,{needs:[["berries","need"]]}), M("Chicken rice bowl",560,15), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
       {n:"Mon", date:"Oct 5", m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",nw:true,from:"Sunday's Prep Session",needs:[["chickpeas","bought"]]}), M("Turkey wraps",620,20,{fav:true}), C()]},
       {n:"Tue", date:"Oct 6", m:[Y(), M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650}), M("Beef stir-fry",640,30,{fav:true,needs:[["bell pepper","need"]]}), C()]},
       {n:"Wed", date:"Oct 7", busy:true, m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",from:"Sunday's Prep Session"}), M("Rotisserie chicken & salad",600,10,{needs:[["rotisserie chicken","need"]]}), C()]},
       {n:"Thu", date:"Oct 8", m:[M("Eggs & toast",460,10), M("Beef stir-fry",560,5,{ty:"left",from:"Tuesday's dinner"}), M("Lemon chicken & orzo",650,55,{nw:true,needs:[["orzo","need"],["lemons","need"]]}), C()]},
       {n:"Fri", date:"Oct 9", m:[Y(), M("Lentil soup",410,10), M("Pizza night",1000,0,{ty:"out",label:"Pizza night",aim:1000}), M("Open",100,0,{ty:"open"})]},
-      {n:"Sat", date:"Oct 10", m:[M("Pancakes & berries",480,20,{needs:[["berries","need"]]}), M("Lemon chicken & orzo",560,5,{ty:"left",from:"Thursday's dinner"}), M("Chili",650,90,{fav:true}), AP()]},
-      {n:"Sun", date:"Oct 11", m:[M("Eggs & toast",460,10), M("Chili",570,5,{ty:"left",from:"Saturday's dinner"}), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
+      {n:"Sat", date:"Oct 10", m:[M("Eggs & toast",460,10), M("Lemon chicken & orzo",560,5,{ty:"left",from:"Thursday's dinner"}), M("Chili",650,90,{fav:true}), AP()]},
     ],
     changes:[]
   };
@@ -181,7 +181,7 @@ function fresh(){
 }
 let S = fresh();
 let undoStack = [];
-let ui = {wk: params.get("week") || "this", day: {w:"this", i:4}, open:{}, sheet:null, review:true, showChanges:false, dv:false, focus:null, color:"batch", hl:null};
+let ui = {wk: params.get("week") || "this", day: {w:"this", i:5}, open:{}, sheet:null, review:true, showChanges:false, dv:false, focus:null, color:"batch", hl:null};
 
 // Swap pool per slot. Pantry fit first after approval (#06).
 const POOL = [
@@ -296,7 +296,6 @@ function approve(){
   const wk=W("next"); wk.approved=true; wk.approvedAt="Fri Oct 2, just now";
   const items=missingList("next");
   wk.days.forEach(d=>d.m.forEach(m=>{ if(m.needs) m.needs=m.needs.map(([i,s])=>[i,s==="need"?"list":s]); }));
-  W("this").days[6].prep.draft=false;
   toast(`Next week approved. Grocery List: + ${items.join(", ")}.`, true); render();
 }
 
@@ -364,7 +363,7 @@ function draftBanner(){
   return `<div class="card draftband"><div class="row"><span class="tag" style="color:#8a6d00">Draft · waiting for your yes</span><span class="sp"></span><span class="xs mute">${wk.draftAt}</span></div>
     <div class="small" style="margin-top:6px">Built with what you accepted in the reflection:</div>
     <ul class="small" style="margin:4px 0 0;padding-left:18px">${wk.intro.map(x=>`<li>${x}</li>`).join("")}</ul>
-    <div class="small mute" style="margin-top:6px">Plus: Busy Wednesday (15-min meals), 2 new Dishes, leftovers first. The Prep Session goes on this Sunday.</div></div>`;
+    <div class="small mute" style="margin-top:6px">Plus: Busy Wednesday (15-min meals), 2 new Dishes, leftovers first.</div></div>`;
 }
 function changesList(w, compact){
   const wk=W(w);
@@ -435,7 +434,7 @@ function VariantB(){
     ${draftBanner()}
     <div class="row" style="margin:0 16px">${missingCard("next")}<span class="sp"></span><span class="xs mute">${missingList("next").join(", ")}</span></div>
     ${n.days.map((_,di)=>dayCard("next",di)).join("")}
-    ${n.approved?"":`<div class="card draftband"><b>Happy with next week?</b><div class="small mute" style="margin:4px 0 10px">Approving adds ${missingCount("next")} Missing Ingredients to the Grocery List and confirms this Sunday's Prep Session.</div>
+    ${n.approved?"":`<div class="card draftband"><b>Happy with next week?</b><div class="small mute" style="margin:4px 0 10px">Approving adds ${missingCount("next")} Missing Ingredients to the Grocery List .</div>
       <div class="row"><button class="btn line" onclick="toast('Opens Chat: What do you want to change?')">Change something</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve</button></div></div>
       <div class="sticky row draftband" style="padding:8px 10px"><span class="small sp"><b>Next week is a draft</b></span><button class="btn good sm" onclick="approve()">Approve</button></div>`}`;
 }
@@ -462,7 +461,7 @@ function VariantC(){
       <div class="small">From your reflection:</div><ul class="small" style="margin:4px 0;padding-left:18px">${n.intro.map(x=>`<li>${x}</li>`).join("")}</ul>
       <table style="width:100%;font-size:13px;margin-top:8px;border-collapse:collapse">${n.days.map((dd,di)=>`<tr style="border-top:1px solid var(--draftline);cursor:pointer" onclick="ui.day={w:'next',i:${di}};ui.review=false;render()"><td style="padding:5px 0"><b>${dd.n}</b></td><td class="small">${dd.m[2].ty==="out"?"⌂ "+dd.m[2].label:dd.m[2].d}${dd.busy?" · Busy":""}${dd.m.some(m=>m.nw)?" ★":""}${dd.m.some((m,si)=>overTime(dd,si,m))?" ⏱":""}</td><td style="text-align:right" class="${dayTotal(dd)>TARGET?'warn':''}">${fmt(dayTotal(dd))}</td><td class="mute">›</td></tr>`).join("")}</table>
       <div class="row wrap" style="margin-top:10px">${missingCard("next")}<span class="xs mute">${missingList("next").join(", ")}</span></div>
-      <div class="small" style="margin-top:6px">🍳 Prep Session this Sunday (Oct 4), 1 h 50 min: chickpea curry and oatmeal cookies.</div>
+      <div class="small" style="margin-top:6px">🍳 Prep Session Sunday Oct 4 (the first day of the week), 1 h 50 min: chickpea curry and oatmeal cookies.</div>
       <div class="row" style="margin-top:14px"><button class="btn line" onclick="ui.review=false;ui.day={w:'next',i:0};render()">Go day by day</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve</button></div>
       <button class="btn ghost small" onclick="toast('Opens Chat: What do you want to change?')">Change something in chat ›</button></div>`;
   }
@@ -494,7 +493,7 @@ function cookText(w,L){
   const cook=L.find(x=>x.m.ty==="cook"), wk=W(w);
   if(cook && L.some(x=>x.m.ty==="left"||x.m.ty==="prep")) return `🔥 cook ${wk.days[cook.di].n} ${SLOT[cook.si].toLowerCase()}`;
   const from=(L.find(x=>x.m.from)||{}).m;
-  if(from && from.from.includes("Prep Session")) return `🔥 cook at the Prep Session, ${w==="next"?"Sun Oct 4 (this week)":"Sun Sep 27 (last week)"}`;
+  if(from && from.from.includes("Prep Session")) return `🔥 cook at the Prep Session, Sun ${W(w).days[0].date}`;
   return `planned ${L.length} times, made fresh each time`;
 }
 function computeBatches(){
@@ -593,7 +592,7 @@ function render(){
   document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
     <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n==='Plan'?'cur':''}" onclick="${n==='Plan'?'':`toast('Not in this prototype')`}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
   document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
-    <button onclick="S=fresh();undoStack=[];ui.review=true;ui.dv=false;ui.hl=null;ui.day={w:'this',i:4};render()" title="Reset state">↺</button>`;
+    <button onclick="S=fresh();undoStack=[];ui.review=true;ui.dv=false;ui.hl=null;ui.day={w:'this',i:5};render()" title="Reset state">↺</button>`;
   if(variant==="C"||(variant==="D"&&ui.dv)){ const s=document.getElementById("strip"), b=s&&s.querySelector("button.on"); if(b) s.scrollLeft=b.offsetLeft-s.offsetWidth/2+25; }
   if(variant==="D"&&ui.dv&&ui.focus!=null){ const el=document.getElementById("meal"+ui.focus); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); ui.focus=null; }
 }
