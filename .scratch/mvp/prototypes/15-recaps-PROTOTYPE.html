@@ -8,7 +8,10 @@
   THROWAWAY PROTOTYPE for .scratch/mvp/issues/15-recaps.md
   Question: what does each Recap period show, how do the Agent's recommendations appear and get accepted,
   and how does the weekly Recap hand off to planning?
-  Three layouts of the Recap page (opened from Today's header), switchable via ?variant=A|B|C and the floating bar (or ← →).
+  Layouts of the Recap page (opened from Today's header), switchable via ?variant=D|A|B|C and the floating bar (or ← →).
+  D (default, from review round 1): A's Recap (tiles, bar graph, recommendation cards, "Plan next week"), plus a separate
+  Stats page with C's breakdown (per-meal ledger, month calendar, weekly table). A day with a missing meal is grey and not counted.
+  Month/Custom recommendations carry into the coming week's plan like the weekly ones.
   Period (?period=day|week|month|custom) is switched inside the page.
   A: report card (tiles, chart, sections, recommendation cards, sticky "Plan next week").
   B: Agent walkthrough (one topic per step, a question on each, the last step starts planning).
@@ -87,9 +90,9 @@
 // ---------- data (in memory) ----------
 const TARGET = 2000;
 const params = new URLSearchParams(location.search);
-let variant = params.get("variant") || "A";
+let variant = params.get("variant") || "D";
 let period = params.get("period") || "week";
-let page = "recap"; // recap | today | plan | chat
+let page = params.get("page") || "recap"; // recap | today | plan | chat
 const sum = a => a.reduce((x,y)=>x+y,0);
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const signed = n => (n>0?"+":n<0?"−":"") + fmt(Math.abs(n));
@@ -105,7 +108,7 @@ const WEEK = [ // Fri Sep 25 – Thu Oct 1 (the 7 days before the Friday 3pm ref
   {d:"Wed", n:"Sep 30", m:[["k",470,"Yogurt & granola"],["k",870,"Chili + cornbread + 3 cookies (extra 300)"],["s",420,"Burrito bowl → turkey wraps (Rebalance)"],["k",190,"Apple + PB"]], rb:"accepted", note:"3 extra cookies after lunch"},
   {d:"Thu", n:"Oct 1", m:[["k",470,"Yogurt & granola"],["k",560,"Chicken rice bowl"],["k",640,"Beef stir-fry"],["s",150,"Apple + PB → yogurt"]]},
 ];
-WEEK.forEach(w=>w.eaten=sum(w.m.map(x=>x[1])));
+WEEK.forEach(w=>{ w.eaten=sum(w.m.map(x=>x[1])); w.missing=w.m.some(x=>x[0]==="u"); });
 const SLOTS = ["B","L","D","S"];
 
 // September for month / custom (deterministic)
@@ -115,7 +118,7 @@ const MONTH = Array.from({length:30},(_,i)=>{
   const fri = (i+4)%7===0; // Fridays
   let e = 1880 + wig + (fri?260:0);
   if(i===29) e = WEEK[5].eaten;
-  return {day:i+1, eaten:e, dow:(i+2)%7};
+  return {day:i+1, eaten:e, missing:i===12||i===26}; // Sep 13 and 27: a meal never logged
 });
 let custom = {from:"2026-09-14", to:"2026-09-27"};
 
@@ -127,6 +130,9 @@ function fresh(){
     {id:"salmon", kind:"Swaps", text:"You swapped salmon out on Sat and Tue. How should I save that?", opts:["Dislike","Restriction","Just this dish"], carry:"Salmon saved as a Dislike (soft)", st:null},
     {id:"chick", kind:"Grocery List", text:"You added chickpeas and dark chocolate to the Grocery List. Want dishes that use the chickpeas?", yes:"Plan a chickpea dish", no:"I have something in mind", carry:"One new chickpea Dish", st:null},
     {id:"pizza", kind:"Eating Out", text:"Friday pizza night has come in over its 800 aim 3 times (avg 1,020). Raise the aim to 1,000 and plan a lighter Friday lunch?", yes:"Do that", no:"Keep 800", carry:"Pizza night aim 1,000, lighter Friday lunch", st:null},
+    // month / custom (variant D): these carry into the coming week's plan too
+    {id:"fri", range:true, kind:"Pattern", text:"Fridays average 250 over. Every other weekday averages 1,860. Plan a lighter Friday lunch next week?", yes:"Add to next plan", no:"No thanks", carry:"A lighter Friday lunch (under 450)", st:null},
+    {id:"fav", range:true, kind:"Dishes", text:"5 of 8 new Dishes were 👍. Turkey wraps and the stir-fry were rated best. Add both to Favorites so they come up more?", yes:"Add to Favorites", no:"Not now", carry:"Turkey wraps and beef stir-fry added to Favorites", st:null},
   ];
   daily = {cooked:{}, leftovers:null, rating:null, fb:null, rec:null};
   stepB = 0; openRow = null;
@@ -144,7 +150,8 @@ function setPeriod(p){ period=p; stepB=0; openRow=null; setParam(); render(); sc
 function weekStats(){
   const all = WEEK.flatMap(w=>w.m.map(x=>x[0]));
   const c = k => all.filter(x=>x===k).length;
-  return {total:sum(WEEK.map(w=>w.eaten)), avg:sum(WEEK.map(w=>w.eaten))/7, under:WEEK.filter(w=>w.eaten<=TARGET).length,
+  const cd = WEEK.filter(w=>!w.missing); // a day with a missing meal isn't counted
+  return {total:sum(cd.map(w=>w.eaten)), counted:cd.length, avg:sum(cd.map(w=>w.eaten))/cd.length, under:cd.filter(w=>w.eaten<=TARGET).length,
     kept:c("k"), swapped:c("s"), out:c("o"), dropped:c("x"), unlogged:c("u"), slots:all.length,
     rbP:WEEK.filter(w=>w.rb).length, rbA:WEEK.filter(w=>w.rb==="accepted").length};
 }
@@ -169,7 +176,7 @@ function subtitle(){
 }
 function chart(days, labelFn, h=120){
   const max = Math.max(TARGET*1.2, ...days.map(d=>d.eaten));
-  return `<div class="chart" style="height:${h}px"><span class="tl" style="bottom:${TARGET/max*100}%"></span>${days.map(d=>`<div class="c"><i style="height:${d.eaten/max*100}%;background:${d.eaten>TARGET?'var(--warn)':'var(--good)'};opacity:.85" title="${fmt(d.eaten)}"></i><span class="lab">${labelFn(d)}</span></div>`).join("")}</div>
+  return `<div class="chart" style="height:${h}px"><span class="tl" style="bottom:${TARGET/max*100}%"></span>${days.map(d=>`<div class="c"><i style="height:${d.eaten/max*100}%;background:${d.missing?'#c8c6c0':d.eaten>TARGET?'var(--warn)':'var(--good)'};opacity:.85" title="${fmt(d.eaten)}"></i><span class="lab">${labelFn(d)}</span></div>`).join("")}</div>
   <div class="small mute" style="margin-top:4px">Dashed line: Calorie Target ${fmt(TARGET)}</div>`;
 }
 function recCard(r, compact){
@@ -223,7 +230,7 @@ function VariantA(){
     <div class="card"><h3>Rebalances</h3>${WEEK.filter(w=>w.rb).map(w=>`<div class="li"><span class="sp">${w.d} ${w.n}</span><span class="${w.rb==='accepted'?'good':'mute'}">${w.rb}</span></div>`).join("")}</div>
     <div class="card"><h3>Eating Out</h3><div class="li"><span class="sp">Work lunch ×2</span><span>645 avg <span class="mute">/ aim 650</span></span></div><div class="li"><span class="sp">Pizza night</span><span class="warn">1,050 <span class="mute">/ aim 800</span></span></div></div>
     <div class="card"><h3>You added to the Grocery List</h3><div class="small">Chickpeas · sparkling water · dark chocolate</div></div>
-    <div class="card"><h3>Recommendations</h3><div class="small mute">Accepted ones go into next week's Meal Plan.</div>${RECS.map(r=>recCard(r)).join("")}</div>
+    <div class="card"><h3>Recommendations</h3><div class="small mute">Accepted ones go into next week's Meal Plan.</div>${RECS.filter(r=>!r.range).map(r=>recCard(r)).join("")}</div>
     <button class="btn sticky" onclick="go('plan')">Plan next week →${carried().length?` <span style="opacity:.8;font-weight:400">(${carried().length} change${carried().length>1?'s':''})</span>`:""}</button>`;
   } else {
     const days = rangeDays(), tot = sum(days.map(d=>d.eaten)), avg = tot/days.length, under = days.filter(d=>d.eaten<=TARGET).length;
@@ -294,7 +301,7 @@ function VariantC(){
       <tr><td><b>Week</b></td><td colspan="4" class="small mute">${s.kept+s.out}/${s.slots} kept · ${s.under}/7 days under</td><td><b>${fmt(s.avg)}</b><div class="small mute">avg</div></td></tr></table>${legend}
       <div class="small mute" style="margin-top:6px">Tap a day for its meals. Grocery List adds: chickpeas, sparkling water, dark chocolate.</div></div>
       <div class="card"><h3>For next week's plan</h3><div class="small mute" style="margin-bottom:4px">The Agent's suggestions. Tick what you want planning to use.</div>
-        ${RECS.map(r=>{ const on = r.st && r.st!=="no"; return `<label class="li" style="cursor:pointer"><input type="checkbox" ${on?"checked":""} onchange="recAns('${r.id}', this.checked ? '${r.opts?"Dislike":"yes"}' : 'no')"><span class="sp small"><b>${r.carry.replace("Salmon saved as a Dislike (soft)","Save salmon as a Dislike")}</b><br><span class="mute">${r.text}</span></span></label>`; }).join("")}
+        ${RECS.filter(r=>!r.range).map(r=>{ const on = r.st && r.st!=="no"; return `<label class="li" style="cursor:pointer"><input type="checkbox" ${on?"checked":""} onchange="recAns('${r.id}', this.checked ? '${r.opts?"Dislike":"yes"}' : 'no')"><span class="sp small"><b>${r.carry.replace("Salmon saved as a Dislike (soft)","Save salmon as a Dislike")}</b><br><span class="mute">${r.text}</span></span></label>`; }).join("")}
         <button class="btn" style="width:100%;margin-top:10px" onclick="go('plan')">Plan next week with ${carried().length} change${carried().length===1?"":"s"} →</button>
         <button class="btn ghost" style="width:100%" onclick="go('chat')">Talk it over with the Agent first</button></div>`;
   } else {
@@ -312,9 +319,67 @@ function VariantC(){
   return header(subtitle()) + body;
 }
 
+// ---------- Variant D: A's Recap + a separate Stats page with C's breakdown ----------
+const counted = days => days.filter(d=>!d.missing);
+function missingNote(days, label){
+  const m = days.filter(d=>d.missing); if(!m.length) return "";
+  return `<div class="small mute" style="margin-top:6px"><span class="mk u" style="width:16px;height:16px;line-height:16px;font-size:10px">?</span> Grey = a meal was never logged. The Check-in and the 9:30pm Recap asked, with no answer. Not counted: ${m.map(label).join(", ")}.</div>`;
+}
+function tiles(days){
+  const c = counted(days), tot = sum(c.map(d=>d.eaten)), avg = tot/c.length, under = c.filter(d=>d.eaten<=TARGET).length;
+  return `<div class="row" style="margin:10px 16px;gap:8px">
+    <div class="tile"><span class="small mute">Daily avg</span><b>${fmt(avg)}</b><span class="small ${avg<=TARGET?'good':'warn'}">${signed(avg-TARGET)} vs target</span></div>
+    <div class="tile"><span class="small mute">Days under</span><b>${under} / ${c.length}</b><span class="small mute">${days.length-c.length?`${days.length-c.length} not counted`:"all counted"}</span></div>
+    <div class="tile"><span class="small mute">Deficit</span><b>${fmt(TARGET*c.length-tot)}</b><span class="small mute">≈ ${(Math.max(0,TARGET*c.length-tot)/3500).toFixed(1)} lb</span></div></div>`;
+}
+const customPick = () => period==="custom"?`<div class="card row small"><span>From</span><input type="date" value="${custom.from}" min="2026-09-01" max="2026-09-30" onchange="custom.from=this.value;render()"><span>to</span><input type="date" value="${custom.to}" min="2026-09-01" max="2026-09-30" onchange="custom.to=this.value;render()"></div>`:"";
+const statsLink = `<button class="btn ghost sm" style="margin-top:4px" onclick="go('stats')">Full breakdown in Stats ›</button>`;
+function VariantD(){
+  if(period==="day") return VariantA();
+  if(period==="week") return header(subtitle()) + tiles(WEEK) + `
+    <div class="card"><h3>Last 7 days</h3>${chart(WEEK, d=>d.d)}${missingNote(WEEK, d=>`${d.d} ${d.n} (breakfast)`)}${statsLink}</div>
+    <div class="card"><h3>Recommendations</h3><div class="small mute">Accepted ones go into next week's Meal Plan.</div>${RECS.filter(r=>!r.range).map(r=>recCard(r)).join("")}</div>
+    <button class="btn sticky" onclick="go('plan')">Plan next week →${carried().length?` <span style="opacity:.8;font-weight:400">(${carried().length} change${carried().length>1?'s':''})</span>`:""}</button>`;
+  const days = rangeDays();
+  return header(subtitle()) + customPick() + tiles(days) + `
+    <div class="card"><h3>Calories per day</h3>${chart(days, d=>d.day%7===1||days.length<15?d.day:"", 110)}${missingNote(days, d=>`Sep ${d.day}`)}${statsLink}</div>
+    <div class="card"><h3>Recommendations</h3><div class="small mute">Accepted ones go into the coming week's Meal Plan (Oct 5–11), drafted after Friday's reflection.</div>${RECS.filter(r=>r.range).map(r=>recCard(r)).join("")}</div>`;
+}
+function Stats(){
+  if(period==="day") period="week";
+  const tabs = `<div class="row" style="padding:0 16px;gap:6px">${[["week","Week"],["month","Month"],["custom","Custom"]].map(([k,n])=>`<button class="pill ${period===k?'on':''}" onclick="setPeriod('${k}')">${n}</button>`).join("")}</div>`;
+  const head = `<div style="padding:14px 16px 10px;background:#fff;border-bottom:1px solid var(--line);margin-bottom:10px"><div class="row"><button class="btn ghost" onclick="go('recap')">‹ Recap</button><span class="sp"></span><b>Stats</b><span class="sp"></span><span style="width:60px"></span></div>
+    <div class="small mute" style="text-align:center">${period==="week"?"Fri Sep 25 – Thu Oct 1":period==="month"?"September 2026":"Custom range"} · also under ☰</div></div>` + tabs;
+  const legend = `<div class="row wrap small mute" style="gap:10px;margin-top:8px">${Object.entries(MK).map(([k,[i,n]])=>`<span><span class="mk ${k}" style="width:16px;height:16px;line-height:16px;font-size:10px">${i}</span> ${n==="Unlogged"?"Missing":n}</span>`).join("")}</div>`;
+  if(period==="week"){
+    const s = weekStats();
+    return head + `<div class="card"><table><tr><th>Day</th>${SLOTS.map(x=>`<th>${x}</th>`).join("")}<th>kcal</th></tr>
+      ${WEEK.map((w,i)=>`<tr class="x1" onclick="openRow=openRow===${i}?null:${i};render()"><td>${w.d} <span class="small mute">${w.n.slice(4)}</span>${w.rb?`<div class="tag ${w.rb==='accepted'?'good':'mute'}" style="font-size:9.5px">Rebalance ${w.rb}</div>`:""}</td>${w.m.map(x=>`<td><span class="mk ${x[0]}">${MK[x[0]][0]}</span></td>`).join("")}<td class="${w.missing?'mute':w.eaten>TARGET?'warn':''}"><b>${fmt(w.eaten)}</b>${w.missing?'<div class="small">not counted</div>':''}</td></tr>
+        ${openRow===i?`<tr><td colspan="6" style="text-align:left;background:#faf9f6" class="small">${w.m.map((x,j)=>`<div class="row"><span style="width:18px">${SLOTS[j]}</span><span class="sp">${x[0]==="u"?"Missing. Asked at 10:00am and in the 9:30pm Recap, no answer.":x[2]}</span><span>${x[1]||"—"}</span></div>`).join("")}${w.note?`<div class="mute" style="margin-top:4px">${w.note}</div>`:""}</td></tr>`:""}`).join("")}
+      <tr><td><b>Week</b></td><td colspan="4" class="small mute">${s.kept+s.out}/${s.slots} kept · ${s.under}/${s.counted} days under</td><td><b>${fmt(s.avg)}</b><div class="small mute">avg</div></td></tr></table>${legend}
+      <div class="small mute" style="margin-top:6px">Tap a day for its meals.</div></div>
+    <div class="card"><h3>Meals vs. the Meal Plan</h3>
+      ${[["k",s.kept,"kept as planned"],["o",s.out,"Eating Out, as planned"],["s",s.swapped,"swapped (salmon twice)"],["x",s.dropped,"dropped by a Rebalance"],["u",s.unlogged,"missing (Sun breakfast)"]].map(([k,n,t])=>`<div class="li"><span class="mk ${k}">${MK[k][0]}</span><span class="sp">${t}</span><b>${n}</b></div>`).join("")}
+      <div class="small mute" style="margin-top:6px">Extras off the plan: cookies Mon (+200) and Wed (+300).</div></div>
+    <div class="card"><h3>Rebalances</h3>${WEEK.filter(w=>w.rb).map(w=>`<div class="li"><span class="sp">${w.d} ${w.n}</span><span class="${w.rb==='accepted'?'good':'mute'}">${w.rb}</span></div>`).join("")}</div>
+    <div class="card"><h3>Eating Out</h3><div class="li"><span class="sp">Work lunch ×2</span><span>645 avg <span class="mute">/ aim 650</span></span></div><div class="li"><span class="sp">Pizza night</span><span class="warn">1,050 <span class="mute">/ aim 800</span></span></div></div>
+    <div class="card"><h3>You added to the Grocery List</h3><div class="small">Chickpeas · sparkling water · dark chocolate</div></div>`;
+  }
+  const days = rangeDays(), c = counted(days), tot = sum(c.map(d=>d.eaten));
+  return head + customPick() + `<div class="card"><div class="cal">${["M","T","W","T","F","S","S"].map(x=>`<div class="h">${x}</div>`).join("")}${period==="month"?"<div></div>":""}
+      ${days.map(d=>{ const diff=d.eaten-TARGET; return d.missing?`<div style="background:#e6e5e1;color:#888"><b>${d.day}</b><span style="font-size:9.5px">missing</span></div>`:`<div style="background:${diff>0?'#f6d6cc':diff>-100?'#e8f2ea':'#cfe7d7'}"><b>${d.day}</b><span style="font-size:9.5px" class="${diff>0?'warn':'good'}">${signed(diff)}</span></div>`; }).join("")}</div>
+      <div class="small mute" style="margin-top:6px">Each day vs. the ${fmt(TARGET)} target. Grey days had a meal never logged and aren't counted.</div></div>
+    <div class="card"><table><tr><th>Week</th><th>Avg</th><th>Days under</th><th>Deficit</th></tr>
+      ${[0,7,14,21,28].map(st=>{ const w=counted(days.slice(st,st+7)); if(!w.length) return ""; const t=sum(w.map(d=>d.eaten)); const all=days.slice(st,st+7); return `<tr><td>${all[0].day}–${all[all.length-1].day}</td><td>${fmt(t/w.length)}</td><td>${w.filter(d=>d.eaten<=TARGET).length}/${w.length}</td><td>${fmt(TARGET*w.length-t)}</td></tr>`; }).join("")}
+      <tr><td><b>Total</b></td><td><b>${fmt(tot/c.length)}</b></td><td><b>${c.filter(d=>d.eaten<=TARGET).length}/${c.length}</b></td><td><b>${fmt(TARGET*c.length-tot)}</b></td></tr></table></div>
+    <div class="card"><h3>Patterns</h3><div class="li"><span class="sp">Fridays</span><span class="warn">avg +250 over</span></div><div class="li"><span class="sp">Rebalances</span><span>${period==="month"?"9 proposed · 6 accepted":"4 proposed · 3 accepted"}</span></div><div class="li"><span class="sp">Meals kept to plan</span><span>${period==="month"?"86 / 120":"41 / 56"}</span></div><div class="li"><span class="sp">Most swapped</span><span>Salmon (4×)</span></div><div class="li"><span class="sp">New Dishes rated 👍</span><span>5 of 8</span></div></div>`;
+}
+
 // ---------- other pages (stubs) ----------
+let menu = false;
 function Today(){
-  return `<div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)"><div class="row"><b>Thu · Oct 1</b><span class="sp"></span><button class="pill" onclick="go('recap')">Recap</button><button class="pill">☰</button></div>
+  return `<div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)"><div class="row"><b>Thu · Oct 1</b><span class="sp"></span><button class="pill" onclick="go('recap')">Recap</button><button class="pill" onclick="menu=!menu;render()">☰</button></div>
+    ${menu?`<div class="card" style="margin:10px 0 0">${[["Favorites",""],["Stats","stats"],["Settings",""]].map(([n,k])=>`<button class="btn line" style="width:100%;text-align:left;margin-top:4px" onclick="${k?`menu=false;go('${k}')`:"toast('Not in this prototype')"}">${n} ›</button>`).join("")}</div>`:""}
     <div class="row" style="margin:12px 0 6px"><span class="big">1,340</span><span class="mute">left · 660 eaten of 2,000</span></div></div>
     <div class="card small mute">Today (from #09) goes here. Tap <b>Recap</b> in the header to come back. The 9:30pm "Your day" push and the Friday "Weekly reflection is ready" push also open the Recap.</div>`;
 }
@@ -330,18 +395,17 @@ function Chat(){
 }
 
 // ---------- shell + switcher ----------
-const VARIANTS = {A:["Report card",VariantA], B:["Agent walkthrough",VariantB], C:["Ledger + checklist",VariantC]};
+const VARIANTS = {D:["Recap + Stats (your picks)",VariantD], A:["Report card",VariantA], B:["Agent walkthrough",VariantB], C:["Ledger + checklist",VariantC]};
 const KEYS = Object.keys(VARIANTS);
 function setParam(){ history.replaceState(null,"","?"+new URLSearchParams({variant,period})); }
 function cycle(d){ variant = KEYS[(KEYS.indexOf(variant)+d+KEYS.length)%KEYS.length]; stepB=0; openRow=null; page="recap"; setParam(); render(); scrollTo(0,0); }
 function render(){
-  if(!VARIANTS[variant]) variant="A";
-  const body = page==="recap" ? VARIANTS[variant][1]() : page==="today" ? Today() : page==="plan" ? Plan() : Chat();
-  const tab = page==="recap"||page==="today" ? "today" : page;
+  if(!VARIANTS[variant]) variant="D";
+  const body = page==="recap" ? VARIANTS[variant][1]() : page==="stats" ? Stats() : page==="today" ? Today() : page==="plan" ? Plan() : Chat();
+  const tab = ["recap","today","stats"].includes(page) ? "today" : page;
   document.getElementById("app").innerHTML = body + `
     <div class="composer"><div class="row"><button class="btn" style="border-radius:50%;width:44px;height:44px;padding:0;font-size:24px;flex:none" title="Quick entry">+</button><input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}"></div></div>
     <div class="tabs">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${tab===k?'cur':''}" onclick="${["today","plan","chat"].includes(k)?`go('${k}')`:"toast('Not in this prototype')"}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
-  const acc = RECS.filter(r=>r.st!==null).length;
   document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
     <span style="opacity:.6">| carried ${carried().length}</span><button onclick="fresh();page='recap';render()" title="Reset state">↺</button>`;
 }
