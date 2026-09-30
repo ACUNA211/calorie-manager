@@ -19,3 +19,5 @@ Make a rough mock-up of the Recap page (opened from Today's header) and react to
 - **Weekly period:** the last 7 days, not including today. So Friday's reflection covers Friday to Thursday.
 - **A missing meal:** the day isn't counted in the average, days under or deficit. The Agent pings to ask whether the meal was skipped (the slot Check-in, then the 9:30pm Recap). With no answer that day, the day stays grey as missing.
 - **Month and custom Recaps** get recommendation cards too, and accepted ones go into the coming week's Meal Plan.
+
+**Feedback round 2 (2026-09-30):** A second card under the tiles shows **Followed the plan** (meals kept as planned, planned Eating Out included, e.g. 22 / 28 with a progress bar, how many were swapped and how many are missing) and **Ate out** (how many times, planned vs. unplanned, and how many went over their aim). It appears in the Week, Month and Custom Recaps.
