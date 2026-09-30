@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Recap (#15)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/15-recaps.md
+  Question: what does each Recap period show, how do the Agent's recommendations appear and get accepted,
+  and how does the weekly Recap hand off to planning?
+  Three layouts of the Recap page (opened from Today's header), switchable via ?variant=A|B|C and the floating bar (or ← →).
+  Period (?period=day|week|month|custom) is switched inside the page.
+  A: report card (tiles, chart, sections, recommendation cards, sticky "Plan next week").
+  B: Agent walkthrough (one topic per step, a question on each, the last step starts planning).
+  C: ledger (a row per day with a mark per meal, tap to expand; recommendations are a "For next week's plan" checklist).
+  Scenario: Member with a 2,000 Calorie Target. Daily = Wed Sep 30 at 9:30pm. Weekly = Fri Oct 2 at 3pm.
+  All state is in memory. Reload resets it. Open by double-clicking.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--hatch:#c9d3f5;--out:#8a5cc2}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:190px}
+  button{font:inherit;cursor:pointer}
+  .row{display:flex;align-items:center;gap:8px}
+  .wrap{flex-wrap:wrap}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .big{font-size:28px;font-weight:700}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px}
+  .pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px;margin-bottom:6px}
+  .strike{text-decoration:line-through;color:var(--mute)}
+  .tile{flex:1;background:#fff;border-radius:12px;padding:10px;box-shadow:0 1px 2px #0001;min-width:0}
+  .tile b{display:block;font-size:20px}
+  .li{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);align-items:baseline}
+  .li:last-child{border-bottom:0}
+  .chart{display:flex;align-items:flex-end;gap:5px;height:120px;position:relative;margin-top:8px}
+  .chart .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .chart .c i{display:block;width:100%;border-radius:4px 4px 0 0}
+  .chart .tl{position:absolute;left:0;right:0;border-top:2px dashed var(--ink);opacity:.55}
+  .chart .lab{font-size:10.5px;color:var(--mute);margin-top:3px}
+  .mk{display:inline-block;width:22px;height:22px;border-radius:6px;text-align:center;line-height:22px;font-size:12px;font-weight:700}
+  .k{background:#dcefe3;color:var(--good)} .s{background:#fdebd8;color:#a0561a} .x{background:#f6d6cc;color:var(--warn)} .o{background:#ebe1f6;color:var(--out)} .u{background:#eee;color:#999} .d{background:#eee;color:#666}
+  .rec{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff}
+  .rec.done{background:#f3faf5;border-color:#bfe0cb}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal div{aspect-ratio:1;border-radius:6px;font-size:11px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .cal .h{aspect-ratio:auto;color:var(--mute);font-weight:700}
+  .steps{display:flex;gap:4px;margin:10px 16px 0}
+  .steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+  .steps i.on{background:var(--accent)}
+  .bubble{background:#fff;border-radius:4px 16px 16px 16px;padding:12px 14px;margin:10px 40px 10px 16px;box-shadow:0 1px 2px #0001}
+  .me{background:var(--accent);color:#fff;border-radius:16px 4px 16px 16px;padding:9px 14px;margin:8px 16px 8px auto;width:fit-content;max-width:75%}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{padding:8px 3px;border-bottom:1px solid var(--line);text-align:center}
+  td:first-child,th:first-child{text-align:left}
+  td:last-child,th:last-child{text-align:right}
+  th{font-size:11px;text-transform:uppercase;color:var(--mute);font-weight:600}
+  tr.x1{cursor:pointer} tr.x1:hover{background:#faf9f6}
+  input[type=date]{font:inherit;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:#fff}
+  /* shell */
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .composer{position:fixed;bottom:108px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);padding:8px 12px;z-index:10}
+  .composer input{width:100%;border:1px solid var(--line);border-radius:999px;padding:11px 14px;font:inherit}
+  .sticky{position:fixed;bottom:170px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:388px;z-index:11;box-shadow:0 4px 14px #0003}
+  /* switcher */
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:10px;z-index:98;font-size:13px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+
+<script>
+// ---------- data (in memory) ----------
+const TARGET = 2000;
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+let period = params.get("period") || "week";
+let page = "recap"; // recap | today | plan | chat
+const sum = a => a.reduce((x,y)=>x+y,0);
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const signed = n => (n>0?"+":n<0?"−":"") + fmt(Math.abs(n));
+
+// meal status: k kept, s swapped, o eating out, x skipped/dropped, u unlogged
+const MK = {k:["✓","Kept"], s:["⇄","Swapped"], o:["⌂","Eating Out"], x:["–","Dropped"], u:["?","Unlogged"]};
+const WEEK = [ // Fri Sep 25 – Thu Oct 1 (the 7 days before the Friday 3pm reflection)
+  {d:"Fri", n:"Sep 25", m:[["k",470,"Yogurt & granola"],["o",640,"Work lunch"],["o",1050,"Pizza night (aim 800)"],["x",0,"Snack dropped by Rebalance"]], rb:"accepted", note:"Pizza night came in 250 over its aim"},
+  {d:"Sat", n:"Sep 26", m:[["k",480,"Eggs & toast"],["k",560,"Chili"],["s",690,"Salmon → chicken tacos"],["k",190,"Apple + PB"]]},
+  {d:"Sun", n:"Sep 27", m:[["u",0,"Breakfast not logged"],["k",570,"Chili"],["k",650,"Sheet-pan chicken"],["k",180,"Cookie (Prep Session)"]], note:"Prep Session: cookies and chili for the week"},
+  {d:"Mon", n:"Sep 28", m:[["k",470,"Yogurt & granola"],["k",770,"Chili + 2 cookies (extra 200)"],["k",660,"Burrito bowl"],["k",190,"Apple + PB"]], rb:"declined", note:"2 extra cookies after lunch"},
+  {d:"Tue", n:"Sep 29", m:[["k",470,"Yogurt & granola"],["o",650,"Work lunch"],["s",430,"Salmon → turkey wraps"],["k",190,"Apple + PB"]]},
+  {d:"Wed", n:"Sep 30", m:[["k",470,"Yogurt & granola"],["k",870,"Chili + cornbread + 3 cookies (extra 300)"],["s",420,"Burrito bowl → turkey wraps (Rebalance)"],["k",190,"Apple + PB"]], rb:"accepted", note:"3 extra cookies after lunch"},
+  {d:"Thu", n:"Oct 1", m:[["k",470,"Yogurt & granola"],["k",560,"Chicken rice bowl"],["k",640,"Beef stir-fry"],["s",150,"Apple + PB → yogurt"]]},
+];
+WEEK.forEach(w=>w.eaten=sum(w.m.map(x=>x[1])));
+const SLOTS = ["B","L","D","S"];
+
+// September for month / custom (deterministic)
+const MONTH = Array.from({length:30},(_,i)=>{
+  const dow = (i+1)%7; // Sep 1 2026 is a Tuesday → index 0 = Tue
+  const wig = [60,-40,120,-90,20,-150,80,-20,140,-60,30,-110,90,-30][i%14];
+  const fri = (i+4)%7===0; // Fridays
+  let e = 1880 + wig + (fri?260:0);
+  if(i===29) e = WEEK[5].eaten;
+  return {day:i+1, eaten:e, dow:(i+2)%7};
+});
+let custom = {from:"2026-09-14", to:"2026-09-27"};
+
+// Agent recommendations for the week (accept = carried into planning)
+let RECS, daily, stepB, openRow;
+function fresh(){
+  RECS = [
+    {id:"sweet", kind:"Pattern", text:"Cookies after lunch showed up Mon and Wed (+200, +300). Plan a 150-kcal sweet snack on weekdays instead?", yes:"Add to next plan", no:"No thanks", carry:"A 150-kcal sweet snack on weekdays", st:null},
+    {id:"salmon", kind:"Swaps", text:"You swapped salmon out on Sat and Tue. How should I save that?", opts:["Dislike","Restriction","Just this dish"], carry:"Salmon saved as a Dislike (soft)", st:null},
+    {id:"chick", kind:"Grocery List", text:"You added chickpeas and dark chocolate to the Grocery List. Want dishes that use the chickpeas?", yes:"Plan a chickpea dish", no:"I have something in mind", carry:"One new chickpea Dish", st:null},
+    {id:"pizza", kind:"Eating Out", text:"Friday pizza night has come in over its 800 aim 3 times (avg 1,020). Raise the aim to 1,000 and plan a lighter Friday lunch?", yes:"Do that", no:"Keep 800", carry:"Pizza night aim 1,000, lighter Friday lunch", st:null},
+  ];
+  daily = {cooked:{}, leftovers:null, rating:null, fb:null, rec:null};
+  stepB = 0; openRow = null;
+}
+fresh();
+const carried = () => RECS.filter(r=>r.st && r.st!=="no" && r.st!=="Just this dish");
+
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); }
+function recAns(id, v){ const r=RECS.find(r=>r.id===id); r.st = v; if(r.id==="salmon" && v!=="Just this dish") r.carry = `Salmon saved as a ${v==="Dislike"?"Dislike (soft)":"Restriction (hard)"}`; render(); toast(v==="no"?"Dismissed":"Saved for next week's plan"); }
+function recUndo(id){ RECS.find(r=>r.id===id).st=null; render(); }
+function go(p){ page=p; render(); scrollTo(0,0); }
+function setPeriod(p){ period=p; stepB=0; openRow=null; setParam(); render(); scrollTo(0,0); }
+
+// ---------- derived ----------
+function weekStats(){
+  const all = WEEK.flatMap(w=>w.m.map(x=>x[0]));
+  const c = k => all.filter(x=>x===k).length;
+  return {total:sum(WEEK.map(w=>w.eaten)), avg:sum(WEEK.map(w=>w.eaten))/7, under:WEEK.filter(w=>w.eaten<=TARGET).length,
+    kept:c("k"), swapped:c("s"), out:c("o"), dropped:c("x"), unlogged:c("u"), slots:all.length,
+    rbP:WEEK.filter(w=>w.rb).length, rbA:WEEK.filter(w=>w.rb==="accepted").length};
+}
+function rangeDays(){
+  if(period==="month") return MONTH;
+  const a = +custom.from.slice(8), b = +custom.to.slice(8);
+  return MONTH.filter(d=>d.day>=Math.min(a,b) && d.day<=Math.max(a,b));
+}
+const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// ---------- shared bits ----------
+function periodTabs(){
+  return `<div class="row" style="padding:0 16px;gap:6px">${[["day","Day"],["week","Week"],["month","Month"],["custom","Custom"]].map(([k,n])=>`<button class="pill ${period===k?'on':''}" onclick="setPeriod('${k}')">${n}</button>`).join("")}</div>`;
+}
+function header(sub){
+  return `<div style="padding:14px 16px 10px;background:#fff;border-bottom:1px solid var(--line);margin-bottom:10px">
+    <div class="row"><button class="btn ghost" onclick="go('today')">‹ Today</button><span class="sp"></span><b>Recap</b><span class="sp"></span><span style="width:60px"></span></div>
+    <div class="small mute" style="text-align:center">${sub}</div></div>` + periodTabs();
+}
+function subtitle(){
+  return {day:"Wed · Sep 30 · sent 9:30 pm", week:"Fri Sep 25 – Thu Oct 1 · weekly reflection, sent Fri 3:00 pm", month:"September 2026 · monthly Recap is off by default (Settings → Schedules)", custom:"Custom range"}[period];
+}
+function chart(days, labelFn, h=120){
+  const max = Math.max(TARGET*1.2, ...days.map(d=>d.eaten));
+  return `<div class="chart" style="height:${h}px"><span class="tl" style="bottom:${TARGET/max*100}%"></span>${days.map(d=>`<div class="c"><i style="height:${d.eaten/max*100}%;background:${d.eaten>TARGET?'var(--warn)':'var(--good)'};opacity:.85" title="${fmt(d.eaten)}"></i><span class="lab">${labelFn(d)}</span></div>`).join("")}</div>
+  <div class="small mute" style="margin-top:4px">Dashed line: Calorie Target ${fmt(TARGET)}</div>`;
+}
+function recCard(r, compact){
+  const done = r.st!==null;
+  const choice = r.st==="no" ? `<span class="mute">Dismissed</span>` : `<span class="good">✓ ${r.opts? r.st : r.yes}</span>${r.st!=="Just this dish"?' · <span class="mute">goes into next week\'s plan</span>':''}`;
+  return `<div class="rec ${done&&r.st!=='no'?'done':''}"><div class="tag mute">${r.kind}</div><div style="margin:4px 0 8px">${r.text}</div>
+    ${done ? `<div class="row small">${choice}<span class="sp"></span><button class="btn ghost sm" onclick="recUndo('${r.id}')">Undo</button></div>`
+    : `<div class="row wrap">${r.opts ? r.opts.map(o=>`<button class="btn ${o==='Dislike'?'':'line'} sm" onclick="recAns('${r.id}','${o}')">${o}</button>`).join("")
+      : `<button class="btn sm" onclick="recAns('${r.id}','yes')">${r.yes}</button><button class="btn line sm" onclick="recAns('${r.id}','no')">${r.no}</button>`}
+      ${compact?"":`<span class="sp"></span><button class="btn ghost sm" onclick="go('chat')">Chat ›</button>`}</div>`}</div>`;
+}
+function dailyMeals(){ return WEEK[5].m.map((x,i)=>({slot:["Breakfast","Lunch","Dinner","Snack"][i], st:x[0], kcal:x[1], what:x[2], plan:[475,570,665,190][i]})); }
+function dailyQuestions(){
+  const c = daily.cooked;
+  const q1 = `<div><b>Was dinner cooked?</b> <span class="small mute">Turkey lettuce wraps. Yes subtracts its ingredients from the Pantry.</span>
+    <div class="row" style="margin-top:6px">${c.dinner===undefined?`<button class="btn sm" onclick="daily.cooked.dinner=true;render()">Yes, cooked</button><button class="btn line sm" onclick="daily.cooked.dinner=false;render()">No</button>`:`<span class="small good">${c.dinner?"✓ Cooked · Pantry updated (turkey −1 lb, lettuce −1 head)":"Not cooked · Pantry unchanged"}</span>`}</div></div>`;
+  const q2 = `<div style="margin-top:12px"><b>Any leftovers?</b>
+    <div class="row wrap" style="margin-top:6px">${daily.leftovers===null?`<button class="btn sm" onclick="daily.leftovers='yes';render()">1 portion left</button><button class="btn line sm" onclick="daily.leftovers='no';render()">None</button>`:`<span class="small good">${daily.leftovers==="yes"?"✓ 1 portion of turkey wraps added to the Pantry. Planned for Fri lunch (you can move it).":"No leftovers"}</span>`}</div></div>`;
+  const q3 = `<div style="margin-top:12px"><b>New Dish: turkey lettuce wraps.</b> How was it?
+    <div class="row wrap" style="margin-top:6px">${daily.rating===null?["👍 Liked it","😐 OK","👎 Didn't like it"].map((t,i)=>`<button class="btn line sm" onclick="daily.rating=${i};render()">${t}</button>`).join("")
+      : daily.rating===0 ? (daily.fb===null?`<span class="small">Add to Favorites?</span><button class="btn sm" onclick="daily.fb='fav';render()">⭐ Yes</button><button class="btn line sm" onclick="daily.fb='no';render()">No</button>`:`<span class="small good">${daily.fb==='fav'?'⭐ Added to Favorites':'Rated 👍'}</span>`)
+      : daily.rating===2 ? (daily.fb===null?["Restriction","Dislike","Just this dish"].map(t=>`<button class="btn line sm" onclick="daily.fb='${t}';render()">${t}</button>`).join(""):`<span class="small good">Saved as ${daily.fb}</span>`)
+      : `<span class="small good">Rated 😐 · noted on the Dish</span>`}</div></div>`;
+  return q1+q2+q3;
+}
+const DAILY_REC = {text:"You've had afternoon cookies 2 days this week. I'll bring it up in Friday's reflection. Anything to change for tomorrow?", yes:"Nothing", no:"Chat ›"};
+
+// ---------- Variant A: report card ----------
+function VariantA(){
+  let body = "";
+  if(period==="day"){
+    const m = dailyMeals(), e = WEEK[5].eaten;
+    body = `<div class="row" style="margin:10px 16px;gap:8px">
+      <div class="tile"><span class="small mute">Eaten</span><b>${fmt(e)}</b><span class="small mute">of ${fmt(TARGET)}</span></div>
+      <div class="tile"><span class="small mute">Result</span><b class="good">${fmt(TARGET-e)} under</b><span class="small mute">forecast was 195 over</span></div>
+      <div class="tile"><span class="small mute">Meals</span><b>4 / 4</b><span class="small mute">logged</span></div></div>
+    <div class="card"><h3>Meals</h3>${m.map(x=>`<div class="li"><span class="mk ${x.st}">${MK[x.st][0]}</span><span class="sp"><b>${x.slot}</b> <span class="small mute">${x.what}</span></span><span class="small">${fmt(x.kcal)} <span class="mute">/ ${x.plan}</span></span></div>`).join("")}</div>
+    <div class="card"><h3>Rebalance</h3><div class="small">Lunch went 300 over (cookies). You accepted <b>Lighter Dish</b>: turkey wraps instead of the burrito bowl (−245). The bowl moved to Thursday.</div></div>
+    <div class="card"><h3>Tonight's questions</h3>${dailyQuestions()}</div>
+    <div class="card"><h3>Agent</h3><div class="small">${DAILY_REC.text}</div><div class="row" style="margin-top:8px"><button class="btn line sm" onclick="toast('Noted')">Nothing</button><button class="btn ghost sm" onclick="go('chat')">Chat ›</button></div></div>`;
+  } else if(period==="week"){
+    const s = weekStats();
+    body = `<div class="row" style="margin:10px 16px;gap:8px">
+      <div class="tile"><span class="small mute">Daily avg</span><b>${fmt(s.avg)}</b><span class="small ${s.avg<=TARGET?'good':'warn'}">${signed(s.avg-TARGET)} vs target</span></div>
+      <div class="tile"><span class="small mute">Days under</span><b>${s.under} / 7</b><span class="small mute">week deficit ${fmt(TARGET*7-s.total)}</span></div>
+      <div class="tile"><span class="small mute">Kept to plan</span><b>${s.kept+s.out} / ${s.slots}</b><span class="small mute">meals</span></div></div>
+    <div class="card"><h3>Calories per day</h3>${chart(WEEK, d=>d.d)}</div>
+    <div class="card"><h3>Meals vs. the Meal Plan</h3>
+      ${[["k",s.kept,"kept as planned"],["o",s.out,"Eating Out, as planned"],["s",s.swapped,"swapped (salmon twice)"],["x",s.dropped,"dropped by a Rebalance"],["u",s.unlogged,"not logged (Sun breakfast)"]].map(([k,n,t])=>`<div class="li"><span class="mk ${k}">${MK[k][0]}</span><span class="sp">${t}</span><b>${n}</b></div>`).join("")}
+      <div class="small mute" style="margin-top:6px">Extras off the plan: cookies Mon (+200) and Wed (+300).</div></div>
+    <div class="card"><h3>Rebalances</h3>${WEEK.filter(w=>w.rb).map(w=>`<div class="li"><span class="sp">${w.d} ${w.n}</span><span class="${w.rb==='accepted'?'good':'mute'}">${w.rb}</span></div>`).join("")}</div>
+    <div class="card"><h3>Eating Out</h3><div class="li"><span class="sp">Work lunch ×2</span><span>645 avg <span class="mute">/ aim 650</span></span></div><div class="li"><span class="sp">Pizza night</span><span class="warn">1,050 <span class="mute">/ aim 800</span></span></div></div>
+    <div class="card"><h3>You added to the Grocery List</h3><div class="small">Chickpeas · sparkling water · dark chocolate</div></div>
+    <div class="card"><h3>Recommendations</h3><div class="small mute">Accepted ones go into next week's Meal Plan.</div>${RECS.map(r=>recCard(r)).join("")}</div>
+    <button class="btn sticky" onclick="go('plan')">Plan next week →${carried().length?` <span style="opacity:.8;font-weight:400">(${carried().length} change${carried().length>1?'s':''})</span>`:""}</button>`;
+  } else {
+    const days = rangeDays(), tot = sum(days.map(d=>d.eaten)), avg = tot/days.length, under = days.filter(d=>d.eaten<=TARGET).length;
+    body = (period==="custom"?`<div class="card row small"><span>From</span><input type="date" value="${custom.from}" min="2026-09-01" max="2026-09-30" onchange="custom.from=this.value;render()"><span>to</span><input type="date" value="${custom.to}" min="2026-09-01" max="2026-09-30" onchange="custom.to=this.value;render()"></div>`:"")+
+    `<div class="row" style="margin:10px 16px;gap:8px">
+      <div class="tile"><span class="small mute">Daily avg</span><b>${fmt(avg)}</b><span class="small ${avg<=TARGET?'good':'warn'}">${signed(avg-TARGET)} vs target</span></div>
+      <div class="tile"><span class="small mute">Days under</span><b>${under} / ${days.length}</b></div>
+      <div class="tile"><span class="small mute">Deficit</span><b>${fmt(TARGET*days.length-tot)}</b><span class="small mute">≈ ${(Math.max(0,TARGET*days.length-tot)/3500).toFixed(1)} lb</span></div></div>
+    <div class="card"><h3>Calories per day</h3>${chart(days, d=>d.day%7===1||days.length<15?d.day:"", 110)}</div>
+    <div class="card"><h3>Patterns</h3><div class="li"><span class="sp">Fridays</span><span class="warn">avg +250 over</span></div><div class="li"><span class="sp">Rebalances</span><span>${period==="month"?"9 proposed · 6 accepted":"4 proposed · 3 accepted"}</span></div><div class="li"><span class="sp">Meals kept to plan</span><span>${period==="month"?"86 / 120":"41 / 56"}</span></div><div class="li"><span class="sp">Most swapped</span><span>Salmon (4×)</span></div><div class="li"><span class="sp">New Dishes rated 👍</span><span>5 of 8</span></div></div>
+    <div class="card"><h3>Agent</h3><div class="small">Fridays are where the deficit leaks. Every other weekday averages 1,860. A lighter Friday lunch would cover most of it.</div><div class="row" style="margin-top:8px"><button class="btn sm" onclick="toast('Noted for Friday planning')">Bring it up on Friday</button><button class="btn ghost sm" onclick="go('chat')">Chat ›</button></div></div>`;
+  }
+  return header(subtitle()) + body;
+}
+
+// ---------- Variant B: Agent walkthrough ----------
+function VariantB(){
+  let steps;
+  if(period==="day"){
+    const e = WEEK[5].eaten;
+    steps = [
+      ()=>`<div class="bubble"><div class="big">${fmt(e)} <span class="mute" style="font-size:15px;font-weight:400">of ${fmt(TARGET)}</span></div><div>Nice recovery. After lunch the forecast was 195 over, and the lighter dinner brought you <b class="good">${fmt(TARGET-e)} under</b>.</div></div>
+          <div class="bubble small">${dailyMeals().map(x=>`<div class="li"><span class="mk ${x.st}">${MK[x.st][0]}</span><span class="sp">${x.slot} · ${x.what}</span><span>${x.kcal}</span></div>`).join("")}</div>`,
+      ()=>`<div class="bubble">A few quick questions about tonight.</div><div class="bubble">${dailyQuestions()}</div>`,
+      ()=>`<div class="bubble">${DAILY_REC.text}</div><div class="row" style="padding:0 16px"><button class="pill" onclick="toast('See you tomorrow')">Nothing, good night</button><button class="pill" onclick="go('chat')">Something ›</button></div>`,
+    ];
+  } else if(period==="week"){
+    const s = weekStats();
+    steps = [
+      ()=>`<div class="bubble">Here's your week, Fri Sep 25 to Thu Oct 1.<div class="big" style="margin-top:6px">${s.under} of 7 days under</div><div class="small mute">avg ${fmt(s.avg)} · deficit ${fmt(TARGET*7-s.total)} for the week</div>${chart(WEEK,d=>d.d,100)}</div>`,
+      ()=>`<div class="bubble">You kept <b>${s.kept+s.out} of ${s.slots}</b> meals as planned. You swapped ${s.swapped}, one was dropped in a Rebalance, and Sunday breakfast wasn't logged.</div>
+          <div class="bubble small">${WEEK.map(w=>`<div class="row" style="padding:3px 0"><span style="width:34px">${w.d}</span>${w.m.map(x=>`<span class="mk ${x[0]}" title="${x[2]}">${MK[x[0]][0]}</span>`).join("")}<span class="sp"></span><span class="${w.eaten>TARGET?'warn':''}">${fmt(w.eaten)}</span></div>`).join("")}</div>
+          ${recCard(RECS[1],true).replace('class="rec','class="bubble rec')}`,
+      ()=>`<div class="bubble">Rebalances: 3 proposed, you took 2 (Fri, Wed). Both times it was an afternoon sweet.</div>${recCard(RECS[0],true).replace('class="rec','class="bubble rec')}`,
+      ()=>`<div class="bubble">Eating Out: work lunches landed right on their 650 aim. Pizza night came in at 1,050 against 800.</div>${recCard(RECS[3],true).replace('class="rec','class="bubble rec')}`,
+      ()=>`<div class="bubble">From the Grocery List: you added chickpeas, sparkling water and dark chocolate.</div>${recCard(RECS[2],true).replace('class="rec','class="bubble rec')}`,
+      ()=>`<div class="bubble">That's the week. For next week's Meal Plan I'll use:${carried().length?`<ul style="margin:6px 0 0;padding-left:18px">${carried().map(r=>`<li>${r.carry}</li>`).join("")}</ul>`:`<div class="mute small" style="margin-top:6px">Nothing new. Same rules as this week.</div>`}<div style="margin-top:8px"><b>Ready to plan next week?</b></div></div>
+          <div class="row" style="padding:0 16px"><button class="btn" onclick="go('plan')">Plan it now</button><button class="btn line" onclick="toast('I\\'ll remind you at 7pm')">Later</button></div>`,
+    ];
+  } else {
+    const days = rangeDays(), tot = sum(days.map(d=>d.eaten)), under = days.filter(d=>d.eaten<=TARGET).length;
+    steps = [
+      ()=>(period==="custom"?`<div class="card row small"><span>From</span><input type="date" value="${custom.from}" onchange="custom.from=this.value;render()"><span>to</span><input type="date" value="${custom.to}" onchange="custom.to=this.value;render()"></div>`:"")+`<div class="bubble">${period==="month"?"September":"That range"}: <b>${under} of ${days.length}</b> days under, averaging ${fmt(tot/days.length)}. Total deficit ${fmt(TARGET*days.length-tot)} (≈ ${((TARGET*days.length-tot)/3500).toFixed(1)} lb).${chart(days,d=>d.day%7===1||days.length<15?d.day:"",100)}</div>`,
+      ()=>`<div class="bubble">The one pattern that stands out: <b>Fridays average 250 over</b>. Every other weekday averages 1,860. Salmon got swapped 4 times, and 5 of 8 new Dishes were 👍.</div><div class="row" style="padding:0 16px"><button class="pill" onclick="toast('Noted for Friday planning')">Bring it up Friday</button><button class="pill" onclick="go('chat')">Talk about it ›</button></div>`,
+    ];
+  }
+  stepB = Math.min(stepB, steps.length-1);
+  return header(subtitle()) + `<div class="steps">${steps.map((_,i)=>`<i class="${i<=stepB?'on':''}"></i>`).join("")}</div>
+    ${steps[stepB]()}
+    <div class="row" style="padding:10px 16px"><button class="btn line" ${stepB?"":"disabled style='opacity:.4'"} onclick="stepB--;render()">‹ Back</button><span class="sp small mute" style="text-align:center">${stepB+1} of ${steps.length}</span>${stepB<steps.length-1?`<button class="btn" onclick="stepB++;render()">Next ›</button>`:`<span style="width:70px"></span>`}</div>`;
+}
+
+// ---------- Variant C: ledger ----------
+function VariantC(){
+  let body = "";
+  const legend = `<div class="row wrap small mute" style="gap:10px;margin-top:8px">${Object.entries(MK).map(([k,[i,n]])=>`<span><span class="mk ${k}" style="width:16px;height:16px;line-height:16px;font-size:10px">${i}</span> ${n}</span>`).join("")}</div>`;
+  if(period==="day"){
+    const m = dailyMeals(), e = WEEK[5].eaten;
+    body = `<div class="card"><table><tr><th>Meal</th><th>Plan</th><th>Eaten</th><th>±</th></tr>
+      ${m.map(x=>`<tr><td><span class="mk ${x.st}">${MK[x.st][0]}</span> ${x.slot}<div class="small mute">${x.what}</div></td><td>${x.plan}</td><td>${x.kcal}</td><td class="${x.kcal-x.plan>50?'warn':'good'}">${signed(x.kcal-x.plan)}</td></tr>`).join("")}
+      <tr><td><b>Day</b><div class="small mute">1 Rebalance accepted</div></td><td>1,900</td><td><b>${fmt(e)}</b></td><td class="good"><b>${fmt(TARGET-e)} under</b></td></tr></table></div>
+      <div class="card"><h3>To close the day</h3>${dailyQuestions()}</div>`;
+  } else if(period==="week"){
+    const s = weekStats();
+    body = `<div class="card"><table><tr><th>Day</th>${SLOTS.map(x=>`<th>${x}</th>`).join("")}<th>kcal</th></tr>
+      ${WEEK.map((w,i)=>`<tr class="x1" onclick="openRow=openRow===${i}?null:${i};render()"><td>${w.d} <span class="small mute">${w.n.slice(4)}</span>${w.rb?`<div class="tag ${w.rb==='accepted'?'good':'mute'}" style="font-size:9.5px">Rebalance ${w.rb}</div>`:""}</td>${w.m.map(x=>`<td><span class="mk ${x[0]}">${MK[x[0]][0]}</span></td>`).join("")}<td class="${w.eaten>TARGET?'warn':''}"><b>${fmt(w.eaten)}</b></td></tr>
+        ${openRow===i?`<tr><td colspan="6" style="text-align:left;background:#faf9f6" class="small">${w.m.map((x,j)=>`<div class="row"><span style="width:18px">${SLOTS[j]}</span><span class="sp">${x[2]}</span><span>${x[1]||"—"}</span></div>`).join("")}${w.note?`<div class="mute" style="margin-top:4px">${w.note}</div>`:""}</td></tr>`:""}`).join("")}
+      <tr><td><b>Week</b></td><td colspan="4" class="small mute">${s.kept+s.out}/${s.slots} kept · ${s.under}/7 days under</td><td><b>${fmt(s.avg)}</b><div class="small mute">avg</div></td></tr></table>${legend}
+      <div class="small mute" style="margin-top:6px">Tap a day for its meals. Grocery List adds: chickpeas, sparkling water, dark chocolate.</div></div>
+      <div class="card"><h3>For next week's plan</h3><div class="small mute" style="margin-bottom:4px">The Agent's suggestions. Tick what you want planning to use.</div>
+        ${RECS.map(r=>{ const on = r.st && r.st!=="no"; return `<label class="li" style="cursor:pointer"><input type="checkbox" ${on?"checked":""} onchange="recAns('${r.id}', this.checked ? '${r.opts?"Dislike":"yes"}' : 'no')"><span class="sp small"><b>${r.carry.replace("Salmon saved as a Dislike (soft)","Save salmon as a Dislike")}</b><br><span class="mute">${r.text}</span></span></label>`; }).join("")}
+        <button class="btn" style="width:100%;margin-top:10px" onclick="go('plan')">Plan next week with ${carried().length} change${carried().length===1?"":"s"} →</button>
+        <button class="btn ghost" style="width:100%" onclick="go('chat')">Talk it over with the Agent first</button></div>`;
+  } else {
+    const days = rangeDays(), tot = sum(days.map(d=>d.eaten));
+    const lead = period==="month" ? 2 : 0; // Sep 1 2026 is a Tuesday (Mon-first grid: 1 blank)
+    body = (period==="custom"?`<div class="card row small"><span>From</span><input type="date" value="${custom.from}" onchange="custom.from=this.value;render()"><span>to</span><input type="date" value="${custom.to}" onchange="custom.to=this.value;render()"></div>`:"")+
+      `<div class="card"><div class="cal">${["M","T","W","T","F","S","S"].map(x=>`<div class="h">${x}</div>`).join("")}${period==="month"?"<div></div>":""}
+      ${days.map(d=>{ const diff=d.eaten-TARGET; return `<div style="background:${diff>0?'#f6d6cc':diff>-100?'#e8f2ea':'#cfe7d7'}"><b>${d.day}</b><span style="font-size:9.5px" class="${diff>0?'warn':'good'}">${signed(diff)}</span></div>`; }).join("")}</div>
+      <div class="small mute" style="margin-top:6px">Each day vs. the ${fmt(TARGET)} target. Tap a day to open its daily Recap.</div></div>
+      <div class="card"><table><tr><th>Week</th><th>Avg</th><th>Days under</th><th>Deficit</th></tr>
+        ${[0,7,14,21,28].map(st=>{ const w=days.slice(st,st+7); if(!w.length) return ""; const t=sum(w.map(d=>d.eaten)); return `<tr><td>${w[0].day}–${w[w.length-1].day}</td><td>${fmt(t/w.length)}</td><td>${w.filter(d=>d.eaten<=TARGET).length}/${w.length}</td><td>${fmt(TARGET*w.length-t)}</td></tr>`; }).join("")}
+        <tr><td><b>Total</b></td><td><b>${fmt(tot/days.length)}</b></td><td><b>${days.filter(d=>d.eaten<=TARGET).length}/${days.length}</b></td><td><b>${fmt(TARGET*days.length-tot)}</b></td></tr></table></div>
+      <div class="card small"><b>Agent:</b> Fridays average 250 over. Every other weekday averages 1,860. <button class="btn ghost sm" onclick="go('chat')">Chat ›</button></div>`;
+  }
+  return header(subtitle()) + body;
+}
+
+// ---------- other pages (stubs) ----------
+function Today(){
+  return `<div style="padding:16px;background:#fff;border-bottom:1px solid var(--line)"><div class="row"><b>Thu · Oct 1</b><span class="sp"></span><button class="pill" onclick="go('recap')">Recap</button><button class="pill">☰</button></div>
+    <div class="row" style="margin:12px 0 6px"><span class="big">1,340</span><span class="mute">left · 660 eaten of 2,000</span></div></div>
+    <div class="card small mute">Today (from #09) goes here. Tap <b>Recap</b> in the header to come back. The 9:30pm "Your day" push and the Friday "Weekly reflection is ready" push also open the Recap.</div>`;
+}
+function Plan(){
+  const c = carried();
+  return `<div class="row" style="padding:16px"><button class="btn ghost" onclick="go('recap')">‹ Recap</button><h2 class="sp">Next week · Oct 5–11</h2></div>
+    <div class="card"><div class="tag mute">Drafting</div><div style="margin:6px 0">The Agent is drafting next week's Meal Plan${c.length?" with these changes from your reflection:":". No changes from the reflection."}</div>
+    ${c.length?`<ul style="margin:0;padding-left:18px">${c.map(r=>`<li>${r.carry}</li>`).join("")}</ul>`:""}
+    <div class="small mute" style="margin-top:10px">Plus the usual rules: leftovers first, Favorites and 2 new Dishes, Pantry as tiebreaker (#06). When it's ready you get "Next week's Meal Plan is ready" and approve it here. The Grocery List updates on approval.</div></div>`;
+}
+function Chat(){
+  return `<div class="row" style="padding:16px"><h2>Chat with the Agent</h2></div><div class="card small"><p><b>Agent:</b> Want to talk through the Recap? Ask me anything about it, or tell me what to change.</p><button class="btn ghost" onclick="go('recap')">‹ Back to Recap</button></div>`;
+}
+
+// ---------- shell + switcher ----------
+const VARIANTS = {A:["Report card",VariantA], B:["Agent walkthrough",VariantB], C:["Ledger + checklist",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function setParam(){ history.replaceState(null,"","?"+new URLSearchParams({variant,period})); }
+function cycle(d){ variant = KEYS[(KEYS.indexOf(variant)+d+KEYS.length)%KEYS.length]; stepB=0; openRow=null; page="recap"; setParam(); render(); scrollTo(0,0); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  const body = page==="recap" ? VARIANTS[variant][1]() : page==="today" ? Today() : page==="plan" ? Plan() : Chat();
+  const tab = page==="recap"||page==="today" ? "today" : page;
+  document.getElementById("app").innerHTML = body + `
+    <div class="composer"><div class="row"><button class="btn" style="border-radius:50%;width:44px;height:44px;padding:0;font-size:24px;flex:none" title="Quick entry">+</button><input placeholder="Ask the Agent, or tell it what you ate…" onkeydown="if(event.key==='Enter'){this.value='';go('chat')}"></div></div>
+    <div class="tabs">${[["Today","◉","today"],["Plan","▦","plan"],["Pantry","▣","pantry"],["Grocery","☐","grocery"],["Chat","✉","chat"]].map(([n,i,k])=>`<button class="${tab===k?'cur':''}" onclick="${["today","plan","chat"].includes(k)?`go('${k}')`:"toast('Not in this prototype')"}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+  const acc = RECS.filter(r=>r.st!==null).length;
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <span style="opacity:.6">| carried ${carried().length}</span><button onclick="fresh();page='recap';render()" title="Reset state">↺</button>`;
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); });
+render();
+</script>
+</body>
+</html>
