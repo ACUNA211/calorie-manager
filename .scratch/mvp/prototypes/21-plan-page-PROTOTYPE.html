@@ -17,7 +17,7 @@
     C: one day at a time, a 14-day strip across both weeks, big meal cards, and a review screen for the draft.
   The swap / edit / move / clear sheets and the data are shared; only the layout differs.
   Scenario: 2,000 Calorie Target, planned to 95%. It's Fri Oct 2, 3:40pm, after the weekly reflection (#15).
-  Weeks run Sunday to Saturday (changed in feedback round 2). This week (Sep 27 – Oct 3) was approved last Friday and has 4 changes since. Next week (Oct 4 – 10) is the Agent's draft,
+  Weeks run Sunday to Saturday (changed in feedback round 2). Planning stays Friday 3pm, so Saturday is the one shopping day before Sunday's Prep Session (round 3). This week (Sep 27 – Oct 3) was approved last Friday and has 4 changes since. Next week (Oct 4 – 10) is the Agent's draft,
   built with the 4 recommendations accepted in the Recap. All state is in memory; reload or ↺ resets it.
 -->
 <style>
@@ -147,7 +147,7 @@ function fresh(){
       {n:"Wed", date:"Sep 30", past:true, busy:true, m:[{...Y(),eaten:470}, M("Chili & cornbread",570,5,{grp:"Chili",ty:"left",from:"Sunday's Prep Session",eaten:870}), M("Turkey wraps",420,15,{eaten:420,ch:{from:"Burrito bowl",by:"Rebalance",when:"Wed 2:10pm",why:"lunch went 300 over"}}), {...AP(),eaten:190}]},
       {n:"Thu", date:"Oct 1", past:true, m:[{...Y(),eaten:470}, M("Chicken rice bowl",560,15,{eaten:560}), M("Beef stir-fry",640,30,{eaten:640}), M("Greek yogurt",150,1,{eaten:150,ch:{from:"Apple + peanut butter",by:"You",when:"Thu 3:05pm",why:"out of apples"}})]},
       {n:"Fri", date:"Oct 2", today:true, m:[{...Y(),eaten:470}, M("Beef stir-fry",480,5,{ty:"left",from:"Thursday's dinner",eaten:480}), M("Pizza night",800,0,{ty:"out",label:"Pizza night",aim:800}), AP()]},
-      {n:"Sat", date:"Oct 3", m:[M("Eggs & toast",460,10), M("Chicken rice bowl",560,15), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
+      {n:"Sat", date:"Oct 3", shop:true, m:[M("Eggs & toast",460,10), M("Chicken rice bowl",560,15), M("Shrimp tacos",650,35,{nw:true,needs:[["shrimp","list"],["tortillas","bought"]],ch:{from:"Salmon & rice",by:"You",when:"Thu 8:30pm",why:"asked in chat; salmon removed from the Grocery List"}}), AP()]},
     ],
     changes:[]
   };
@@ -168,7 +168,7 @@ function fresh(){
     ],
     days:[
       {n:"Sun", date:"Oct 4", prep:{text:"Prep Session, 2 pm, 1 h 50 min: chickpea curry (Mon + Wed lunch) and oatmeal cookies (weekday snacks)"}, m:[M("Pancakes & berries",480,20,{needs:[["berries","need"]]}), M("Chicken rice bowl",560,15), M("Sheet-pan chicken & veg",640,45,{fav:true}), AP()]},
-      {n:"Mon", date:"Oct 5", m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",nw:true,from:"Sunday's Prep Session",needs:[["chickpeas","bought"]]}), M("Turkey wraps",620,20,{fav:true}), C()]},
+      {n:"Mon", date:"Oct 5", m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",nw:true,from:"Sunday's Prep Session",needs:[["chickpeas","bought"],["coconut milk","need"]]}), M("Turkey wraps",620,20,{fav:true}), C()]},
       {n:"Tue", date:"Oct 6", m:[Y(), M("Work lunch",650,0,{ty:"out",label:"Tuesday work lunch",aim:650}), M("Beef stir-fry",640,30,{fav:true,needs:[["bell pepper","need"]]}), C()]},
       {n:"Wed", date:"Oct 7", busy:true, m:[Y(), M("Chickpea curry & rice",540,5,{ty:"prep",from:"Sunday's Prep Session"}), M("Rotisserie chicken & salad",600,10,{needs:[["rotisserie chicken","need"]]}), C()]},
       {n:"Thu", date:"Oct 8", m:[M("Eggs & toast",460,10), M("Beef stir-fry",560,5,{ty:"left",from:"Tuesday's dinner"}), M("Lemon chicken & orzo",650,55,{nw:true,needs:[["orzo","need"],["lemons","need"]]}), C()]},
@@ -296,7 +296,8 @@ function approve(){
   const wk=W("next"); wk.approved=true; wk.approvedAt="Fri Oct 2, just now";
   const items=missingList("next");
   wk.days.forEach(d=>d.m.forEach(m=>{ if(m.needs) m.needs=m.needs.map(([i,s])=>[i,s==="need"?"list":s]); }));
-  toast(`Next week approved. Grocery List: + ${items.join(", ")}.`, true); render();
+  const sun=sundayList("next");
+  toast(`Next week approved. Grocery List: + ${items.join(", ")}.${sun.length?` Shop tomorrow: ${sun.join(", ")} ${sun.length>1?"are":"is"} needed Sunday.`:""}`, true); render();
 }
 
 // ---------- sheet (shared by all layouts) ----------
@@ -356,14 +357,31 @@ function renderSheet(){
   el.innerHTML = `<div class="shade" onclick="closeSheet()"></div><div class="sheet">${head}${body}</div>`;
 }
 
+// ---------- Saturday shopping (planning stays Friday, so Saturday is the only day to shop before Sunday) ----------
+function sundayList(w){
+  const set=new Set();
+  W(w).days.forEach((d,di)=>d.m.forEach(m=>{ if(di===0||m.ty==="prep") (m.needs||[]).forEach(([it,st])=>{ if(st!=="bought") set.add(it); }); }));
+  return [...set];
+}
+function shopCard(){
+  const n=W("next"), s=sundayList("next"); if(!s.length) return "";
+  return `<div class="card small" style="background:#fff4e0;border:1px solid #f0d49a">🛒 <b>Shop Saturday ${W("this").days[6].date}.</b> ${s.join(", ")} ${s.length>1?"are":"is"} needed Sunday (Prep Session and Sunday meals).
+    ${n.approved?"If they aren't ticked off the Grocery List by Saturday 3pm, you get an alert.":"They go on the Grocery List when you approve."}</div>`;
+}
+function shopDay(d){
+  if(!d.shop) return "";
+  const n=W("next"), s=sundayList("next");
+  return `<div class="card small" style="background:#fff4e0;border:1px solid #f0d49a">🛒 <b>Shopping day for next week.</b> ${n.approved?`${missingCount("next")} items on the Grocery List, ${s.length} needed for Sunday (${s.join(", ")}). Alert at 3pm if those aren't bought yet.`:"Next week is still a draft, so its items aren't on the Grocery List yet. Approve it today to shop tomorrow."}</div>`;
+}
+
 // ---------- shared bits for the week header ----------
 function draftBanner(){
   const wk=W("next");
-  if(wk.approved) return `<div class="card small" style="background:#f3faf5;border:1px solid #bfe0cb">✓ Approved ${wk.approvedAt}. The Grocery List has its Missing Ingredients. Changes from now on are marked.</div>`;
+  if(wk.approved) return `<div class="card small" style="background:#f3faf5;border:1px solid #bfe0cb">✓ Approved ${wk.approvedAt}. The Grocery List has its Missing Ingredients. Changes from now on are marked.</div>${shopCard()}`;
   return `<div class="card draftband"><div class="row"><span class="tag" style="color:#8a6d00">Draft · waiting for your yes</span><span class="sp"></span><span class="xs mute">${wk.draftAt}</span></div>
     <div class="small" style="margin-top:6px">Built with what you accepted in the reflection:</div>
     <ul class="small" style="margin:4px 0 0;padding-left:18px">${wk.intro.map(x=>`<li>${x}</li>`).join("")}</ul>
-    <div class="small mute" style="margin-top:6px">Plus: Busy Wednesday (15-min meals), 2 new Dishes, leftovers first.</div></div>`;
+    <div class="small mute" style="margin-top:6px">Plus: Busy Wednesday (15-min meals), 2 new Dishes, leftovers first.</div></div>${shopCard()}`;
 }
 function changesList(w, compact){
   const wk=W(w);
@@ -388,7 +406,7 @@ function VariantA(){
       <button class="chip chg" style="border:0" onclick="ui.showChanges=!ui.showChanges;render()">● ${wk.changes.length} changes since approval ${ui.showChanges?"▴":"▾"}</button></div>
       ${ui.showChanges?`<div class="card" style="padding:6px 14px">${changesList(w)}</div>`:""}`;
   const grid = `<div style="padding:8px 13px 0"><table class="grid"><tr><th></th>${SLOT.map((s,i)=>`<th>${s.slice(0,5)}<br><span style="font-weight:400">${SHARE[i]}</span></th>`).join("")}<th style="text-align:right">Day</th></tr>
-    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]}</div>${d.busy?`<div class="xs" title="Busy Day" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17" title="${d.prep.text}">🍳Prep</div>`:""}</td>
+    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]}</div>${d.busy?`<div class="xs" title="Busy Day" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17" title="${d.prep.text}">🍳Prep</div>`:""}${d.shop?`<div class="xs" style="color:#a0561a">🛒Shop</div>`:""}</td>
       ${d.m.map((m,si)=>{ const ic=[m.ty==="left"?"↺":"",m.ty==="prep"?"🍳":"",m.nw?"★":"",overTime(d,si,m)?"⏱":"",(m.needs||[]).some(n=>n[1]!=="bought")?"🛒":"",m_eaten(m)?"✓":""].join("");
         return `<td class="ty-${m.ty} ${d.past||m_eaten(m)?'past':''} ${m.ch&&wk.approved?'chg':''}" onclick="openSheet('${w}',${di},${si})"><div style="font-weight:600">${title(m).replace("⌂ ","")}</div><div class="k">${fmt(kcal(m))}</div><div class="ic">${ic}</div></td>`; }).join("")}
       <td class="tot ${dayTotal(d)>TARGET?'over':''}">${fmt(dayTotal(d))}</td></tr>`).join("")}
@@ -420,7 +438,7 @@ function dayCard(w,di){
   if(d.past && !ui.open[k]) return `<div class="dayc" style="opacity:.7"><div class="hd" style="border:0;cursor:pointer" onclick="ui.open['${k}']=1;render()"><b>${d.n} ${d.date}</b><span class="xs mute">done</span>${d.m.some(m=>m.ch)?`<span class="dot"></span>`:""}<span class="sp"></span><span class="small">${totalLine(d)}</span><span class="mute">▾</span></div></div>`;
   return `<div class="dayc" id="${k}" style="${w==='next'&&!wk.approved?'border:1px dashed var(--draftline)':''}"><div class="hd" style="${d.today?'background:var(--soft)':''}"><div class="sp"><b>${d.n} ${d.date}</b>${d.today?` <span class="tag" style="color:var(--accent)">Today</span>`:""}${d.busy?` <span class="chip time">Busy Day · 15 min</span>`:""}
     <div style="margin-top:5px;width:150px">${totalBar(d)}</div></div><span class="small">${totalLine(d)}</span></div>
-    ${d.prep?`<div class="meal" style="background:#faf5e8"><div class="sl">Prep</div><div class="small sp">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div></div>`:""}
+    ${d.prep?`<div class="meal" style="background:#faf5e8"><div class="sl">Prep</div><div class="small sp">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div></div>`:""}${shopDay(d)}
     ${d.m.map((_,si)=>mealRow(w,di,si)).join("")}</div>`;
 }
 function VariantB(){
@@ -434,7 +452,7 @@ function VariantB(){
     ${draftBanner()}
     <div class="row" style="margin:0 16px">${missingCard("next")}<span class="sp"></span><span class="xs mute">${missingList("next").join(", ")}</span></div>
     ${n.days.map((_,di)=>dayCard("next",di)).join("")}
-    ${n.approved?"":`<div class="card draftband"><b>Happy with next week?</b><div class="small mute" style="margin:4px 0 10px">Approving adds ${missingCount("next")} Missing Ingredients to the Grocery List .</div>
+    ${n.approved?"":`<div class="card draftband"><b>Happy with next week?</b><div class="small mute" style="margin:4px 0 10px">Approving adds ${missingCount("next")} Missing Ingredients to the Grocery List. Saturday is the only day to shop before Sunday's Prep Session.</div>
       <div class="row"><button class="btn line" onclick="toast('Opens Chat: What do you want to change?')">Change something</button><span class="sp"></span><button class="btn good" onclick="approve()">Approve</button></div></div>
       <div class="sticky row draftband" style="padding:8px 10px"><span class="small sp"><b>Next week is a draft</b></span><button class="btn good sm" onclick="approve()">Approve</button></div>`}`;
 }
@@ -470,7 +488,7 @@ function VariantC(){
       <div class="xs mute">${w==="this"?"This week":"Next week"}${wk.approved?"":" · Draft"}${d.busy?" · Busy Day, 15-min meals":""}</div></div><button class="btn line sm" onclick="stepDay(1)">›</button></div>
     <div class="card" style="padding:10px 14px"><div class="row"><span class="small sp">Planned</span><span class="small">${totalLine(d)}</span></div><div style="margin-top:6px">${totalBar(d)}</div>
       ${t>TARGET?`<div class="xs warn" style="margin-top:4px">Over the Calorie Target by ${fmt(t-TARGET)}</div>`:`<div class="xs mute" style="margin-top:4px">${fmt(TARGET-t)} under</div>`}</div>
-    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}
+    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}${shopDay(d)}
     ${d.m.map((m,si)=>{ const lk=locked(w,i,si), chg=m.ch&&wk.approved;
       return `<div class="bigm ty-${m.ty}" style="${chg?'box-shadow:0 0 0 2px var(--chg) inset':''}"><div class="row"><span class="tag mute sp">${SLOT[si]}${si<3?" · "+TIME[si]:""}</span><span>${fmt(kcal(m))}<span class="xs mute"> / ${SHARE[si]}</span></span></div>
         ${chg?`<div class="xs" style="color:#9a5a00;margin-top:4px">Changed by ${m.ch.by}, ${m.ch.when} · was <span class="strike">${m.ch.from}</span></div>`:""}
@@ -540,7 +558,7 @@ function GridD(){
       <button class="chip chg" style="border:0" onclick="ui.showChanges=!ui.showChanges;render()">● ${wk.changes.length} changes since approval ${ui.showChanges?"▴":"▾"}</button></div>
       ${ui.showChanges?`<div class="card" style="padding:6px 14px">${changesList(w)}</div>`:""}`;
   const grid = `<div style="padding:8px 13px 0"><table class="grid"><tr><th></th>${SLOT.map((s,i)=>`<th>${s.slice(0,5)}<br><span style="font-weight:400">${SHARE[i]}</span></th>`).join("")}<th style="text-align:right">Day</th></tr>
-    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh" style="cursor:pointer" onclick="openDay('${w}',${di},null)">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]} ›</div>${d.busy?`<div class="xs" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17">🍳Prep</div>`:""}</td>
+    ${wk.days.map((d,di)=>`<tr class="${d.today?'today':''}"><td class="dayh" style="cursor:pointer" onclick="openDay('${w}',${di},null)">${d.n}<div class="xs mute" style="font-weight:400">${d.date.split(" ")[1]} ›</div>${d.busy?`<div class="xs" style="color:#a0561a">Busy</div>`:""}${d.prep?`<div class="xs" style="color:#7a5a17">🍳Prep</div>`:""}${d.shop?`<div class="xs" style="color:#a0561a">🛒Shop</div>`:""}</td>
       ${d.m.map((m,si)=>{ const b=batchOf(w,m), ck=isCook(b,m);
         const ic=[orphan(w,m)?"⚠️":"",ck?"🔥":"",m.ty==="left"?"↺":"",m.ty==="prep"?"🍳":"",m.nw?"★":"",overTime(d,si,m)?"⏱":"",(m.needs||[]).some(n=>n[1]!=="bought")?"🛒":"",m_eaten(m)?"✓":""].join("");
         const st = b ? `background:${b.color}${ck?"40":"1c"};box-shadow:inset 4px 0 0 ${b.color};` : "";
@@ -563,7 +581,7 @@ function DayD(){
     <div class="xs mute" style="text-align:center">${d.today?"Today · ":""}${w==="this"?"This week":"Next week"}${wk.approved?"":" · Draft"}${d.busy?" · Busy Day, 15-min meals":""}</div>`;
   const tot = `<div class="card" style="padding:10px 14px"><div class="row"><span class="small sp">Planned</span><span class="small">${totalLine(d)}</span></div><div style="margin-top:6px">${totalBar(d)}</div>
       ${t>TARGET?`<div class="xs warn" style="margin-top:4px">Over the Calorie Target by ${fmt(t-TARGET)}</div>`:`<div class="xs mute" style="margin-top:4px">${fmt(TARGET-t)} under</div>`}</div>
-    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}`;
+    ${d.prep?`<div class="card small" style="background:#faf5e8">🍳 ${d.prep.text}${d.prep.draft?` <span class="tag" style="color:#8a6d00">· from next week's draft</span>`:""}</div>`:""}${shopDay(d)}`;
   const meals = d.m.map((m,si)=>{ const lk=locked(w,i,si), chg=m.ch&&wk.approved, b=batchOf(w,m), ck=isCook(b,m);
     const others = b ? b.items.filter(x=>!(x.di===i&&x.si===si)).map(x=>`${wk.days[x.di].n} ${SL[x.si]}`).join(", ") : "";
     return `<div class="bigm ty-${m.ty}" id="meal${si}" style="${b?`border-left:6px solid ${b.color};`:""}${chg?'box-shadow:0 0 0 2px var(--chg) inset':''}"><div class="row"><span class="tag mute sp">${SLOT[si]}${si<3?" · "+TIME[si]:""}</span><span>${fmt(kcal(m))}<span class="xs mute"> / ${SHARE[si]}</span></span></div>

@@ -28,3 +28,8 @@ Waiting for the Member's reaction.
 - **A leftover left without a source:** if the meal that cooks a batch is swapped or cleared, its leftovers get ⚠️ in the grid, and the day view says nothing cooks them any more.
 
 **Feedback round 2 (2026-09-30):** The week runs **Sunday to Saturday** instead of Monday to Sunday (#06 and the map are updated). This settles the Prep Session question from the first prototype comment: the Sunday Prep Session is the first day of the week it cooks for, so it belongs to that week's plan and is approved with it. In the prototype, this week is Sep 27 – Oct 3 (Sunday's Prep Session made the chili for Sunday dinner and Mon/Wed lunch), and next week's draft is Oct 4 – 10, with its own Prep Session on Sunday Oct 4. The catch: after Friday 3pm planning, only Saturday is left to shop, and the unbought-ingredient alert for Sunday's Prep Session comes Saturday at 3pm.
+
+**Feedback round 3 (2026-09-30):** Planning stays **Friday at 3pm** (#05 unchanged). Saturday is the one shopping day, so the prototype now shows it:
+- **"Shop Saturday" card** under next week's draft banner (and after approval): lists the Missing Ingredients needed Sunday, meaning Sunday's meals plus anything cooked at the Prep Session (e.g. berries, coconut milk). Before approval it says they go on the Grocery List when you approve; after, it says you'll get an alert if they aren't ticked off by Saturday 3pm.
+- **🛒 Shop on Saturday** in the grid, and a shopping-day card on Saturday's day view. While next week is still a draft, it nudges you to approve today so you can shop tomorrow.
+- The approve bar says Saturday is the only day to shop before the Prep Session, and the approve toast ends with "Shop tomorrow: … needed Sunday."
