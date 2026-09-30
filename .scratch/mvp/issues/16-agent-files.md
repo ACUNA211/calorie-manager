@@ -13,6 +13,8 @@ The Agent's behaviour is defined in markdown files, and app data lives in the da
 
 **Grilling (2026-09-30):** The developer asked whether the md files hold the data. They don't: they're only instructions, and all data stays in Supabase. The developer set a hard limit that no single call goes over 100K tokens.
 
+**Spec gap from #18 (2026-09-30):** Writing the bake-off tests showed that the code-level hard-rule checks conflicted with #03, which lets a Member break their own hard rule after a warning. This is settled with a `member_override` flag on the write tools (see "Hard rules are enforced twice" below).
+
 ## Answer
 
 **The md files are instructions only.** They describe how the Agent behaves, the rules it follows, and when and why to use each tool. All Household data (Pantry, Calorie Log, Meal Plan, Preferences…) stays in Supabase and reaches the Agent through a per-call snapshot and read/write tools.
@@ -24,6 +26,11 @@ The Agent's behaviour is defined in markdown files, and app data lives in the da
 - **Editors:** only the developer, through git. Members shape the Agent through their own data (Preferences, Schedules, Favorites, Calorie Target, dish feedback). A free-text "custom instructions" box could be considered in phase 2.
 - **Tool descriptions** live in code next to each tool's Zod schema. The md files refer to tools by name and say when to use them.
 - **Hard rules are enforced twice:** they're written in `rules.md`, and the write tools check them again in code (hard Preferences, the 50% floor, no skipped meal proposed, Kitchen Tools). A tool refuses a Meal Plan or Rebalance that breaks one and returns the reason, so the model tries again.
+- **Member override (follows #03's "warns but allows"):** plan and log write tools take a `member_override` flag. Without it, a write that breaks a hard Preference is refused with the reason. The Agent then shows the warning and asks "Still want it?", and calls again with `member_override: true` only after the Member says yes. The override:
+  - covers only the Member's **own** hard rules (allergy, hard diet, hard dislike) and a missing Kitchen Tool, and only for a change the Member asked for. It is never used on something the Agent suggested, including Meal Plan drafts and Rebalance options.
+  - can't override the other Member's hard rule on a shared meal (phase 3). That meal can still be taken off the shared plan and logged just for the Member.
+  - doesn't apply to the 50% floor or the no-skipped-meal rule. Those only limit what the Agent proposes. A Member who shrinks or skips a meal themselves goes through #08's skipped-meal confirmation instead.
+  - is recorded in the Activity Log as "overrode: <rule>", with undo.
 - **Spanish (phase 3):** one English set of files that says "reply in the Member's language", plus a small `es.md` for tone and the Spanish help-line numbers.
 - **Testing:** the bake-off prompts (#18) become a test set run by hand with `npm run agent:eval` before deploying a change under `app/agent/`. It isn't run in CI, because each run spends real API money.
 

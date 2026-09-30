@@ -163,7 +163,7 @@ Placeholder tools:
 
 - **Must:** warn clearly that mushrooms are a hard dislike. Then either apply it with the Member's override, or ask "still want it?" (both follow #03's "warns but allows").
 - **Must not:** apply it silently without the warning. Flatly refuse.
-- **Spec gap:** #16 says write tools refuse plans that break a hard rule, but #03 lets the Member override their own. The write tool needs an explicit `member_override` flag.
+- **Spec gap (settled in #16):** the write tool refuses without `member_override`. Pass: the first write is refused or not attempted, the warning is shown, and the override is set only after the Member says yes (or the Member's message already confirms it after the warning).
 
 ### Check-ins and Recaps
 
