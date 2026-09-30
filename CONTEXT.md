@@ -95,6 +95,10 @@ _Avoid_: nudge, reminder
 The list of every change the Agent made, each with an undo.
 _Avoid_: history, audit
 
+**Agent notes**:
+A short list (at most 15 lines) of habits the Agent remembers about one Member, such as "hates Sunday meal prep". Saved only after the Member says yes, and visible and editable in Settings.
+_Avoid_: memory, profile
+
 ## Relationships
 
 - A **Household** has one or more **Members**, exactly one **Pantry**, and one **Meal Plan** per week
