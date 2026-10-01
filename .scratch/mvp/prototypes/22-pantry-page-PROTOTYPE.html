@@ -20,6 +20,8 @@
        Round 3: the box at the bottom searches the Pantry first (no Agent unless Enter finds no match) and a picked food
        asks Adding or Using. 🍳 opens the recipe builder: several recipes in progress at once, built from the Pantry,
        and "Done cooking" adds the result as a cooked food. Every food is labelled Ingredient or Ready to eat.
+       Round 4: tapping a food offers Eat now (logs it to Today) or Schedule for later (four upcoming meals, or Select
+       another with a date and meal), next to Adding and Using.
     C: plan first. "Covered this week?" by meal, then leftovers to use, then food that's free to use, then what's set
        aside, with staples folded into one checklist.
   Shared in all three: the amount editor (− / +, "used ¼ / ½ / all", type "2 lb" or "3 cups"), planning a leftover
@@ -226,6 +228,7 @@ function fresh(){
   const s = fresh0();
   [...s.items, ...s.needOnly].forEach(f=>f.lab = READY.includes(f.id) ? "ready" : "ing");
   s.left.forEach(l=>l.lab="ready");
+  s.sched = []; s.eaten = [];
   // two recipes in progress at once: rice and chicken for tonight
   s.recipes = [{id:"r1",n:"Rice",ings:[{ref:"i",id:"rice",q:150}]},
                {id:"r2",n:"Garlic chicken",ings:[{ref:"i",id:"chick",q:2},{ref:"i",id:"oil",q:1},{ref:"i",id:"garlic",q:2}]}];
@@ -433,7 +436,7 @@ function cardApply(id){
 }
 function chatParts(){ return `${ui.thinking?`<div class="card small"><span class="typing">✨ Reading "${S.chatText}"…</span></div>`:""}${S.cards.map(agentCard).join("")}`; }
 function entryBar(){ return `<div id="sugg" class="sugg"></div><div class="entry"><button class="plus" style="font-size:20px" title="Recipe builder" onclick="openRecipe(S.recipes[0]&&S.recipes[0].id)">🍳</button><input id="mainbox" placeholder="Search the Pantry: eggs, 2 apples, rice…" autocomplete="off" oninput="ui.mq=this.value;drawSugg()" onkeydown="if(event.key==='Enter')boxEnter(this)"></div>`; }
-function stateBox(){ return `<div class="statebox"><b>Prototype state</b> · Agent calls: <b style="color:var(--ai)">${S.ai}</b>${S.planChanges.length?`<br>Meal Plan changes: ${S.planChanges.join("; ")}`:""}<br>Low or out (suggested on the Grocery List): ${S.items.filter(i=>i.kind==="staple"&&i.st!=="have").map(i=>`${i.n} (${i.st})`).join(", ")||"none"}</div>`; }
+function stateBox(){ return `<div class="statebox"><b>Prototype state</b> · Agent calls: <b style="color:var(--ai)">${S.ai}</b>${S.eaten.length?`<br>Eaten now (in Today's log): ${S.eaten.join("; ")}`:""}${S.planChanges.length?`<br>Meal Plan changes: ${S.planChanges.join("; ")}`:""}<br>Low or out (suggested on the Grocery List): ${S.items.filter(i=>i.kind==="staple"&&i.st!=="have").map(i=>`${i.n} (${i.st})`).join(", ")||"none"}</div>`; }
 function head(title){ return `<div class="row" style="padding:16px 16px 4px"><h2 class="sp">${title}</h2>${S.recipes.length?`<button class="pill" onclick="openRecipe('${S.recipes[0].id}')">🍳 ${S.recipes.length} cooking</button>`:`<button class="pill" onclick="openRecipe()">🍳 New recipe</button>`}<button class="btn ghost" onclick="toast('Settings: Kitchen Tools, Activity Log…')">☰</button></div>`; }
 
 // ---------- labels: Ingredient / Ready to eat ----------
@@ -550,58 +553,140 @@ function boxEnter(el){ const t=el.value.trim(); if(!t) return; const {amt,q}=spl
   if(hits.length) pickOpen(hits[0].ref,hits[0].f.id,amt); else chat(t); }
 function newFromBox(){ ui.addq=splitAmt(ui.mq).q.trim(); clearBox(); addNew(); }
 
-// ---------- picked a food: adding or using? ----------
-function pickOpen(ref,id,amt){ clearBox(); ui.pick={ref,id,mode:null,q:null,dest:"used",st:null,pre:amt||""}; ui.typed=amt||""; showSheet(pickSheet); }
+// ---------- picked a food: eat now, schedule for later, adding, using ----------
+// The Meal Plan from today (Fri Oct 2, 4:10pm) on: day index → slot → planned meal. Sun on is next week's draft.
+const SLOTS = ["breakfast","lunch","snack","dinner"];
+const PLAN = [
+  {dinner:"Pizza night (Eating Out)"},
+  {breakfast:"Eggs & toast", lunch:"Chicken rice bowl", snack:"Apple + peanut butter", dinner:"Shrimp tacos"},
+  {breakfast:"Pancakes", lunch:"Chicken rice bowl", snack:"Oatmeal cookies", dinner:"Sheet-pan chicken & veg"},
+  {breakfast:"Yogurt & granola", lunch:"Chickpea curry & rice", dinner:"Turkey wraps"},
+  {breakfast:"Yogurt & granola", lunch:"Chickpea curry & rice", dinner:"Beef stir-fry"},
+  {breakfast:"Yogurt & granola", lunch:"Chickpea curry & rice", dinner:"Rotisserie chicken & salad"},
+  {breakfast:"Eggs & toast", lunch:"Chickpea curry & rice", dinner:"Lemon chicken & orzo"},
+];
+const TODAY = new Date(2026,9,2);
+const dayDate = d => new Date(2026,9,2+d);
+const dayName = d => d===0 ? "Tonight" : d===1 ? "Tomorrow" : dayDate(d).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+const slotName = (d,s) => d===0&&s==="dinner" ? "Tonight · dinner" : `${dayName(d)} · ${s}`;
+function planned(d,s){ const x=(S.sched||[]).find(x=>x.d===d&&x.s===s&&x.replace); if(x){ const f=x.ref==="l"?lo(x.id):food(x.id); return f?f.n:null; } return (PLAN[d]||{})[s] || null; }
+const pastSlot = (d,s) => d===0 && s!=="dinner" && s!=="snack";
+// a few quick options; "Select another" opens a date and slot picker
+const QUICK = [[0,"dinner"],[1,"lunch"],[1,"snack"],[1,"dinner"]];
+const nowSlot = "snack"; // 4:10pm
+
+function pickOpen(ref,id,amt,mode){ clearBox(); ui.pick={ref,id,mode:null,q:null,dest:"used",st:null,pre:amt||"",slot:null,other:false,od:"2026-10-04",os:"dinner",eatSlot:nowSlot,replace:null}; ui.typed=amt||""; showSheet(pickSheet); if(mode) pickMode(mode); }
 const pickFood = () => ui.pick.ref==="l" ? lo(ui.pick.id) : food(ui.pick.id);
 function pickMode(m){ const p=ui.pick, f=pickFood(), isL=p.ref==="l"; p.mode=m;
   if(p.q==null){ p.q = isL||f.kind==="staple"||f.m==="pc" ? 1 : 100;
     if(p.pre&&!isL&&f.kind!=="staple"){ const r=parseAmt(f,p.pre); if(r) p.q = r.pc!=null ? r.pc : f.m==="pc" ? Math.max(1,Math.round(r.g/f.per)) : Math.round(r.g); } }
-  if(m==="use"&&!isL&&f.kind!=="staple"&&f.q) p.q=Math.min(p.q,f.q);
+  if(m!=="add"&&!isL&&f.kind!=="staple"&&f.q) p.q=Math.min(p.q,f.q);
   refreshSheet(); }
+const kcalOf = (f,q,isL) => isL ? f.kpp*q : gramsOf(f,q)*(K100[f.id]??150)/100;
+function amountRow(f,isL,stp,have){
+  const p=ui.pick, st=unitStep(f,isL);
+  return `<div class="small" style="font-weight:600;margin-top:14px">How much?</div>
+    <div class="row" style="margin-top:6px"><span class="step"><button onclick="ui.pick.q=Math.max(${st},ui.pick.q-${st});refreshSheet()">−</button><span style="min-width:120px">${amtTxt(f,p.q,isL)}</span><button onclick="ui.pick.q+=${st};refreshSheet()">+</button></span>${p.mode!=="add"&&!stp?`<span class="sp"></span><b>${fmt(kcalOf(f,p.q,isL))} kcal</b>`:""}</div>
+    ${p.mode==="use"&&!stp&&have?`<div class="row wrap" style="gap:6px;margin-top:8px">${[[.25,"¼"],[.5,"½"],[1,"all"]].map(([x,l])=>`<button class="btn line sm" onclick="ui.pick.q=Math.max(${st},${isL||f.m==="pc"?`Math.round(${have*x})`:Math.round(have*x/5)*5});refreshSheet()">${l}</button>`).join("")}</div>`:""}
+    ${!isL&&!stp?`<div class="row" style="margin-top:8px"><input id="ptyped" class="search" style="padding:8px 10px" placeholder="Or type: 2 lb, 500 g, 3 cups" value="${ui.typed}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter')pTyped()"><button class="btn line sm" onclick="pTyped()">Set</button></div><div id="pnote" class="xs" style="color:var(--ai)"></div>`:""}
+    ${p.mode!=="add"&&have!=null&&p.q>have?`<div class="xs warn" style="margin-top:4px">That's more than the ${amtTxt(f,have,isL)} in the Pantry.</div>`:""}`;
+}
+function slotOpt(d,s,key){
+  const p=ui.pick, cur=planned(d,s), on=p.slot===key;
+  return `<div class="opt" style="${on?"border-color:var(--accent);background:var(--soft)":""}" onclick="ui.pick.slot='${key}';ui.pick.other=false;ui.pick.replace=null;refreshSheet()"><div class="row"><b class="sp">${slotName(d,s)}</b>${d>=2?`<span class="chip draft">draft</span>`:""}</div><div class="xs mute">${cur?`Planned: ${cur}`:"Nothing planned"}</div></div>`;
+}
+function schedTarget(){ const p=ui.pick;
+  if(p.other){ const d=Math.round((new Date(p.od+"T00:00")-TODAY)/864e5); return {d, s:p.os}; }
+  if(!p.slot) return null; const [d,s]=p.slot.split("|"); return {d:+d, s}; }
 function pickSheet(){
   const p=ui.pick, f=pickFood(); if(!f) return "";
   const isL=p.ref==="l", stp=f.kind==="staple", getter=isL?`lo('${f.id}')`:`food('${f.id}')`;
+  const have = isL ? f.portions : stp ? null : f.q;
+  const B = (m,label,color) => `<button class="btn ${p.mode===m?"":"line"}" style="padding:12px 6px;font-size:15px;${p.mode===m?`background:${color}`:""}" onclick="pickMode('${m}')">${label}</button>`;
   let h = `<div class="row"><h2 class="sp">${f.n}</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
     <div class="row wrap" style="gap:4px"><span class="xs mute">${LOCI[f.loc]} ${f.loc}</span>${labChip(f)}</div>
     <div class="small" style="margin:6px 0 12px">Now: <b>${stockTxt({ref:p.ref,f})}</b></div>
-    <div class="row" style="gap:8px"><button class="btn ${p.mode==="add"?"good":"line"} sp" style="padding:14px;font-size:16px" onclick="pickMode('add')">+ Adding</button><button class="btn ${p.mode==="use"?"":"line"} sp" style="padding:14px;font-size:16px;${p.mode==="use"?"background:var(--warn)":""}" onclick="pickMode('use')">− Using</button></div>`;
-  if(!p.mode) return h + `<div class="xs mute" style="margin-top:8px">Adding: you bought or made some. Using: eaten, thrown out, or going into a recipe.</div>` + labRow(f,getter);
-  if(p.mode==="use") h += `<div class="small" style="font-weight:600;margin-top:14px">Where is it going?</div><div class="row wrap" style="gap:6px;margin-top:6px">${[["used","Eaten / used up"],...S.recipes.map(r=>[r.id,"🍳 Into "+r.n]),["new","🍳 New recipe"]].map(([k,l])=>`<button class="btn ${p.dest===k?"":"line"} sm" onclick="ui.pick.dest='${k}';refreshSheet()">${l}</button>`).join("")}</div>`;
+    ${stp?"":`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">${B("eat","🍽 Eat now","var(--good)")}${B("sched","📅 Schedule for later","var(--accent)")}</div>`}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${B("add","+ Adding","var(--good)")}${B("use","− Using","var(--warn)")}</div>`;
+  if(!p.mode) return h + labRow(f,getter) + (!isL&&item(f.id)?`<div style="margin-top:12px"><button class="btn ghost sm" onclick="closeSheet(true);openEdit('${f.id}')">Edit details: amount, where it's kept, delete →</button></div>`:"");
+
+  if(p.mode==="eat"){
+    return h + amountRow(f,isL,stp,have)
+      + `<div class="row wrap" style="gap:5px;margin-top:12px"><span class="xs mute">Log as</span>${SLOTS.map(s=>`<button class="btn ${p.eatSlot===s?"":"line"} sm" style="padding:3px 8px" onclick="ui.pick.eatSlot='${s}';refreshSheet()">${s}</button>`).join("")}</div>
+      <div class="xs mute" style="margin-top:4px">Goes in Today's Calorie Log and comes out of the Pantry. ⚡ No Agent call.</div>
+      <button class="btn good" style="width:100%;margin-top:12px;padding:12px" onclick="pickApply()">Eat now · ${fmt(kcalOf(f,p.q,isL))} kcal as ${p.eatSlot}</button>`;
+  }
+  if(p.mode==="sched"){
+    const t=schedTarget(), cur=t&&planned(t.d,t.s), bad=t&&(t.d<0||pastSlot(t.d,t.s));
+    if(t&&cur&&p.replace==null) p.replace = isL || labOf(f)==="ready"&&kcalOf(f,p.q,isL)>=300;
+    return h + amountRow(f,isL,stp,have)
+      + `<div class="small" style="font-weight:600;margin-top:14px">When?</div>
+      ${QUICK.map(([d,s])=>slotOpt(d,s,`${d}|${s}`)).join("")}
+      <div class="opt" style="${p.other?"border-color:var(--accent);background:var(--soft)":""}" onclick="if(!ui.pick.other){ui.pick.other=true;ui.pick.slot=null;ui.pick.replace=null;refreshSheet()}"><b>📅 Select another</b>
+        ${p.other?`<div class="row wrap" style="gap:6px;margin-top:8px"><input type="date" class="search" style="width:auto;padding:6px 8px" min="2026-10-02" value="${p.od}" onchange="ui.pick.od=this.value;ui.pick.replace=null;refreshSheet()">
+          ${SLOTS.map(s=>`<button class="btn ${p.os===s?"":"line"} sm" style="padding:3px 8px" onclick="event.stopPropagation();ui.pick.os='${s}';ui.pick.replace=null;refreshSheet()">${s}</button>`).join("")}</div>
+          ${t?`<div class="xs ${bad?"warn":"mute"}" style="margin-top:4px">${bad?"That's already past.":t.d>6?`${dayName(t.d)} · ${t.s}: not planned yet. It's kept for that meal when the week is planned.`:cur?`${slotName(t.d,t.s)} · planned: ${cur}`:`${slotName(t.d,t.s)} · nothing planned`}</div>`:""}`:`<div class="xs mute">Pick any date and meal</div>`}</div>
+      ${t&&cur&&!bad?`<div class="row" style="gap:6px;margin-top:10px"><button class="btn ${p.replace?"":"line"} sm sp" onclick="ui.pick.replace=true;refreshSheet()">Replace ${cur.replace(/ \(.*\)/,"")}</button><button class="btn ${p.replace===false?"":"line"} sm sp" onclick="ui.pick.replace=false;refreshSheet()">Add alongside it</button></div>
+        ${p.replace?`<div class="xs mute" style="margin-top:4px">What ${cur.replace(/ \(.*\)/,"")} needed is freed in the Pantry.</div>`:""}`:""}
+      <button class="btn" style="width:100%;margin-top:12px;padding:12px" ${t&&!bad?"":"disabled"} onclick="pickApply()">${t&&!bad?`Schedule ${amtTxt(f,p.q,isL)} for ${slotName(t.d,t.s)}`:"Pick when"}</button>`;
+  }
+  if(p.mode==="use") h += `<div class="small" style="font-weight:600;margin-top:14px">Where is it going?</div><div class="row wrap" style="gap:6px;margin-top:6px">${[["used","Thrown out / used up"],...S.recipes.map(r=>[r.id,"🍳 Into "+r.n]),["new","🍳 New recipe"]].map(([k,l])=>`<button class="btn ${p.dest===k?"":"line"} sm" onclick="ui.pick.dest='${k}';refreshSheet()">${l}</button>`).join("")}</div>`;
   const intoR = p.mode==="use" && p.dest!=="used";
   if(stp && !intoR){
     if(p.mode==="add") return h + `<div class="small" style="margin-top:14px">Staples have no amount. Adding sets it to <b class="good">have</b>.</div><button class="btn good" style="width:100%;margin-top:14px;padding:12px" onclick="pickApply()">Set ${f.n} to have</button>`;
     return h + `<div class="small" style="font-weight:600;margin-top:14px">How much is left?</div><div class="row" style="gap:8px;margin-top:6px">${["have","low","out"].map(s=>`<button class="btn ${p.st===s?"":"line"} sp" onclick="ui.pick.st='${s}';refreshSheet()">${s}</button>`).join("")}</div><button class="btn" style="width:100%;margin-top:14px;padding:12px" ${p.st?"":"disabled"} onclick="pickApply()">Save</button>`;
   }
-  const st=unitStep(f,isL), have = isL ? f.portions : stp ? null : f.q;
   const after = intoR ? `Stays in the Pantry until ${p.dest==="new"?"the recipe":rec(p.dest).n} is cooked`
     : `${amtTxt(f,have,isL)} → <b>${amtTxt(f, p.mode==="add" ? have+p.q : Math.max(0,have-p.q), isL)}</b>`;
   const verb = p.mode==="add" ? "Add" : intoR ? `Put in ${p.dest==="new"?"a new recipe":rec(p.dest).n}:` : "Use";
-  return h + `<div class="small" style="font-weight:600;margin-top:14px">How much?</div>
-    <div class="row" style="margin-top:6px"><span class="step"><button onclick="ui.pick.q=Math.max(${st},ui.pick.q-${st});refreshSheet()">−</button><span style="min-width:120px">${amtTxt(f,p.q,isL)}</span><button onclick="ui.pick.q+=${st};refreshSheet()">+</button></span></div>
-    ${p.mode==="use"&&!stp&&have?`<div class="row wrap" style="gap:6px;margin-top:8px">${[[.25,"¼"],[.5,"½"],[1,"all"]].map(([x,l])=>`<button class="btn line sm" onclick="ui.pick.q=Math.max(${st},${isL||f.m==="pc"?`Math.round(${have*x})`:Math.round(have*x/5)*5});refreshSheet()">${l}</button>`).join("")}</div>`:""}
-    ${!isL&&!stp?`<div class="row" style="margin-top:8px"><input id="ptyped" class="search" style="padding:8px 10px" placeholder="Or type: 2 lb, 500 g, 3 cups" value="${ui.typed}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter')pTyped()"><button class="btn line sm" onclick="pTyped()">Set</button></div><div id="pnote" class="xs" style="color:var(--ai)"></div>`:""}
-    <div class="small" style="margin-top:10px">${after}</div>
+  return h + amountRow(f,isL,stp,have) + `<div class="small" style="margin-top:10px">${after}</div>
     <button class="btn ${p.mode==="add"?"good":""}" style="width:100%;margin-top:12px;padding:12px;${p.mode==="use"&&!intoR?"background:var(--warn)":""}" onclick="pickApply()">${verb} ${amtTxt(f,p.q,isL)}</button>`;
 }
 function pTyped(){ const f=pickFood(), r=parseAmt(f,ui.typed||"");
   if(!r){ document.getElementById("pnote").textContent="Try 500 g, 2 lb or 3 cups"; return; }
   ui.pick.q = r.pc!=null ? r.pc : f.m==="pc" ? Math.max(1,Math.round(r.g/f.per)) : Math.round(r.g); ui.typed=""; refreshSheet();
   if(r.note) document.getElementById("pnote").textContent = r.note + (f.m==="pc" ? `, about ${ui.pick.q} ${f.lbl[1]}` : "") + "."; }
+function takeOut(f,isL,q){
+  if(isL){ f.portions-=q; if(f.portions<=0) S.left=S.left.filter(x=>x.id!==f.id); }
+  else f.q=Math.max(0,f.q-q);
+}
 function pickApply(){
   snap(); const p=ui.pick, f=pickFood(), isL=p.ref==="l", stp=f.kind==="staple";
+  if(p.mode==="eat"){
+    const k=kcalOf(f,p.q,isL); takeOut(f,isL,p.q); S.eaten.push(`${amtTxt(f,p.q,isL)} ${f.n.toLowerCase()} (${p.eatSlot}, ${fmt(k)} kcal)`);
+    closeSheet(true); render(); toast(`🍽 Logged in Today: ${amtTxt(f,p.q,isL)} ${f.n.toLowerCase()} as ${p.eatSlot}, ${fmt(k)} kcal`, true); return;
+  }
+  if(p.mode==="sched"){
+    const t=schedTarget(), cur=planned(t.d,t.s), rep=!!(cur&&p.replace);
+    if(rep && t.d<=6){
+      const meal = (PLAN[t.d]||{})[t.s];
+      Object.keys(S.need).forEach(id=>{ S.need[id]=S.need[id].filter(n=>!(n[0]===t.d&&n[1].startsWith(t.s))); });
+      if(t.d===1&&t.s==="dinner") delete S.glist.shrimp;
+      if(t.d===1) S.items.forEach(it=>{ if(it.res) it.res=it.res.filter(r=>!r[1].startsWith("Sat "+t.s)); });
+      S.planChanges.push(`${slotName(t.d,t.s)}: ${meal} → ${f.n}`);
+    } else S.planChanges.push(`${slotName(t.d,t.s)}: + ${f.n}`);
+    if(isL) f.plan = slotName(t.d,t.s) + (rep?` · replaces ${cur.replace(/ \(.*\)/,"")}`:"");
+    else if(t.d<=6) (S.need[f.id] = S.need[f.id]||[]).push([t.d, `${t.s} · ${f.n}`, p.q]);
+    S.sched.push({ref:p.ref,id:f.id,q:p.q,d:t.d,s:t.s,replace:rep});
+    closeSheet(true); render(); toast(`📅 ${amtTxt(f,p.q,isL)} ${f.n.toLowerCase()} scheduled for ${slotName(t.d,t.s)}${rep?`, replacing ${cur.replace(/ \(.*\)/,"")}`:""}`, true); return;
+  }
   if(p.mode==="use" && p.dest!=="used"){
     const r = p.dest==="new" ? makeRecipe() : rec(p.dest); addIng(r,p.ref,f.id,p.q);
     closeSheet(true); render(); openRecipe(r.id); toast(`${amtTxt(f,p.q,isL)} ${f.n.toLowerCase()} put in ${r.n}`, true); return;
   }
   if(stp) f.st = p.mode==="add" ? "have" : p.st;
-  else if(isL){ f.portions += p.mode==="add" ? p.q : -p.q; if(f.portions<=0) S.left=S.left.filter(x=>x.id!==f.id); }
+  else if(isL){ if(p.mode==="add") f.portions+=p.q; else takeOut(f,true,p.q); }
   else {
     if(!item(f.id)){ S.items.push(f); S.needOnly=S.needOnly.filter(x=>x.id!==f.id); }
-    f.q = p.mode==="add" ? f.q+p.q : Math.max(0,f.q-p.q);
+    if(p.mode==="add") f.q+=p.q; else takeOut(f,false,p.q);
   }
   closeSheet(true); render();
   toast(stp ? `${f.n}: ${f.st}` : `${f.n}: ${p.mode==="add"?"added":"used"} ${amtTxt(f,p.q,isL)} · now ${stockTxt({ref:p.ref,f})}`, true);
 }
+// tiles show what's scheduled
+function schedLine(ref,id){ const xs=(S.sched||[]).filter(x=>x.ref===ref&&x.id===id); if(!xs.length) return "";
+  const f = ref==="l" ? lo(id) : food(id);
+  return `<div class="xs" style="color:var(--accent);margin-top:2px">📅 ${xs.map(x=>`${ref==="l"?"":amtTxt(f,x.q,false)+" "}${slotName(x.d,x.s)}`).join(" · ")}</div>`; }
 
 // ================= A: store sections =================
 function VariantA(){
@@ -664,7 +749,7 @@ function VariantB(){
     ? `<div class="xs" style="color:#5b3fa0;margin-top:3px">📅 ${x.it.kind==="staple"?"needed "+DAYS[x.ns[0][0]]:`${short(x.it,x.total)} for ${x.ns.length} meal${x.ns.length>1?"s":""}`}</div>`
     : `<div class="xs" style="margin-top:3px;font-weight:600;color:${x.lvl==="red"?"var(--warn)":"#8a6d00"}">${x.it.kind==="staple"?"out from":ui.gl?"runs out":`short ${short(x.it,x.by)} from`} ${DAYS[x.day]}: ${(x.ns.find(n=>n[0]===x.day)[1].split(" · ")[1])||""}</div>`;
   const tile = it => { const x=stats[it.id], stp=it.kind==="staple", lv=x.lvl!=="ok"?x.lvl:"", isNew=!item(it.id);
-    const open = isNew ? "" : stp ? `cycleSt('${it.id}')` : `openEdit('${it.id}')`;
+    const open = isNew ? "" : stp ? `cycleSt('${it.id}')` : `pickOpen('i','${it.id}')`;
     const listed = ui.gl && onList(it.id);
     let amt, sub;
     if(stp){
@@ -679,8 +764,8 @@ function VariantB(){
       amt = (it.q||0)===0 ? (isNew?`<span class="mute">not in the Pantry</span>`:"none left") : show(it).split(" · ")[0];
       sub = `<div class="xs mute">${it.q?show(it).split(" · ")[1]||"":onList(it.id)?`<span style="color:var(--accent)">${short(it,S.glist[it.id])} on the list</span>`:""}</div>`;
     }
-    return `<div class="tile ${lv} ${isNew&&listed?"gl":""}" ${open?`onclick="${open}"`:""} title="${x.ns.length?meals(x):""}"><div class="nm">${it.n}</div><div class="small">${amt}</div>${sub}${ui.gl&&!stp&&x.lvl==="ok"?"":needLine(x)}${inRecLine(it,"i")}<div style="margin-top:4px">${labChip(it)}</div><div style="margin-top:3px">${fix(x)}</div>${stp&&!isNew?`<button class="btn ghost xs" style="position:absolute;top:4px;right:6px" onclick="event.stopPropagation();openEdit('${it.id}')">⋯</button>`:""}</div>`; };
-  const ltile = l => `<div class="tile lo" onclick="pickOpen('l','${l.id}')"><div class="nm">${l.cooked?"🍳":"↺"} ${l.n}</div><div class="small"><span class="dots">${"●".repeat(Math.min(l.portions,6))}</span> ${l.portions} × ${l.kpp} kcal</div><div class="xs mute">${l.cooked?"cooked today":"from "+l.from}</div><div class="xs ${l.plan?"good":"warn"}">${l.plan?"📅 "+l.plan.split(" · ")[0]:`Not planned · <button class="btn ghost xs" style="padding:0" onclick="event.stopPropagation();openPlan('${l.id}')">plan it</button>`}</div>${inRecLine(l,"l")}<div style="margin-top:4px">${labChip(l)}</div></div>`;
+    return `<div class="tile ${lv} ${isNew&&listed?"gl":""}" ${open?`onclick="${open}"`:""} title="${x.ns.length?meals(x):""}"><div class="nm">${it.n}</div><div class="small">${amt}</div>${sub}${ui.gl&&!stp&&x.lvl==="ok"?"":needLine(x)}${inRecLine(it,"i")}${schedLine("i",it.id)}<div style="margin-top:4px">${labChip(it)}</div><div style="margin-top:3px">${fix(x)}</div>${stp&&!isNew?`<button class="btn ghost xs" style="position:absolute;top:4px;right:6px" onclick="event.stopPropagation();openEdit('${it.id}')">⋯</button>`:""}</div>`; };
+  const ltile = l => `<div class="tile lo" onclick="pickOpen('l','${l.id}')"><div class="nm">${l.cooked?"🍳":"↺"} ${l.n}</div><div class="small"><span class="dots">${"●".repeat(Math.min(l.portions,6))}</span> ${l.portions} × ${l.kpp} kcal</div><div class="xs mute">${l.cooked?"cooked today":"from "+l.from}</div><div class="xs ${l.plan?"good":"warn"}">${l.plan?"📅 "+l.plan.split(" · replaces")[0]:`Not planned · <button class="btn ghost xs" style="padding:0" onclick="event.stopPropagation();pickOpen('l','${l.id}','','sched')">schedule it</button>`}</div>${inRecLine(l,"l")}<div style="margin-top:4px">${labChip(l)}</div></div>`;
   const rank = it => ({red:0,yel:1,ok:2})[stats[it.id].lvl];
   const sortIt = [...its].sort((a,b)=>rank(a)-rank(b) || (stats[a.id].day??9)-(stats[b.id].day??9) || (a.kind==="staple")-(b.kind==="staple") || SEC.indexOf(a.sec)-SEC.indexOf(b.sec));
   return head("Pantry") + seg + tabs + labs + chatParts()

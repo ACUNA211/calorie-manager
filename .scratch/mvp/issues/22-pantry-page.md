@@ -53,4 +53,12 @@ Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is lef
 - **Labels:** 🥕 Ingredient / 🍽 Ready to eat on every tile and match, a filter under the location tabs, and a switch in the food's sheet.
 - Open question: CONTEXT.md avoids "recipe" (recipes with steps are a future phase) and uses Dish for a named meal with ingredients. This builder has no steps, so is it a Dish being made, or a new term?
 
+**Member's reaction (2026-10-01):** tapping something in the Pantry should give two options, eat now and schedule for later. Schedule for later offers a few meals, and if none of those fit, a "Select another" button where a date can be picked.
+
+**Prototype, round 4 (2026-10-01):** tapping a food tile (or picking it from the box) opens one sheet with **🍽 Eat now** and **📅 Schedule for later** on top, and **+ Adding** / **− Using** under them. Staples only get Adding / Using. "Edit details" (amount, where it's kept, delete) is a link at the bottom.
+- **Eat now:** amount (with calories), "Log as" breakfast / lunch / snack / dinner (preset from the time of day, snack at 4:10pm), then "Eat now · 73 kcal as snack". It goes into Today's Calorie Log and comes out of the Pantry, with no Agent call.
+- **Schedule for later:** amount, then four upcoming meals (tonight's dinner, tomorrow's lunch, snack and dinner), each showing what's planned there. **📅 Select another** opens a date picker and a meal (breakfast / lunch / snack / dinner). Past meals are refused. Dates past next week show "not planned yet, kept for that meal when the week is planned".
+- When the meal already has something planned: **Replace it** or **Add alongside it**. Replace is preset for leftovers, cooked food, and Ready-to-eat food of 300 kcal or more. Replacing frees what the old meal needed (chili for Sat lunch frees the chicken rice bowl's chicken, rice and broccoli), and the meal option then shows the new food.
+- The tile shows "📅 100 g Wed, Oct 14 · snack". A scheduled main food counts as planned in With Grocery List.
+
 Waiting for the Member's reaction.
