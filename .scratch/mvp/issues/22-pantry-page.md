@@ -23,4 +23,16 @@ Shared in all three:
 
 Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is left this week, and next week's draft isn't approved yet, so its shortfalls (chicken short 1 piece, tortillas short 2) show as "goes on the list when the draft is approved".
 
+**Member's reaction (2026-10-01):** B (where it's kept) is the one. Changes asked for:
+- The switch says **Current** / **With Grocery List** instead of this week / next week. With Grocery List counts everything on the list as already bought.
+- The where-it's-kept tabs go below that switch.
+- Show every food needed for the next 7 days. Yellow if it runs out somewhere in the 7 days, red if it runs out today or tomorrow.
+
+**Prototype, B revised (2026-10-01):** `?variant=B`. Order: Current / With Grocery List → Fridge / Freezer / Cupboard / Spice rack tabs (with a count of short foods, red if any is red) → "Needed in the next 7 days" (Fri Oct 2 – Thu Oct 8) → the tiles for the chosen place.
+- The needs card lists every food the next 7 days of meals need. Short ones come first as rows: red (apples for tomorrow's snack, shrimp for tomorrow's tacos), then yellow by the day they run out (chicken short 1 on Sun, cumin out for Sun's curry, tortillas short 2 on Mon, then next week's new foods). Each row says have / need / short, the meal where it runs out, and every meal it's for. The rest are "Covered" chips with "needed of have".
+- A food runs out on the first meal where the running total needed is more than what's there, so chicken (3 pieces, 4 needed) is fine tomorrow and yellow from Sun.
+- With Grocery List: shrimp (450 g on the list) turns covered, so only apples stay red. "+ Add to list" on a red row puts the shortfall on the list. Yellow rows from next week's draft show "list when draft approved", so they stay yellow in both modes until the draft is approved.
+- Tiles use the same red / yellow and show "📅 needed in 7 days · short … from Sun". In With Grocery List, list amounts show as "+450 g from the list", and foods only on the list show as dashed tiles.
+- Planning the stir-fry leftover for Sat dinner drops the tacos' needs, and shrimp comes off the list.
+
 Waiting for the Member's reaction.
