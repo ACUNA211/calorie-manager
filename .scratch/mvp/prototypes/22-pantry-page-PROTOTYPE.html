@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Pantry page (#22)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/22-pantry-page.md
+  Question: what does the Pantry tab look like? How is it grouped (store section, exact vs. staple, or where it's kept)?
+  How are leftovers shown and linked to the Meal Plan? How is an amount edited quickly, and a staple switched between
+  have / low / out? Does it show which planned meals each food is set aside for, and what's missing for this week?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: store sections (same order as the Grocery List). Leftovers on top, staples inline with a have/low/out switch,
+       and a bar on each main food showing how much is set aside for planned meals.
+    B: where it's kept (Fridge / Freezer / Cupboard / Spice rack). Tiles; a tap on a staple cycles have → low → out.
+    C: plan first. "Covered this week?" by meal, then leftovers to use, then food that's free to use, then what's set
+       aside, with staples folded into one checklist.
+  Shared in all three: the amount editor (− / +, "used ¼ / ½ / all", type "2 lb" or "3 cups"), planning a leftover
+  (it changes the Meal Plan and frees what the replaced meal had set aside), the Agent quick-add card with unit
+  conversions (#04), adding by hand with no Agent call, delete with undo, and a This week / + next week's draft switch.
+  Try the chat box: "a dozen eggs and 3 lb chicken breast", "2 cans chickpeas, cilantro", "olive oil".
+  Scenario: Fri Oct 2, 4:10pm (same week as the #21 prototype). Saturday is left this week; next week's draft was made
+  at 3:25pm and isn't approved yet. All state is in memory; reload or ↺ resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--low:#c98a12;--lowbg:#fdf3dc;--outbg:#fbe3dc;--res:#c9b8ec;--ai:#7a4fd0;--aibg:#f1ebfc;--left:#2f7d4f;--draft:#fff6d6;--draftline:#e8cf73}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:220px}
+  button{font:inherit;cursor:pointer}
+  input{font:inherit}
+  .row{display:flex;align-items:center;gap:8px}
+  .wrap{flex-wrap:wrap}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .btn.good{background:var(--good)} .btn.ai{background:var(--ai)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px}
+  .chip{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 6px;margin:2px 3px 0 0;background:#f0efea;color:#555;white-space:nowrap}
+  .chip.res{background:#efe9fa;color:#5b3fa0} .chip.short{background:var(--outbg);color:var(--warn)} .chip.list{background:#e4ecff;color:var(--accent)}
+  .chip.left{background:#e6f3ea;color:var(--good)} .chip.ai{background:var(--aibg);color:var(--ai)} .chip.draft{background:var(--draft);color:#8a6d00}
+  .seg{display:flex;background:#e7e5df;border-radius:10px;padding:3px;margin:0 16px}
+  .seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px 4px;font-size:13px;color:var(--mute)}
+  .seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px #0002}
+  .tri{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+  .tri button{border:0;background:#fff;font-size:12px;padding:4px 8px;color:var(--mute)}
+  .tri button.on.have{background:#e6f3ea;color:var(--good);font-weight:700}
+  .tri button.on.low{background:var(--lowbg);color:var(--low);font-weight:700}
+  .tri button.on.out{background:var(--outbg);color:var(--warn);font-weight:700}
+  .sec{margin:16px 16px 4px;display:flex;align-items:center;gap:8px}
+  .sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+  .list{background:#fff;border-radius:14px;margin:0 16px;box-shadow:0 1px 2px #0001;overflow:hidden}
+  .li{padding:10px 14px;border-top:1px solid var(--line)}
+  .li:first-child{border-top:0}
+  .li .nm{font-weight:600}
+  .rbar{height:5px;border-radius:3px;background:#e6f3ea;overflow:hidden;display:flex;margin-top:5px}
+  .rbar i{display:block;height:100%}
+  .rbar i.r{background:var(--res)} .rbar i.s{background:var(--warn)}
+  .step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+  .step button{border:0;background:#f4f3ef;width:34px;height:32px;font-size:16px}
+  .step span{min-width:150px;text-align:center;font-size:13px;padding:0 6px}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 16px}
+  .tile{background:#fff;border-radius:12px;padding:10px;box-shadow:0 1px 2px #0001;cursor:pointer;min-height:78px;position:relative}
+  .tile .nm{font-weight:700;font-size:14px}
+  .tile.have{border-left:5px solid var(--good)} .tile.low{border-left:5px solid var(--low);background:var(--lowbg)} .tile.out{border-left:5px solid var(--warn);background:var(--outbg)}
+  .tile.lo{border:2px solid var(--left)}
+  .lcard{background:#fff;border-radius:14px;margin:8px 16px;padding:12px 14px;box-shadow:0 1px 2px #0001;border-left:5px solid var(--left)}
+  .dots{letter-spacing:2px;color:var(--left)}
+  .need{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .need:first-child{border-top:0}
+  .entry{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:8px 12px;display:flex;gap:8px;z-index:12;background:linear-gradient(transparent,var(--bg) 30%)}
+  .entry input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:#fff}
+  .entry .plus{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:24px;flex:none}
+  .search{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;background:#fff}
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .shade{position:fixed;inset:0;background:#0006;z-index:50}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:420px;max-height:88vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;z-index:51;padding:16px 16px 90px}
+  .opt{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--accent)}
+  .statebox{margin:18px 16px;padding:10px 12px;border:1px dashed #b5b2a9;border-radius:10px;font-size:12px;color:var(--mute);background:#fbfaf7}
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 14px;border-radius:10px;z-index:98;font-size:13px;display:flex;gap:12px;align-items:center;max-width:92vw}
+  .toast button{background:none;border:0;color:#9db4ff;font-weight:700;padding:0}
+  .typing{display:inline-block;animation:bl 1s infinite}
+  @keyframes bl{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sheet"></div>
+<div id="toastbox"></div>
+<div id="sw"></div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+const SEC = ["Produce","Meat & fish","Dairy & eggs","Bakery","Dry goods & staples","Frozen"];
+const LOC = ["Fridge","Freezer","Cupboard","Spice rack"];
+const LOCI = {Fridge:"🧊",Freezer:"❄️",Cupboard:"🚪","Spice rack":"🧂"};
+
+// ---------- data ----------
+// Main foods: m = measure (pc pieces, cup = grams shown with cups, ml = millilitres with cups, g = grams), per = grams per piece / per cup,
+// q = amount (pieces for pc, grams for cup/g, mL for ml), res = [week, meal, amount] set aside for the Meal Plan.
+// Staples: st = have | low | out. Leftovers: portions, kcal per portion, where it came from, and the meal it's planned for.
+function fresh(){
+  const P=(id,n,sec,loc,m,per,q,lbl,res=[])=>({id,n,sec,loc,kind:"exact",m,per,q,lbl,res});
+  const T=(id,n,sec,loc,st)=>({id,n,sec,loc,kind:"staple",st});
+  return {
+  items:[
+    P("egg","Eggs","Dairy & eggs","Fridge","pc",50,10,["egg","eggs"],[["this","Sat breakfast · Eggs & toast",2],["next","Sun breakfast · Pancakes",2],["next","Sun Prep Session · cookies",1],["next","Thu breakfast · Eggs & toast",2],["next","Sat breakfast · Eggs & toast",2]]),
+    P("yog","Greek yogurt","Dairy & eggs","Fridge","cup",245,750,null,[["next","Mon–Wed + Fri breakfast · Yogurt & granola",680]]),
+    P("milk","Milk, 2%","Dairy & eggs","Fridge","ml",240,1200,null,[["next","Sun breakfast · Pancakes",240]]),
+    P("ched","Cheddar","Dairy & eggs","Fridge","g",0,220,null,[["this","Sat dinner · Shrimp tacos",40],["next","Mon dinner · Turkey wraps",40]]),
+    P("chick","Chicken breast","Meat & fish","Fridge","pc",230,3,["piece","pieces"],[["this","Sat lunch · Chicken rice bowl",1],["next","Sun lunch · Chicken rice bowl",1],["next","Sun dinner · Sheet-pan chicken & veg",2]]),
+    P("turkey","Ground turkey","Meat & fish","Fridge","g",0,450,null,[["next","Mon dinner · Turkey wraps",450]]),
+    P("broc","Broccoli","Produce","Fridge","cup",90,350,null,[["this","Sat lunch · Chicken rice bowl",90],["next","Sun lunch · Chicken rice bowl",90]]),
+    P("carrot","Carrots","Produce","Fridge","pc",60,8,["carrot","carrots"],[["next","Sun dinner · Sheet-pan chicken & veg",5]]),
+    P("banana","Bananas","Produce","Cupboard","pc",118,3,["banana","bananas"]),
+    P("apple","Apples","Produce","Cupboard","pc",182,0,["apple","apples"],[["this","Sat snack · Apple + peanut butter",1]]),
+    P("bread","Whole wheat bread","Bakery","Cupboard","pc",32,8,["slice","slices"],[["this","Sat breakfast · Eggs & toast",2],["next","Thu breakfast · Eggs & toast",2],["next","Sat breakfast · Eggs & toast",2]]),
+    P("tort","Flour tortillas","Bakery","Cupboard","pc",49,6,["tortilla","tortillas"],[["this","Sat dinner · Shrimp tacos",4],["next","Mon dinner · Turkey wraps",4]]),
+    P("rice","White rice (dry)","Dry goods & staples","Cupboard","cup",185,1800,null,[["this","Sat lunch · Chicken rice bowl",75],["next","Sun lunch · Chicken rice bowl",75],["next","Sun Prep Session · Chickpea curry",150]]),
+    P("oats","Rolled oats","Dry goods & staples","Cupboard","cup",80,600,null,[["next","Sun Prep Session · cookies",200]]),
+    P("gran","Granola","Dry goods & staples","Cupboard","cup",120,400,null,[["next","Mon–Wed + Fri breakfast · Yogurt & granola",200]]),
+    P("chickpea","Chickpeas, canned","Dry goods & staples","Cupboard","pc",425,2,["can","cans"],[["next","Sun Prep Session · Chickpea curry",2]]),
+    P("alm","Almonds","Dry goods & staples","Cupboard","g",0,300,null),
+    P("veg","Frozen mixed veg","Frozen","Freezer","g",0,750,null),
+    T("oil","Olive oil","Dry goods & staples","Cupboard","low"),
+    T("salt","Salt","Dry goods & staples","Spice rack","have"),
+    T("pep","Black pepper","Dry goods & staples","Spice rack","have"),
+    T("cumin","Cumin","Dry goods & staples","Spice rack","out"),
+    T("chili","Chili powder","Dry goods & staples","Spice rack","have"),
+    T("soy","Soy sauce","Dry goods & staples","Fridge","have"),
+    T("pb","Peanut butter","Dry goods & staples","Cupboard","have"),
+    T("flour","Flour","Dry goods & staples","Cupboard","have"),
+    T("honey","Honey","Dry goods & staples","Cupboard","low"),
+    T("garlic","Garlic","Produce","Cupboard","have"),
+    T("butter","Butter","Dairy & eggs","Fridge","have"),
+  ],
+  left:[
+    {id:"l1",n:"Beef stir-fry",portions:1,kpp:480,from:"Thursday's dinner",loc:"Fridge",plan:null},
+    {id:"l2",n:"Chili",portions:1,kpp:650,from:"Sunday's Prep Session",loc:"Freezer",plan:null},
+    {id:"l3",n:"Oatmeal cookies",portions:3,kpp:150,from:"Sunday's Prep Session",loc:"Cupboard",plan:null,unit:["cookie","cookies"]},
+  ],
+  missing:{this:[["Shrimp","Sat dinner · Shrimp tacos","list"],["Apples","Sat snack · Apple + peanut butter","out"]],
+           next:[["Berries","Sun breakfast · Pancakes"],["Coconut milk","Sun Prep Session · Chickpea curry"],["Bell pepper","Tue dinner · Beef stir-fry"],["Rotisserie chicken","Wed dinner"],["Orzo","Thu dinner · Lemon chicken & orzo"],["Lemons","Thu dinner · Lemon chicken & orzo"]]},
+  planChanges:[], ai:0, cards:[], nid:100,
+}; }
+let S = fresh();
+let undoStack = [];
+let ui = {wk:"this", filter:"all", loc:"Fridge", edit:null, editSnap:null, thinking:false, showRes:false, showStaples:false, typed:""};
+const snap = () => undoStack.push(JSON.stringify(S));
+function undo(){ if(!undoStack.length) return; S=JSON.parse(undoStack.pop()); closeSheet(true); render(); toast("Undone"); }
+const item = id => S.items.find(i=>i.id===id);
+const lo = id => S.left.find(l=>l.id===id);
+
+// ---------- amounts ----------
+function fq(q){ const w=Math.floor(q+1e-9), r=q-w; const f=Math.abs(r-.5)<.13?"½":Math.abs(r-.25)<.13?"¼":Math.abs(r-.75)<.13?"¾":""; if(r>.87) return String(w+1); if(f) return (w||"")+f; return String(w); }
+function show(it, q=it.q){
+  if(it.m==="pc") return `${fmt(q)} ${q===1?it.lbl[0]:it.lbl[1]} · about ${fmt(q*it.per)} g`;
+  if(it.m==="cup") return `${fmt(q)} g · about ${fq(q/it.per)} cup${q/it.per>1.1?"s":""}`;
+  if(it.m==="ml") return `${fmt(q)} mL · about ${fq(q/it.per)} cup${q/it.per>1.1?"s":""}`;
+  return `${fmt(q)} g`;
+}
+function short(it, q){ return it.m==="pc" ? `${fmt(q)} ${q===1?it.lbl[0]:it.lbl[1]}` : `${fmt(q)} ${it.m==="ml"?"mL":"g"}`; }
+const stepOf = it => it.m==="pc" ? 1 : it.m==="cup" ? Math.max(5, Math.round(it.per/20)*5) : it.m==="ml" ? 60 : (it.q>=300?50:25);
+const resOf = it => (it.res||[]).filter(r=>r[0]==="this"||ui.wk==="both");
+const reserved = it => resOf(it).reduce((a,r)=>a+r[2],0);
+const free = it => it.q - reserved(it);
+function resBar(it){
+  if(!it.res||!it.res.length) return "";
+  const r=reserved(it), tot=Math.max(it.q, r)||1, sh=Math.max(0,r-it.q);
+  return `<div class="rbar"><i class="r" style="width:${Math.min(r,it.q)/tot*100}%"></i><i class="s" style="width:${sh/tot*100}%"></i></div>`;
+}
+function resLine(it){
+  const rs=resOf(it); if(!rs.length) return "";
+  const r=reserved(it), f=it.q-r;
+  return `<div class="xs" style="color:#5b3fa0;margin-top:3px">${short(it,r)} set aside for ${rs.length} meal${rs.length>1?"s":""}${f<0?` · <b class="warn">short ${short(it,-f)}</b>`:` · ${short(it,f)} free`}</div>`;
+}
+function stapleTri(it){ return `<span class="tri">${["have","low","out"].map(s=>`<button class="${s} ${it.st===s?'on':''}" onclick="event.stopPropagation();setSt('${it.id}','${s}')">${s}</button>`).join("")}</span>`; }
+function setSt(id,s){ snap(); const it=item(id); it.st=s; render(); refreshSheet();
+  toast(s==="have"?`${it.n}: have`:`${it.n}: ${s}. The Agent suggests it on the Grocery List`, true); }
+function cycleSt(id){ const it=item(id); setSt(id, {have:"low",low:"out",out:"have"}[it.st]); }
+
+// ---------- what's missing ----------
+function missingList(){
+  const out = S.missing.this.map(m=>({n:m[0],meal:m[1],st:m[2],w:"this"}));
+  if(ui.wk==="both") out.push(...S.missing.next.map(m=>({n:m[0],meal:m[1],st:"draft",w:"next"})));
+  S.items.filter(it=>it.kind==="exact"&&it.q>0&&free(it)<0).forEach(it=>out.push({n:`${it.n}: short ${short(it,-free(it))}`,meal:resOf(it).map(r=>r[1].split(" · ")[0]).join(", "),st:resOf(it).some(r=>r[0]==="this")&&free({...it,res:it.res.filter(r=>r[0]==="this")})<0?"short":"draft",w:"short"}));
+  return out;
+}
+function missChip(m){ return m.st==="list" ? `<span class="chip list">on Grocery List</span>` : m.st==="out" ? `<span class="chip short">not on the list</span>` : m.st==="draft" ? `<span class="chip draft">goes on the list when the draft is approved</span>` : `<span class="chip short">short</span>`; }
+function addToList(n){ snap(); const m=S.missing.this.find(x=>x[0]===n); if(m) m[2]="list"; render(); toast(`${n} added to the Grocery List`, true); }
+function weekSeg(){ return `<div class="seg" style="margin-top:8px"><button class="${ui.wk==='this'?'on':''}" onclick="ui.wk='this';render()">This week (to Sat)</button><button class="${ui.wk==='both'?'on':''}" onclick="ui.wk='both';render()">+ next week <span class="tag" style="color:#8a6d00">draft</span></button></div>`; }
+
+// ---------- leftovers ----------
+const PLANOPTS = [
+  {k:"satL",lbl:"Sat lunch",repl:"Chicken rice bowl (560)",eff:"Frees what the chicken rice bowl had set aside: 1 chicken breast, 75 g rice, 90 g broccoli"},
+  {k:"satD",lbl:"Sat dinner",repl:"Shrimp tacos (650)",eff:"Shrimp comes off the Grocery List, and 4 tortillas + 40 g cheddar are freed"},
+  {k:"nextMonL",lbl:"Next Mon lunch",repl:"Chickpea curry & rice (draft)",eff:"Changes next week's draft; the curry makes one portion fewer"},
+  {k:"freeze",lbl:"Freeze it",repl:null,eff:"Moves it to the Freezer, not planned"},
+];
+function leftCard(l, compact){
+  const dots = "●".repeat(Math.min(l.portions,6));
+  const u = l.unit || ["portion","portions"];
+  return `<div class="lcard"><div class="row"><div class="sp"><div style="font-weight:700">${l.n} <span class="dots">${dots}</span></div>
+      <div class="xs mute">${l.portions} ${l.portions===1?u[0]:u[1]} · ${l.kpp} kcal each · from ${l.from} · ${LOCI[l.loc]} ${l.loc}</div></div></div>
+    ${l.plan?`<div class="small" style="margin-top:6px;color:var(--good)">📅 Planned: <b>${l.plan}</b> <button class="btn ghost xs" onclick="openPlan('${l.id}')">change</button></div>`
+            :`<div class="small warn" style="margin-top:6px">Not in the Meal Plan yet</div>`}
+    ${compact?"":`<div class="row wrap" style="gap:6px;margin-top:8px">${l.plan?"":`<button class="btn sm good" onclick="openPlan('${l.id}')">Plan it</button>`}<button class="btn line sm" onclick="leftUse('${l.id}')">Ate one</button><button class="btn line sm" onclick="leftToss('${l.id}')">Thrown out</button></div>`}</div>`;
+}
+function openPlan(id){ ui.plan=id; showSheet(planSheet); }
+function planSheet(){
+  const l=lo(ui.plan);
+  return `<div class="row"><h2 class="sp">Plan ${l.n}</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
+    <div class="small mute">${l.portions} ${l.portions===1?"portion":"portions"} · ${l.kpp} each. The Agent offers the meals where it fits the calories. Pantry first.</div>
+    ${PLANOPTS.map(o=>`<div class="opt" onclick="doPlan('${l.id}','${o.k}')"><div class="row"><b class="sp">${o.lbl}</b>${o.repl?`<span class="xs mute">replaces ${o.repl}</span>`:""}</div><div class="xs mute" style="margin-top:2px">${o.eff}</div></div>`).join("")}
+    <div class="xs mute" style="margin-top:10px">Picking a meal changes the Meal Plan straight away, with undo, and shows as a change on the Plan page.</div>`;
+}
+function doPlan(id,k){
+  snap(); const l=lo(id), o=PLANOPTS.find(x=>x.k===k);
+  if(k==="freeze"){ l.loc="Freezer"; l.plan=null; closeSheet(true); render(); toast(`${l.n} moved to the Freezer`, true); return; }
+  l.plan = o.lbl + (o.repl?` · replaces ${o.repl.replace(/ \(.*\)/,"")}`:"");
+  const drop = (meal) => S.items.forEach(it=>{ if(it.res) it.res=it.res.filter(r=>!r[1].startsWith(meal)); });
+  if(k==="satL") drop("Sat lunch");
+  if(k==="satD"){ drop("Sat dinner"); S.missing.this=S.missing.this.filter(m=>m[0]!=="Shrimp"); }
+  S.planChanges.push(`${o.lbl}: ${o.repl.replace(/ \(.*\)/,"")} → ${l.n} (leftover)`);
+  closeSheet(true); render(); toast(`Meal Plan: ${o.lbl} is now ${l.n} (leftover)`, true);
+}
+function leftUse(id){ snap(); const l=lo(id); l.portions--; if(l.portions<=0) S.left=S.left.filter(x=>x.id!==id); render(); toast(`${l.n}: one eaten. Log it from Today if it isn't logged yet`, true); }
+function leftToss(id){ snap(); const l=lo(id); S.left=S.left.filter(x=>x.id!==id); render(); toast(`${l.n} removed`, true); }
+
+// ---------- edit an item (shared) ----------
+function openEdit(id){ ui.edit=id; ui.editSnap=JSON.stringify(S); ui.typed=""; showSheet(editSheet); }
+function editSheet(){
+  const it=item(ui.edit); if(!it) return "";
+  if(it.kind==="staple") return `<div class="row"><h2 class="sp">${it.n}</h2><button class="btn ghost" onclick="eDone()">✕</button></div>
+    <div class="small mute" style="margin:4px 0 10px">Staple: kept as have / low / out, no amount. Low or out puts it on the Grocery List as an Agent suggestion.</div>
+    <div class="row" style="gap:8px">${["have","low","out"].map(s=>`<button class="btn ${it.st===s?"":"line"} sp" style="${it.st===s?`background:${s==="have"?"var(--good)":s==="low"?"var(--low)":"var(--warn)"}`:""}" onclick="setSt('${it.id}','${s}')">${s}</button>`).join("")}</div>
+    ${locRow(it)}<div class="row" style="margin-top:16px"><button class="btn line sm warn" onclick="eDel()">Delete</button><span class="sp"></span><button class="btn sm" onclick="eDone()">Done</button></div>`;
+  const rs = it.res||[];
+  return `<div class="row"><h2 class="sp">${it.n}</h2><button class="btn ghost" onclick="eDone()">✕</button></div>
+    <div class="xs mute">${it.sec} · ${LOCI[it.loc]} ${it.loc}</div>
+    <div style="font-size:24px;font-weight:800;margin:10px 0 4px">${show(it)}</div>
+    <div class="row"><span class="step"><button onclick="eStep(-1)">−</button><span>${short(it, stepOf(it))} at a time</span><button onclick="eStep(1)">+</button></span></div>
+    <div class="row wrap" style="gap:6px;margin-top:8px"><span class="xs mute">Used</span>${[[.25,"¼"],[.5,"½"],[1,"all"]].map(([f,l])=>`<button class="btn line sm" onclick="eUse(${f})">${l}</button>`).join("")}</div>
+    <div class="row" style="margin-top:10px"><input id="typed" class="search" style="padding:8px 10px" placeholder="Type an amount: 2 lb, 500 g, 3 cups, 6" value="${ui.typed}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter')eTyped()"><button class="btn sm" onclick="eTyped()">Set</button></div>
+    <div id="typednote" class="xs" style="color:var(--ai);margin-top:4px"></div>
+    <div style="margin-top:12px"><div class="small" style="font-weight:600">Set aside for the Meal Plan</div>
+      ${rs.length?rs.map(r=>`<div class="row xs" style="padding:4px 0;border-top:1px solid var(--line);${r[0]==="next"&&ui.wk!=="both"?"opacity:.5":""}"><span class="sp">${r[1]}${r[0]==="next"?` <span class="chip draft">next week · draft</span>`:""}</span><b>${short(it,r[2])}</b></div>`).join(""):`<div class="xs mute">Nothing. All of it is free to use.</div>`}
+      ${rs.length?`<div class="xs mute" style="margin-top:4px">Set aside is worked out from the plan. To change it, change the meal on the Plan page.</div>`:""}</div>
+    ${locRow(it)}
+    <div class="row" style="margin-top:16px"><button class="btn line sm warn" onclick="eDel()">Delete</button><span class="xs mute sp" style="padding-left:8px">Expired or thrown out</span><button class="btn sm" onclick="eDone()">Done</button></div>`;
+}
+function locRow(it){ return `<div class="row wrap" style="gap:5px;margin-top:12px"><span class="xs mute">Kept in</span>${LOC.map(l=>`<button class="btn ${it.loc===l?"":"line"} sm" style="padding:3px 8px" onclick="item('${it.id}').loc='${l}';render();refreshSheet()">${LOCI[l]} ${l}</button>`).join("")}</div>`; }
+function eStep(d){ const it=item(ui.edit); it.q=Math.max(0, it.q+d*stepOf(it)); render(); refreshSheet(); }
+function eUse(f){ const it=item(ui.edit); it.q = f===1 ? 0 : Math.max(0, Math.round(it.q*(1-f)/(it.m==="pc"?1:5))*(it.m==="pc"?1:5)); render(); refreshSheet(); }
+function parseAmt(it, t){
+  const m=t.trim().toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(g|grams?|kg|lbs?|pounds?|oz|ounces?|cups?|ml|l|pieces?|pcs?)?$/); if(!m) return null;
+  const n=+m[1], u=m[2]||"";
+  if(/^kg/.test(u)) return {g:n*1000};
+  if(/^(lb|pound)/.test(u)) return {g:n*453.6, note:`${n} lb is about ${fmt(n*453.6)} g`};
+  if(/^(oz|ounce)/.test(u)) return {g:n*28.35, note:`${n} oz is about ${fmt(n*28.35)} g`};
+  if(/^cup/.test(u)) return {g:n*(it.per||240), note:`${n} cups is about ${fmt(n*(it.per||240))} ${it.m==="ml"?"mL":"g"}`};
+  if(/^(g|gram|ml)/.test(u)) return {g:n};
+  if(u==="l") return {g:n*1000};
+  return it.m==="pc" ? {pc:n} : {g:n};
+}
+function eTyped(){
+  const it=item(ui.edit), r=parseAmt(it, ui.typed), note=document.getElementById("typednote");
+  if(!r){ note.textContent="Try something like 500 g, 2 lb or 3 cups"; return; }
+  if(it.m==="pc" && r.g!=null){ const pcs=Math.max(1,Math.round(r.g/it.per)); it.q=pcs; ui.typed=""; render(); refreshSheet();
+    document.getElementById("typednote").textContent=`${r.note||fmt(r.g)+" g"}. That's about ${pcs} ${it.lbl[1]} (${it.per} g each). Change it with − / + if the count is different.`; return; }
+  it.q = r.pc!=null ? r.pc : Math.round(r.g); ui.typed=""; render(); refreshSheet();
+  if(r.note) document.getElementById("typednote").textContent=r.note+".";
+}
+function eDel(){ undoStack.push(ui.editSnap); const it=item(ui.edit); S.items=S.items.filter(x=>x.id!==ui.edit); ui.edit=null; closeSheet(true); render(); toast(`${it.n} deleted`, true); }
+function eDone(){ if(ui.editSnap && ui.editSnap!==JSON.stringify(S)){ undoStack.push(ui.editSnap); toast("Saved", true); } ui.edit=null; ui.editSnap=null; closeSheet(true); render(); }
+
+// ---------- add by hand (+), no Agent ----------
+function openAdd(){ ui.addq=""; showSheet(addSheet); setTimeout(()=>{ const q=document.getElementById("q"); if(q) q.focus(); },30); }
+function addSheet(){
+  return `<div class="row"><h2 class="sp">Add to the Pantry</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
+    <div class="xs mute" style="margin-bottom:8px">No Agent call. Pick a food to add an amount, or type a new one.</div>
+    <input id="q" class="search" placeholder="Search the Pantry or type a new food" autocomplete="off" oninput="ui.addq=this.value;document.getElementById('addres').innerHTML=addRes()">
+    <div id="addres">${addRes()}</div>`;
+}
+function addRes(){
+  const q=(ui.addq||"").trim().toLowerCase();
+  const hits=S.items.filter(it=>!q||it.n.toLowerCase().includes(q)).slice(0,q?6:5);
+  return hits.map(it=>`<div class="opt" onclick="closeSheet(true);openEdit('${it.id}')"><div class="row"><b class="sp">${it.n}</b><span class="xs mute">${it.kind==="staple"?it.st:show(it)}</span></div></div>`).join("")
+    + (q&&!S.items.some(it=>it.n.toLowerCase()===q)?`<div class="opt" onclick="addNew()"><b>+ New: "${ui.addq.trim()}"</b><div class="xs mute">Goes in ${guessSec(q)[0]} · ${guessSec(q)[1]}. You can change both.</div></div>`:"");
+}
+const SECGUESS=[[/cilantro|lime|lemon|onion|pepper|berr|spinach|tomato|potato|avocado|lettuce/,"Produce","Fridge"],[/shrimp|salmon|beef|pork|turkey|thigh|steak|fish/,"Meat & fish","Fridge"],[/cheese|cream|yog|milk/,"Dairy & eggs","Fridge"],[/bread|bagel|bun|tortilla/,"Bakery","Cupboard"],[/frozen|ice cream|peas/,"Frozen","Freezer"],[/oil|vinegar|sauce|spice|cumin|paprika|oregano|salt/,"Dry goods & staples","Spice rack"]];
+function guessSec(q){ const g=SECGUESS.find(([r])=>r.test(q)); return g?[g[1],g[2]]:["Dry goods & staples","Cupboard"]; }
+function addNew(){ snap(); const n=ui.addq.trim(), [sec,loc]=guessSec(n.toLowerCase()); const it={id:"n"+S.nid++,n:n.charAt(0).toUpperCase()+n.slice(1),sec,loc,kind:"exact",m:"g",per:0,q:0,res:[]}; S.items.push(it); closeSheet(true); render(); openEdit(it.id); }
+
+// ---------- Agent quick-add (chat box) ----------
+const ALIAS=[[/egg/,"egg"],[/chicken/,"chick"],[/yog/,"yog"],[/milk/,"milk"],[/cheddar|cheese/,"ched"],[/turkey/,"turkey"],[/broccoli/,"broc"],[/carrot/,"carrot"],[/banana/,"banana"],[/apple/,"apple"],[/bread/,"bread"],[/tortilla/,"tort"],[/rice/,"rice"],[/oat/,"oats"],[/granola/,"gran"],[/chickpea/,"chickpea"],[/almond/,"alm"],[/olive oil/,"oil"],[/cumin/,"cumin"],[/honey/,"honey"],[/peanut butter/,"pb"]];
+function agentAdd(text){
+  S.ai++;
+  const parts=text.toLowerCase().split(/,|\band\b|&/).map(s=>s.trim()).filter(Boolean);
+  const rows=parts.map(p=>{
+    let m=p.match(/^(a dozen|dozen|\d+(?:\.\d+)?|a|an|one|two|three)\s*(lbs?|pounds?|oz|kg|g|grams?|cans?|cups?|bags?)?\s*(?:of\s+)?(.+)$/), n=null,u="",name=p;
+    if(m){ n = /dozen/.test(m[1])?12 : isNaN(+m[1]) ? ({a:1,an:1,one:1,two:2,three:3}[m[1]]) : +m[1]; u=m[2]||""; name=m[3]; }
+    const al=ALIAS.find(([r])=>r.test(name)), it=al&&item(al[1]);
+    if(it && it.kind==="staple") return {id:it.id,kind:"staple",n:it.n,text:`set to have (was ${it.st})`};
+    if(it){
+      let add=null, note="", ask=false;
+      if(/lb|pound/.test(u)){ const g=n*453.6; note=`${n} lb is about ${fmt(g)} g`; add = it.m==="pc" ? Math.round(g/it.per) : Math.round(g); ask = it.m==="pc"; }
+      else if(/oz/.test(u)){ const g=n*28.35; note=`${n} oz is about ${fmt(g)} g`; add = it.m==="pc" ? Math.round(g/it.per) : Math.round(g); ask = it.m==="pc"; }
+      else if(/^(g|gram|kg)/.test(u)) add = it.m==="pc" ? Math.round(n*(u==="kg"?1000:1)/it.per) : n*(u==="kg"?1000:1);
+      else if(/cup/.test(u)) add = Math.round(n*(it.per||240));
+      else if(n!=null) add = it.m==="pc" ? n : Math.round(n*(it.per||100));
+      else add = stepOf(it);
+      return {id:it.id,kind:"add",n:it.n,add,note,ask};
+    }
+    const [sec,loc]=guessSec(name);
+    return {kind:"new",n:name.charAt(0).toUpperCase()+name.slice(1),sec,loc,q:n?Math.round(n*(/can/.test(u)?425:/lb/.test(u)?453.6:1)):0,staple:!n};
+  });
+  return rows;
+}
+function chat(text){
+  ui.thinking=true; S.chatText=text; render();
+  setTimeout(()=>{ ui.thinking=false; S.cards.push({id:S.nid++,text,rows:agentAdd(text),st:"open",aiN:S.ai}); render(); },600);
+}
+function agentCard(c){
+  if(c.st!=="open") return c.st==="done"?`<div class="card small" style="padding:10px 14px">✓ Added to the Pantry: ${c.rows.map(r=>r.n).join(", ")} <span class="xs mute">(in the Activity Log with undo)</span></div>`:"";
+  return `<div class="card" style="border-top:4px solid var(--ai)"><div class="row"><span class="chip ai">✨ Agent call #${c.aiN}</span><span class="sp"></span><span class="xs mute">"${c.text}"</span></div>
+    <div class="small" style="margin:6px 0">Add these to the Pantry?</div>
+    ${c.rows.map((r,i)=>{ const it=r.id&&item(r.id);
+      return `<div style="padding:7px 0;border-top:1px solid var(--line)">
+        <div class="row"><b class="sp">${r.n}</b>${r.kind==="new"?`<span class="chip">new · ${r.sec}</span>`:""}</div>
+        ${r.kind==="staple"?`<div class="xs mute">Staple: ${r.text}</div>`:""}
+        ${r.kind==="add"?`<div class="xs">${r.note?`<span style="color:var(--ai)">${r.note}.</span> `:""}${r.ask?`How many pieces is that? <span class="step" style="vertical-align:middle"><button onclick="cardQ(${c.id},${i},-1)">−</button><span style="min-width:40px">${r.add}</span><button onclick="cardQ(${c.id},${i},1)">+</button></span>`:`+${short(it,r.add)}`} → <b>${show(it,it.q+r.add)}</b></div>`:""}
+        ${r.kind==="new"?`<div class="xs mute">${r.staple?"Added as a staple (have). Tap it later to give it an amount instead.":`${fmt(r.q)} g`}</div>`:""}</div>`; }).join("")}
+    <div class="row" style="margin-top:8px"><button class="btn line sm" onclick="cardSet(${c.id},'cancel')">Cancel</button><span class="sp"></span><button class="btn ai" onclick="cardApply(${c.id})">Add ${c.rows.length}</button></div></div>`;
+}
+function cardQ(id,i,d){ const r=S.cards.find(c=>c.id===id).rows[i]; r.add=Math.max(1,r.add+d); render(); }
+function cardSet(id,st){ S.cards.find(c=>c.id===id).st=st; render(); }
+function cardApply(id){
+  snap(); const c=S.cards.find(c=>c.id===id);
+  c.rows.forEach(r=>{ if(r.kind==="staple") item(r.id).st="have"; if(r.kind==="add") item(r.id).q+=r.add;
+    if(r.kind==="new") S.items.push(r.staple?{id:"n"+S.nid++,n:r.n,sec:r.sec,loc:r.loc,kind:"staple",st:"have"}:{id:"n"+S.nid++,n:r.n,sec:r.sec,loc:r.loc,kind:"exact",m:"g",per:0,q:r.q,res:[]}); });
+  c.st="done"; render(); toast(`Added ${c.rows.length} to the Pantry`, true);
+}
+function chatParts(){ return `${ui.thinking?`<div class="card small"><span class="typing">✨ Reading "${S.chatText}"…</span></div>`:""}${S.cards.map(agentCard).join("")}`; }
+function entryBar(){ return `<div class="entry"><button class="plus" onclick="openAdd()">+</button><input placeholder="Tell the Agent what you bought or used…" onkeydown="if(event.key==='Enter'&&this.value.trim()){chat(this.value.trim());this.value=''}"></div>`; }
+function stateBox(){ return `<div class="statebox"><b>Prototype state</b> · Agent calls: <b style="color:var(--ai)">${S.ai}</b>${S.planChanges.length?`<br>Meal Plan changes: ${S.planChanges.join("; ")}`:""}<br>Low or out (suggested on the Grocery List): ${S.items.filter(i=>i.kind==="staple"&&i.st!=="have").map(i=>`${i.n} (${i.st})`).join(", ")||"none"}</div>`; }
+function head(title){ return `<div class="row" style="padding:16px 16px 4px"><h2 class="sp">${title}</h2><button class="btn ghost" onclick="toast('Settings: Kitchen Tools, Activity Log…')">☰</button></div>`; }
+
+// ================= A: store sections =================
+function VariantA(){
+  const miss = missingList();
+  const filt = `<div class="row" style="margin:10px 16px 0;gap:6px">${[["all","All"],["exact","Main foods"],["staple","Staples"]].map(([k,l])=>`<button class="btn ${ui.filter===k?"":"line"} sm" onclick="ui.filter='${k}';render()">${l}</button>`).join("")}<span class="sp"></span><span class="xs mute">${S.items.length} items</span></div>`;
+  const missCard = `<div class="card" style="padding:10px 14px"><div class="row"><b class="sp">Missing for ${ui.wk==="both"?"this + next week":"this week"}</b><span class="xs mute">${miss.length}</span></div>
+    ${miss.map(m=>`<div class="need"><div class="sp"><b>${m.n}</b><div class="xs mute">${m.meal}</div></div><div style="text-align:right">${missChip(m)}${m.st==="out"?`<div><button class="btn ghost xs" onclick="addToList('${m.n}')">+ Add to list</button></div>`:""}</div></div>`).join("")}</div>`;
+  const lefts = S.left.length ? `<div class="sec"><h3>Leftovers</h3><span class="sp"></span><span class="xs mute">${S.left.reduce((a,l)=>a+l.portions,0)} portions</span></div>${S.left.map(l=>leftCard(l)).join("")}` : "";
+  const secs = SEC.map(sec=>{
+    const its=S.items.filter(it=>it.sec===sec&&(ui.filter==="all"||it.kind===ui.filter));
+    if(!its.length) return "";
+    its.sort((a,b)=>(a.kind===b.kind?0:a.kind==="exact"?-1:1));
+    return `<div class="sec"><h3>${sec}</h3></div><div class="list">${its.map(it=> it.kind==="staple"
+      ? `<div class="li row" onclick="openEdit('${it.id}')" style="cursor:pointer"><span class="sp">${it.n} <span class="xs mute">staple</span></span>${stapleTri(it)}</div>`
+      : `<div class="li" onclick="openEdit('${it.id}')" style="cursor:pointer"><div class="row"><span class="nm sp">${it.n}</span><span class="small ${it.q===0?'warn':''}">${it.q===0?"none left":show(it)}</span></div>${resBar(it)}${resLine(it)}</div>`).join("")}</div>`;
+  }).join("");
+  return head("Pantry") + weekSeg() + missCard + chatParts() + lefts + filt + secs
+    + `<div class="xs mute" style="margin:8px 16px">Purple = set aside for planned meals, red = short. Tap a food to change its amount.</div>` + stateBox() + entryBar();
+}
+
+// ================= B: where it's kept =================
+function VariantB(){
+  const counts = l => S.items.filter(i=>i.loc===l&&(i.kind==="staple"?i.st!=="have":i.q===0)).length;
+  const tabs = `<div class="seg" style="margin-top:6px">${LOC.map(l=>`<button class="${ui.loc===l?'on':''}" onclick="ui.loc='${l}';render()">${LOCI[l]} ${l}${counts(l)?` <span class="warn">·${counts(l)}</span>`:""}</button>`).join("")}</div>`;
+  const miss = missingList();
+  const strip = `<div class="row" style="margin:10px 16px 0;gap:6px;overflow-x:auto;scrollbar-width:none"><span class="xs mute" style="flex:none">Missing:</span>${miss.map(m=>`<span class="chip ${m.st==="list"?"list":m.st==="draft"?"draft":"short"}" style="flex:none">${m.n}${m.st==="list"?" · on list":""}</span>`).join("")}</div>`;
+  const lefts = S.left.filter(l=>l.loc===ui.loc);
+  const its = S.items.filter(i=>i.loc===ui.loc);
+  const tile = it => it.kind==="staple"
+    ? `<div class="tile ${it.st}" onclick="cycleSt('${it.id}')"><div class="nm">${it.n}</div><div class="small" style="font-weight:700;color:${it.st==="have"?"var(--good)":it.st==="low"?"var(--low)":"var(--warn)"}">${it.st.toUpperCase()}</div><div class="xs mute">tap: have → low → out</div><button class="btn ghost xs" style="position:absolute;top:4px;right:6px" onclick="event.stopPropagation();openEdit('${it.id}')">⋯</button></div>`
+    : `<div class="tile ${it.q===0?'out':''}" onclick="openEdit('${it.id}')"><div class="nm">${it.n}</div><div class="small">${it.q===0?"none left":show(it).split(" · ")[0]}</div><div class="xs mute">${it.q?show(it).split(" · ")[1]||"":""}</div>${it.res&&resOf(it).length?`<div class="xs" style="color:${free(it)<0?"var(--warn)":"#5b3fa0"};margin-top:3px">🔒 ${short(it,reserved(it))} for ${resOf(it).length} meal${resOf(it).length>1?"s":""}${free(it)<0?" · short":""}</div>`:""}${resBar(it)}</div>`;
+  const ltile = l => `<div class="tile lo" onclick="openPlan('${l.id}')"><div class="nm">↺ ${l.n}</div><div class="small"><span class="dots">${"●".repeat(l.portions)}</span> ${l.portions} × ${l.kpp}</div><div class="xs ${l.plan?"good":"warn"}">${l.plan?"📅 "+l.plan.split(" · ")[0]:"Not planned · tap to plan"}</div><div class="xs mute">from ${l.from}</div></div>`;
+  const sortIt = [...its].sort((a,b)=>(a.kind==="staple")-(b.kind==="staple") || SEC.indexOf(a.sec)-SEC.indexOf(b.sec));
+  return head("Pantry") + tabs + strip + `<div style="margin:6px 16px 0">${weekSeg().replace('class="seg" style="margin-top:8px"','class="seg" style="margin:0"')}</div>` + chatParts()
+    + `<div class="tiles">${lefts.map(ltile).join("")}${sortIt.map(tile).join("")}</div>`
+    + (its.length||lefts.length?"":`<div class="card small mute">Nothing kept here.</div>`)
+    + `<div class="xs mute" style="margin:0 16px">Green frame = leftover. Coloured edge = staple. 🔒 = set aside for planned meals.</div>` + stateBox() + entryBar();
+}
+
+// ================= C: plan first =================
+function VariantC(){
+  const miss = missingList();
+  const meals = ui.wk==="both"
+    ? [["Sat","Eggs & toast",["egg","bread"]],["Sat","Chicken rice bowl",["chick","rice","broc"]],["Sat","Shrimp tacos",["tort","ched"],"Shrimp"],["Sat","Apple + peanut butter",["apple"]],["Next Sun","Pancakes & berries",["egg","milk"],"Berries"],["Next Sun","Prep Session",["chickpea","rice","oats","egg"],"Coconut milk"],["Next Sun","Sheet-pan chicken & veg",["chick","carrot"]],["Next Mon","Turkey wraps",["turkey","tort","ched"]],["Next Tue","Beef stir-fry",[],"Bell pepper"],["Next Wed","Rotisserie chicken & salad",[],"Rotisserie chicken"],["Next Thu","Lemon chicken & orzo",[],"Orzo, lemons"]]
+    : [["Sat","Eggs & toast",["egg","bread"]],["Sat","Chicken rice bowl",["chick","rice","broc"]],["Sat","Shrimp tacos",["tort","ched"],"Shrimp"],["Sat","Apple + peanut butter",["apple"]]];
+  const satLeft = S.left.find(l=>l.plan&&l.plan.startsWith("Sat lunch")), satDin = S.left.find(l=>l.plan&&l.plan.startsWith("Sat dinner"));
+  const rowsM = meals.map(([d,n,ids,miss2])=>{
+    if(d==="Sat"&&n==="Chicken rice bowl"&&satLeft) return [d,`${satLeft.n} (leftover)`,[],null,true];
+    if(d==="Sat"&&n==="Shrimp tacos"&&satDin) return [d,`${satDin.n} (leftover)`,[],null,true];
+    return [d,n,ids,miss2,false];
+  }).map(([d,n,ids,miss2,isLeft])=>{
+    const shortIds = ids.filter(id=>{ const it=item(id); return it && (it.q===0 || free(it)<0); });
+    const ok = !miss2 && !shortIds.length;
+    const onList = miss2 && (miss2!=="Shrimp" || S.missing.this.some(m=>m[0]==="Shrimp"&&m[2]==="list"));
+    return `<div class="need"><span style="font-size:16px">${ok?"✅":shortIds.length&&!miss2?"⚠️":"🛒"}</span><div class="sp"><div><b>${n}</b> <span class="xs mute">${d}${d.startsWith("Next")?" · draft":""}</span></div>
+      <div class="xs">${isLeft?`<span class="good">From the leftovers</span>`:ok?`<span class="mute">All in the Pantry: ${ids.map(id=>item(id)&&item(id).n.toLowerCase()).filter(Boolean).join(", ")}</span>`:""}
+      ${miss2?`<span class="${d.startsWith("Next")?"":"warn"}">Needs ${miss2.toLowerCase()}</span> ${d.startsWith("Next")?`<span class="chip draft">list on approval</span>`:onList?`<span class="chip list">on list</span>`:""}`:""}
+      ${shortIds.map(id=>{ const it=item(id); return it.q===0?`<span class="warn">Out of ${it.n.toLowerCase()}</span> <button class="btn ghost xs" onclick="addToList('${it.n}')">+ Add to list</button>`:`<span class="warn">${it.n}: short ${short(it,-free(it))}</span>`; }).join(" ")}</div></div></div>`;
+  }).join("");
+  const freeItems = S.items.filter(it=>it.kind==="exact"&&it.q>0&&free(it)>0).sort((a,b)=>SEC.indexOf(a.sec)-SEC.indexOf(b.sec));
+  const resItems = S.items.filter(it=>it.kind==="exact"&&resOf(it).length);
+  const st = S.items.filter(i=>i.kind==="staple"), bad = st.filter(i=>i.st!=="have");
+  return head("Pantry") + weekSeg()
+    + `<div class="card" style="padding:10px 14px"><div class="row"><b class="sp">Covered ${ui.wk==="both"?"through next week":"for the rest of this week"}?</b><span class="xs mute">${miss.length} to buy</span></div>${rowsM}</div>`
+    + chatParts()
+    + (S.left.length?`<div class="sec"><h3>Leftovers to use</h3></div>${S.left.map(l=>leftCard(l)).join("")}`:"")
+    + `<div class="sec"><h3>Free to use</h3><span class="sp"></span><span class="xs mute">not set aside for any meal</span></div>
+       <div class="list">${freeItems.map(it=>`<div class="li row"><div class="sp" onclick="openEdit('${it.id}')" style="cursor:pointer"><div class="nm">${it.n}</div><div class="xs mute">${short(it,free(it))} free${reserved(it)?` of ${short(it,it.q)}`:""}</div></div>
+          <span class="step"><button onclick="quick('${it.id}',-1)">−</button><span style="min-width:64px">${short(it,stepOf(it))}</span><button onclick="quick('${it.id}',1)">+</button></span></div>`).join("")}</div>
+       <div class="sec"><h3>Set aside</h3><span class="sp"></span><button class="btn ghost xs" onclick="ui.showRes=!ui.showRes;render()">${ui.showRes?"Hide":"Show"} ${resItems.length} foods</button></div>
+       ${ui.showRes?`<div class="list">${resItems.map(it=>`<div class="li" onclick="openEdit('${it.id}')" style="cursor:pointer"><div class="row"><span class="nm sp">${it.n}</span><span class="small">${short(it,reserved(it))} of ${short(it,it.q)}</span></div><div class="xs mute">${resOf(it).map(r=>r[1].split(" · ")[0]).join(" · ")}</div>${resBar(it)}</div>`).join("")}</div>`:""}
+       <div class="sec"><h3>Staples</h3><span class="sp"></span><span class="xs ${bad.length?"warn":"good"}">${bad.length?`${bad.length} low or out`:"all good"}</span></div>
+       <div class="list">${bad.map(it=>`<div class="li row"><span class="sp">${it.n}</span>${stapleTri(it)}</div>`).join("")}
+         <div class="li"><button class="btn ghost small" onclick="ui.showStaples=!ui.showStaples;render()">${ui.showStaples?"Hide":"Show"} the ${st.length-bad.length} you have</button></div>
+         ${ui.showStaples?st.filter(i=>i.st==="have").map(it=>`<div class="li row"><span class="sp">${it.n}</span>${stapleTri(it)}</div>`).join(""):""}</div>`
+    + stateBox() + entryBar();
+}
+function quick(id,d){ snap(); const it=item(id); it.q=Math.max(0,it.q+d*stepOf(it)); render(); toast(`${it.n}: ${show(it)}`, true); }
+
+// ---------- shell + switcher ----------
+let sheetFn=null;
+function showSheet(fn){ sheetFn=fn; refreshSheet(); }
+function refreshSheet(){ if(!sheetFn) return; document.getElementById("sheet").innerHTML=`<div class="shade" onclick="closeSheet()"></div><div class="sheet">${sheetFn()}</div>`; }
+function closeSheet(silent){ if(sheetFn===editSheet&&!silent){ eDone(); return; } sheetFn=null; document.getElementById("sheet").innerHTML=""; }
+function toast(msg, withUndo){
+  const box=document.getElementById("toastbox");
+  box.innerHTML = `<div class="toast"><span>${msg}</span>${withUndo?`<button onclick="undo()">Undo</button>`:""}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>box.innerHTML="", withUndo?6000:2500);
+}
+const VARIANTS = {A:["Store sections",VariantA], B:["Where it's kept",VariantB], C:["Plan first",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); closeSheet(true); render(); scrollTo(0,0); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
+    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n==='Pantry'?'cur':''}" onclick="${n==='Pantry'?'':`toast('Not in this prototype')`}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <button onclick="S=fresh();undoStack=[];closeSheet(true);render()" title="Reset state">↺</button>`;
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Adding food (#20)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/20-adding-food.md
+  Question: how does food get into the Calorie Log? What does the confirmation look like, is + the same flow as chat,
+  how are wrong matches and amounts fixed (before and after logging), how are estimates shown and swapped for a Food Library
+  match, and how do "as planned", Eating Out and logging for the other Member fit in? Cost angle (#17): can a Member log
+  straight from a Food Library search with no Agent call, with the Agent only for free text or unknown foods?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: + opens a search sheet (no Agent). Picks collect in a tray that is the confirmation card. The chat box is a separate
+       Agent flow that ends in the same card.
+    B: one box. The chat box shows live Food Library matches as you type (no Agent). Enter logs locally when every part
+       matches the library, and only calls the Agent when something doesn't. Everything lands as a card in a chat stream.
+    C: meal rows. Today's table is the logging surface: "As planned" and portion buttons per meal, search inline in the row,
+       a tap logs straight away with undo (no confirmation card), and the Pantry question comes after.
+  Shared in all three: the search (synonyms, typos, recent and frequent first, Dishes and foods), the edit controls for a
+  logged food (amount, wrong match, estimate → library match, meal, Pantry, delete), and the Agent stand-in.
+  Try typing: "2 eggs and toast", "brocoli", "yoghurt", "pb", "150g chicken", "4 oz almonds",
+  "chipotle burrito bowl with guac and a diet coke", "2 slices pepperoni pizza and garlic knots".
+  Scenario: Fri Oct 2, 12:40pm (same week as the #21 prototype). Calorie Target 2,000. Breakfast logged as planned.
+  Lunch is planned as Beef stir-fry, a leftover from Thursday's dinner. Dinner is Pizza night (Eating Out, aim 800).
+  The Agent here is canned: it splits text, looks parts up in the library, and estimates the rest. All state is in memory.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--out:#8a5cc2;--est:#a0561a;--estbg:#fdebd8;--ai:#7a4fd0;--aibg:#f1ebfc}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:230px}
+  button{font:inherit;cursor:pointer}
+  input{font:inherit}
+  .row{display:flex;align-items:center;gap:8px}
+  .wrap{flex-wrap:wrap}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .btn.good{background:var(--good)}
+  .btn.ai{background:var(--ai)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px}
+  .chip{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 6px;margin:2px 3px 0 0;background:#f0efea;color:#555;white-space:nowrap}
+  .chip.est{background:var(--estbg);color:var(--est)} .chip.lib{background:#e6f3ea;color:var(--good)} .chip.ai{background:var(--aibg);color:var(--ai)}
+  .chip.out{background:#ebe1f6;color:var(--out)} .chip.dish{background:#e4ecff;color:var(--accent)} .chip.pan{background:#f1ead9;color:#7a5a17}
+  .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px}
+  .pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
+  .bar i{position:absolute;top:0;bottom:0;left:0;background:var(--good)}
+  .bar i.fc{background:#a9c9b4}
+  .bar i.over{background:var(--warn)}
+  .step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+  .step button{border:0;background:#f4f3ef;width:28px;height:28px}
+  .step span{min-width:84px;text-align:center;font-size:12.5px;padding:0 4px}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top;font-size:13.5px}
+  .tbl tr:first-child td{border-top:0}
+  .tbl .num{text-align:right;white-space:nowrap;width:58px}
+  .food{display:flex;gap:6px;font-size:12.5px;color:#444;padding:3px 0 0 10px;cursor:pointer}
+  .food:hover{color:var(--accent)}
+  .res{display:flex;align-items:center;gap:10px;padding:9px 4px;border-top:1px solid var(--line);cursor:pointer}
+  .res:hover{background:#faf9f6}
+  .res .nm{font-weight:600;font-size:14px}
+  .res .add{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--soft);color:var(--accent);font-size:18px;line-height:1}
+  .search{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;background:#fff}
+  .lcard{background:#fff;border-radius:14px;box-shadow:0 1px 3px #0002;padding:12px;margin:10px 16px;border-top:4px solid var(--good)}
+  .lcard.ag{border-top-color:var(--ai)}
+  .it{padding:8px 0;border-top:1px solid var(--line)}
+  .it:first-of-type{border-top:0}
+  .it.isest{background:linear-gradient(90deg,var(--estbg) 0 4px,transparent 4px);padding-left:10px}
+  .fix{background:#faf9f6;border-radius:10px;padding:8px;margin-top:6px}
+  .bub{max-width:85%;border-radius:14px;padding:8px 12px;margin:6px 16px;font-size:14px}
+  .bub.me{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+  .bub.ag{background:#fff;border-bottom-left-radius:4px;box-shadow:0 1px 2px #0001}
+  .sys{font-size:11.5px;color:var(--mute);text-align:center;margin:4px 16px}
+  .entry{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:8px 12px;display:flex;gap:8px;z-index:12;background:linear-gradient(transparent,var(--bg) 30%)}
+  .entry input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:#fff}
+  .entry .plus{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:24px;flex:none}
+  .sugg{position:fixed;bottom:170px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:0 12px;z-index:12}
+  .sugg .s{background:#fff;border-radius:12px;box-shadow:0 2px 10px #0002;overflow:hidden}
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .shade{position:fixed;inset:0;background:#0006;z-index:50}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:420px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:51;padding:14px 0 90px}
+  .sheet .pad{padding:0 16px}
+  .mrow{background:#fff;border-radius:14px;margin:10px 16px;padding:12px 14px;box-shadow:0 1px 2px #0001}
+  .mrow.cur{box-shadow:0 0 0 2px var(--accent) inset}
+  .qbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .statebox{margin:18px 16px;padding:10px 12px;border:1px dashed #b5b2a9;border-radius:10px;font-size:12px;color:var(--mute);background:#fbfaf7}
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 14px;border-radius:10px;z-index:98;font-size:13px;display:flex;gap:12px;align-items:center;max-width:92vw}
+  .toast button{background:none;border:0;color:#9db4ff;font-weight:700;padding:0}
+  .typing{display:inline-block;animation:bl 1s infinite}
+  @keyframes bl{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sheet"></div>
+<div id="toastbox"></div>
+<div id="sw"></div>
+
+<script>
+// ---------- constants ----------
+const TARGET = 2000;
+const SLOT = ["Breakfast","Lunch","Dinner","Snack"];
+const NOW_SLOT = 1;                                  // 12:40pm → Lunch
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+
+// ---------- Food Library (FoodData Central foods, plus Dishes) ----------
+// u: unit, k: kcal per unit (per gram when u is g), g: grams per unit, def: default amount, al: synonyms, alt: group of near matches, pan: in the Pantry
+const L = {};
+function lib(id,name,al,u,k,g,def,x={}){ L[id]={id,name,al,u,k,g,def,...x}; }
+lib("egg","Egg, whole, cooked",["egg","eggs","boiled egg","fried egg","hard boiled egg"],"egg",78,50,2,{alt:"egg",pan:"10 eggs"});
+lib("eggscr","Egg, scrambled with butter",["scrambled eggs","scrambled egg"],"egg",101,61,2,{alt:"egg",pan:"10 eggs"});
+lib("eggwh","Egg white, cooked",["egg white","egg whites"],"egg",17,33,3,{alt:"egg"});
+lib("toast","Bread, whole wheat, toasted",["toast","bread","wheat toast","slice of bread"],"slice",86,32,2,{alt:"bread",pan:"½ loaf"});
+lib("toastw","Bread, white, toasted",["white toast","white bread"],"slice",79,29,2,{alt:"bread"});
+lib("butter","Butter, salted",["butter"],"tbsp",102,14,1,{pan:"have"});
+lib("banana","Banana, raw",["banana","bananas"],"piece",105,118,1,{pan:"3 bananas"});
+lib("apple","Apple, raw, with skin",["apple","apples"],"piece",95,182,1);
+lib("pb","Peanut butter, smooth",["peanut butter","pb"],"tbsp",94,16,2,{pan:"have"});
+lib("gyog","Yogurt, Greek, plain, whole milk",["greek yogurt","yogurt","yoghurt","greek yoghurt"],"g",0.97,1,170,{pan:"750 g"});
+lib("rice","Rice, white, cooked",["rice","white rice"],"cup",205,158,1,{alt:"rice"});
+lib("brice","Rice, brown, cooked",["brown rice"],"cup",218,195,1,{alt:"rice"});
+lib("chick","Chicken breast, roasted",["chicken","chicken breast","grilled chicken"],"g",1.65,1,150,{pan:"620 g"});
+lib("broc","Broccoli, cooked",["broccoli"],"cup",55,156,1,{pan:"1 head"});
+lib("milk","Milk, 2%",["milk"],"cup",122,244,1,{pan:"1.2 L"});
+lib("coffee","Coffee, brewed",["coffee","black coffee"],"cup",2,237,1);
+lib("oj","Orange juice",["orange juice","oj"],"cup",112,248,1);
+lib("avo","Avocado, raw",["avocado","avo"],"piece",240,150,0.5);
+lib("ched","Cheese, cheddar",["cheese","cheddar"],"slice",113,28,1,{pan:"220 g"});
+lib("tort","Tortilla, flour, 8 inch",["tortilla","tortillas","flour tortilla"],"piece",146,49,1,{pan:"6 tortillas"});
+lib("pizza","Pizza, cheese, regular crust",["pizza","cheese pizza","pizza slice","slice of pizza"],"slice",285,107,1,{alt:"pizza"});
+lib("pizzap","Pizza, pepperoni, regular crust",["pepperoni pizza","pepperoni"],"slice",313,111,1,{alt:"pizza"});
+lib("gran","Granola",["granola"],"g",4.7,1,50,{pan:"400 g"});
+lib("alm","Almonds",["almonds","almond","nuts"],"g",5.79,1,28,{pan:"300 g"});
+lib("choc","Chocolate, dark, 70–85%",["dark chocolate","chocolate"],"g",5.98,1,20);
+lib("cookie","Oatmeal cookie",["cookie","cookies","oatmeal cookie"],"cookie",150,38,1,{dish:1,pan:"3 cookies"});
+lib("d_yg","Yogurt & granola",["yogurt and granola","yogurt granola"],"portion",470,0,1,{dish:1});
+lib("d_crb","Chicken rice bowl",["chicken rice bowl","rice bowl"],"portion",560,0,1,{dish:1});
+lib("d_bsf","Beef stir-fry",["beef stir fry","stir fry","stirfry"],"portion",640,0,1,{dish:1,pan:"1 leftover portion"});
+lib("d_tw","Turkey wraps",["turkey wrap","turkey wraps","wraps"],"portion",430,0,1,{dish:1});
+lib("d_chili","Chili",["chili","chilli"],"portion",650,0,1,{dish:1});
+lib("d_apb","Apple + peanut butter",["apple and peanut butter","apple pb"],"portion",190,0,1,{dish:1});
+
+// What the canned Agent estimates when the library has nothing.
+const EST = [
+  ["burrito bowl","Burrito bowl, chicken (restaurant)","portion",780],
+  ["guac","Guacamole, side","portion",230],
+  ["diet coke","Diet soda","can",0], ["coke","Cola","can",140], ["soda","Cola","can",140],
+  ["garlic knot","Garlic knot","piece",160],
+  ["cake","Birthday cake, frosted, slice","slice",350],
+  ["fries","French fries, medium","portion",365],
+  ["burger","Cheeseburger (restaurant)","portion",650],
+  ["taco","Taco (restaurant)","piece",210],
+  ["salad","Side salad with dressing","portion",180],
+  ["beer","Beer, regular","can",155],
+  ["smoothie","Fruit smoothie, 16 oz","portion",290],
+  ["empanada","Empanada, beef","piece",310],
+  ["arepa","Arepa with cheese","piece",330],
+];
+
+// Today's Meal Plan (from #21: Fri Oct 2)
+const PLAN = [
+  {d:"Yogurt & granola", k:470, lib:"d_yg"},
+  {d:"Beef stir-fry", k:480, lib:"d_bsf", left:"Thursday's dinner"},
+  {d:"Pizza night", k:800, out:true},
+  {d:"Apple + peanut butter", k:190, lib:"d_apb"},
+];
+
+// ---------- state ----------
+function fresh(){ return {
+  log:[{id:1,slot:0,lib:"d_yg",name:"Yogurt & granola",u:"portion",k:470,g:0,q:1,est:false,src:"plan",pan:false}],
+  ana:[], cards:[], chat:[{who:"ag",tpl:true,text:"Lunch is planned: <b>Beef stir-fry</b> (leftover from Thursday's dinner), 480.",qr:"plan1"}],
+  ai:0, local:0, pantry:[], nid:10, occ:2,
+  freq:{d_yg:9,cookie:6,egg:5,toast:5,banana:4,chick:4,d_crb:3,alm:3,gyog:3,pb:2},
+  recent:["d_yg","cookie","banana","egg","toast","alm","d_crb","gyog"],
+}; }
+let S = fresh();
+let undoStack = [];
+let ui = {sheet:null, slot:NOW_SLOT, q:"", tray:null, edit:null, editSnap:null, cOpen:null, cEdit:null, btext:"", thinking:false};
+const snap = () => undoStack.push(JSON.stringify(S));
+function undo(){ if(!undoStack.length) return; S = JSON.parse(undoStack.pop()); ui.edit=null; ui.cEdit=null; closeSheet(true); render(); toast("Undone"); }
+
+// ---------- amounts ----------
+const PL = {egg:["egg","eggs"],slice:["slice","slices"],piece:["piece","pieces"],cup:["cup","cups"],tbsp:["tbsp","tbsp"],portion:["portion","portions"],cookie:["cookie","cookies"],can:["can","cans"]};
+function fq(q){ const w=Math.floor(q+1e-9), r=q-w; const f=Math.abs(r-.5)<.01?"½":Math.abs(r-.25)<.01?"¼":Math.abs(r-.75)<.01?"¾":""; if(f) return (w||"")+f; return String(Math.round(q*100)/100); }
+function amt(it){ if(it.u==="g") return `${fmt(it.q)} g`; const s=`${fq(it.q)} ${(PL[it.u]||[it.u,it.u])[it.q<=1?0:1]}`; return it.g ? `${s} · ${fmt(it.q*it.g)} g` : s; }
+const stepOf = it => it.u==="g" ? (it.q>=100?25:10) : it.u==="portion" ? .25 : ["egg","slice","cookie","can"].includes(it.u) ? 1 : .5;
+const kc = it => it.k*it.q;
+function fromLib(id,q){ const x=L[id]; return {lib:id,name:x.name,u:x.u,k:x.k,g:x.g,q:q??x.def,est:false,pan:null}; }
+
+// ---------- search: synonyms, typos, recent/frequent first, Dishes and foods ----------
+function lev(a,b){ const m=a.length,n=b.length; if(Math.abs(m-n)>2) return 9; let p=[...Array(n+1).keys()]; for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
+const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+function search(raw){
+  const q = norm(raw); if(!q) return [];
+  const out = [];
+  for(const it of Object.values(L)){
+    const nm = norm(it.name), cands = [nm, ...it.al.map(norm)];
+    let s=0, why="";
+    for(const c of cands){
+      if(c===q && s<100){ s=100; why = c!==nm ? `"${q}" → ${it.name}` : ""; }
+      else if(c.startsWith(q) && s<85){ s=85; why=""; }
+      else if(q.length>=3 && c.includes(q) && s<70){ s=70; why=""; }
+    }
+    if(!s){
+      const toks=[...new Set(cands.join(" ").split(" "))], fixes=[]; let ok=true;
+      for(const t of q.split(" ")){
+        if(t.length>=2 && toks.some(x=>x.startsWith(t))) continue;
+        const tol = t.length>=8?2 : t.length>=4?1 : 0;
+        const hit = tol && toks.find(x=>lev(t,x)<=tol);
+        if(hit) fixes.push(`"${t}" ≈ ${hit}`); else { ok=false; break; }
+      }
+      if(ok){ s=55; why = fixes.length ? fixes.join(", ")+" (typo)" : ""; }
+    }
+    if(s){ s += Math.min(10, S.freq[it.id]||0); out.push({it,s,why}); }
+  }
+  return out.sort((a,b)=>b.s-a.s).slice(0,7);
+}
+const U = "(g|grams?|oz|ounces?|lbs?|pounds?|cups?|tbsp|tablespoons?|slices?|pieces?|portions?)";
+const WORDN = {a:1,an:1,one:1,two:2,three:3,four:4,half:.5};
+function parseQty(s){
+  s = s.trim().toLowerCase();
+  let m = s.match(new RegExp("^(\\d+(?:\\.\\d+)?|½)\\s*(?:"+U+"\\b)?\\s*(?:of\\s+)?(.+)$"));
+  if(!m) m = s.match(new RegExp("^(a|an|one|two|three|four|half)\\s+(?:"+U+"\\b\\s*)?(?:of\\s+)?(.+)$"));
+  if(!m) return {q:null,u:null,rest:s};
+  const q = m[1]==="½" ? .5 : isNaN(+m[1]) ? WORDN[m[1]] : +m[1];
+  return {q, u:m[2]||null, rest:m[3]};
+}
+// One part of free text → a library item if it matches well enough. note: unit conversions the Agent would mention.
+function partToLib(part, min){
+  const {q,u,rest} = parseQty(part);
+  const best = search(rest)[0];
+  if(!best || best.s < min) return null;
+  const it = fromLib(best.it.id); let note="";
+  let grams = null;
+  if(u && /^(g|gram)/.test(u)) grams=q;
+  if(u && /^(oz|ounce)/.test(u)){ grams=q*28.35; note=`${fq(q)} oz is about ${fmt(grams)} g`; }
+  if(u && /^(lb|pound)/.test(u)){ grams=q*453.6; note=`${fq(q)} lb is about ${fmt(grams)} g`; }
+  if(grams!=null) it.q = it.u==="g" ? Math.round(grams) : Math.max(.5, Math.round(grams/(it.g||100)*2)/2);
+  else if(q!=null) it.q = it.u==="g" ? it.def*q : q;
+  it.query = rest;
+  return {it, why:best.why, note};
+}
+function estimate(part){
+  const {q,rest} = parseQty(part);
+  const hit = EST.find(([kw])=>rest.includes(kw));
+  const [_,name,u,k] = hit || [null, rest.charAt(0).toUpperCase()+rest.slice(1), "portion", 150+([...rest].reduce((a,c)=>a+c.charCodeAt(0),0)%25)*10];
+  return {lib:null,name,u,k,g:0,q:q||1,est:true,pan:false,query:rest};
+}
+const splitText = t => t.split(/,|\band\b|\bwith\b|&|\bplus\b|\+/i).map(s=>s.trim()).filter(Boolean);
+function localParse(text){ const parts=splitText(text); const r=parts.map(p=>partToLib(p,55)); return r.every(Boolean) ? r : null; }
+function agentParse(text){ S.ai++; const notes=[]; const items = splitText(text).map(p=>{ const r=partToLib(p,70); if(r){ if(r.note) notes.push(r.note); return r.it; } return estimate(p); }); return {items, notes}; }
+
+// ---------- cards (the confirmation) ----------
+function newCard(items, src, text, notes){
+  const slot = ui.slot;
+  items.forEach(it=>{ if(it.pan==null) it.pan = !!(it.lib && L[it.lib].pan) && !PLAN[slot].out; });
+  const c = {id:S.nid++, items, src, text:text||"", notes:notes||[], slot, who:"you", st:"open", fix:null, aiN:S.ai};
+  S.cards.push(c); return c;
+}
+const card = id => S.cards.find(c=>c.id===id);
+function cardHTML(c, opts={}){
+  if(c.st==="logged") return `<div class="lcard ${c.src==='library'?'':'ag'}" style="padding:10px 12px"><div class="row small"><span class="good">✓</span><span class="sp">Logged to ${c.who==="ana"?"Ana's ":""}${SLOT[c.slot]} · ${c.items.length} item${c.items.length>1?"s":""} · <b>${fmt(c.items.reduce((a,i)=>a+kc(i),0))}</b></span></div>
+    <div class="xs mute">${c.who==="ana"?"She sees \"added by you\" next to each food, and it's in the Activity Log with undo.":"Tap a food in Today to change it later."}${c.items.some(i=>i.pan)?" Pantry: "+c.items.filter(i=>i.pan).map(i=>"−"+amt(i).split(" · ")[0]+" "+i.name.split(",")[0].toLowerCase()).join(", ")+".":""}</div></div>`;
+  if(c.st==="cancel") return `<div class="sys">Cancelled, nothing logged</div>`;
+  const tot = c.items.reduce((a,i)=>a+kc(i),0), anyEst = c.items.some(i=>i.est);
+  const head = c.src==="library" ? `<span class="chip lib">⚡ Food Library · no Agent call</span>` : `<span class="chip ai">✨ Agent call #${c.aiN}</span>`;
+  const slots = `<div class="row wrap" style="gap:5px;margin:8px 0 4px">${SLOT.map((s,i)=>`<button class="pill ${c.slot===i?'on':''}" style="padding:3px 9px;font-size:12px" onclick="cSlot(${c.id},${i})">${s}${PLAN[i].out?" ⌂":""}</button>`).join("")}</div>
+    ${PLAN[c.slot].out?`<div class="xs" style="color:var(--out)">⌂ Eating Out: ${PLAN[c.slot].d}, aim ${PLAN[c.slot].k}. This is occasion ${S.occ+1}; after 3 the aim is learned from what you log.</div>`:""}`;
+  const rows = c.items.map((it,i)=>`<div class="it ${it.est?'isest':''}">
+      <div class="row"><div class="sp" style="min-width:0"><div style="font-weight:600;font-size:14px">${it.name}</div>
+        <div>${it.est?`<span class="chip est">est. · Agent estimate</span>`:it.lib&&L[it.lib].dish?`<span class="chip dish">Dish</span>`:`<span class="chip lib">FoodData Central</span>`}</div></div>
+        <b style="font-size:14px">${fmt(kc(it))}</b><button class="btn ghost" style="color:var(--mute)" onclick="cDel(${c.id},${i})" title="Remove">✕</button></div>
+      <div class="row" style="margin-top:5px"><span class="step"><button onclick="cQ(${c.id},${i},-1)">−</button><span>${amt(it)}</span><button onclick="cQ(${c.id},${i},1)">+</button></span><span class="sp"></span>
+        <button class="btn ghost small" onclick="cFix(${c.id},${i})">${it.est?"Find a library match":"Wrong match?"} ${c.fix===i?"▴":"›"}</button></div>
+      ${it.lib&&L[it.lib].pan&&!PLAN[c.slot].out?`<label class="xs row" style="margin-top:4px;gap:5px;color:#7a5a17"><input type="checkbox" ${it.pan?"checked":""} onchange="cPan(${c.id},${i})"> From the Pantry (has ${L[it.lib].pan}). Subtract it.</label>`:""}
+      ${c.fix===i?fixPanel(c,i):""}</div>`).join("");
+  const add = c.fix==="new" ? fixPanel(c,"new") : `<button class="btn ghost small" onclick="cFix(${c.id},'new')">+ Add another food</button>`;
+  const who = `<div class="row" style="margin-top:8px;gap:6px"><span class="xs mute">For</span><button class="pill ${c.who==='you'?'on':''}" style="padding:2px 9px;font-size:12px" onclick="cWho(${c.id},'you')">You</button><button class="pill ${c.who==='ana'?'on':''}" style="padding:2px 9px;font-size:12px" onclick="cWho(${c.id},'ana')">Ana</button><span class="xs mute">phase 3</span></div>`;
+  return `<div class="lcard ${c.src==='library'?'':'ag'}" id="card${c.id}">
+    <div class="row">${head}<span class="sp"></span>${opts.noSlot?"":`<span class="xs mute">${c.text?`"${c.text}"`:""}</span>`}</div>
+    ${c.notes.length?`<div class="xs" style="color:var(--ai);margin-top:4px">${c.notes.join(". ")}.</div>`:""}
+    ${opts.noSlot?"":slots}
+    ${rows}${add}
+    ${anyEst?`<div class="xs" style="color:var(--est);margin-top:4px">Orange = estimated by the Agent, no library match. You can log it as is, or swap it for a library food.</div>`:""}
+    ${who}
+    <div class="row" style="margin-top:10px"><button class="btn line sm" onclick="cCancel(${c.id})">Cancel</button><span class="sp"></span>
+      <button class="btn ${c.src==='library'?'good':'ai'}" ${c.items.length?"":"disabled"} onclick="cLog(${c.id})">${c.who==="ana"?"Add to Ana's log":"Log"} ${c.items.length} · ${fmt(tot)}</button></div></div>`;
+}
+function fixPanel(c,i){
+  const it = i==="new" ? null : c.items[i];
+  const alts = it ? (it.est ? search(it.query||it.name).slice(0,4).map(r=>r.it) : Object.values(L).filter(x=>it.lib&&L[it.lib].alt&&x.alt===L[it.lib].alt&&x.id!==it.lib)) : [];
+  return `<div class="fix">${it&&alts.length?`<div class="xs mute">${it.est?"Library foods that might fit:":"Near matches:"}</div>${alts.map(x=>pickRow(x,`cPick(${c.id},${i},'${x.id}')`)).join("")}`:""}
+    <input class="search" style="padding:8px 10px;font-size:14px;margin-top:6px" placeholder="${it?"Search the Food Library":"Add a food: search the Food Library"}" oninput="document.getElementById('fr${c.id}').innerHTML=search(this.value).map(r=>pickRow(r.it,'cPick(${c.id},&quot;${i}&quot;,&quot;'+r.it.id+'&quot;)',r.why)).join('')">
+    <div id="fr${c.id}"></div></div>`;
+}
+function pickRow(x, on, why){ return `<div class="res" style="padding:6px 2px" onclick="${on}"><div class="sp"><div class="small" style="font-weight:600">${x.name}</div><div class="xs mute">${x.dish?"Dish · ":""}${x.u==="g"?`${fmt(x.k*100)} per 100 g`:`${fmt(x.k)} per ${PL[x.u][0]}`}${why?` · <span style="color:var(--accent)">${why}</span>`:""}</div></div><span class="xs" style="color:var(--accent)">Use</span></div>`; }
+function cQ(id,i,dir){ const c=card(id), it=c.items[i]; it.q=Math.max(stepOf(it), +(it.q+dir*stepOf(it)).toFixed(2)); refresh(); }
+function cDel(id,i){ card(id).items.splice(i,1); refresh(); }
+function cFix(id,i){ const c=card(id); c.fix = c.fix===i ? null : i; refresh(); }
+function cPick(id,i,lid){ const c=card(id); const n=fromLib(lid); n.pan=!!L[lid].pan&&!PLAN[c.slot].out;
+  if(i==="new") c.items.push(n); else { const old=c.items[+i]; if(old.u===n.u) n.q=old.q; c.items[+i]=n; }
+  c.fix=null; refresh(); }
+function cPan(id,i){ const it=card(id).items[i]; it.pan=!it.pan; refresh(); }
+function cSlot(id,s){ const c=card(id); c.slot=s; c.items.forEach(it=>{ if(PLAN[s].out) it.pan=false; }); refresh(); }
+function cWho(id,w){ card(id).who=w; refresh(); }
+function cCancel(id){ card(id).st="cancel"; if(ui.tray===id) ui.tray=null; refresh(); }
+function cLog(id){
+  const c=card(id); snap();
+  if(c.who==="ana"){ S.ana.push(...c.items); }
+  else c.items.forEach(it=>{
+    S.log.push({...it, id:S.nid++, slot:c.slot, src:it.est?"agent":"lib"});
+    if(it.lib){ S.freq[it.lib]=(S.freq[it.lib]||0)+1; S.recent=[it.lib,...S.recent.filter(x=>x!==it.lib)]; }
+    if(it.pan) S.pantry.push(`−${amt(it).split(" · ")[0]} ${it.name.split(",")[0].toLowerCase()}`);
+  });
+  if(c.src==="library") S.local++;
+  if(PLAN[c.slot].out && c.who==="you") S.occ++;
+  c.st="logged"; c.fix=null;
+  if(ui.tray===id){ ui.tray=null; closeSheet(true); }
+  render(); refreshSheet();
+  toast(c.who==="ana" ? "Added to Ana's Calorie Log" : `Logged ${fmt(c.items.reduce((a,i)=>a+kc(i),0))} to ${SLOT[c.slot]}`, true);
+}
+
+// ---------- logging the planned meal ----------
+function logPlanned(slot, frac){
+  const p = PLAN[slot]; snap();
+  if(p.out){ S.log.push({id:S.nid++,slot,lib:null,name:`⌂ ${p.d} (aim)`,u:"portion",k:p.k,g:0,q:1,est:true,src:"out",pan:false}); }
+  else {
+    S.log.push({id:S.nid++,slot,lib:p.lib,name:p.d,u:"portion",k:p.k,g:0,q:frac,est:false,src:"plan",pan:!!p.left});
+    if(p.left) S.pantry.push(`−1 leftover portion of ${p.d.toLowerCase()}`);
+  }
+  closeSheet(true); render();
+  toast(p.out?`Logged ${p.d} at its aim, ${p.k}`:`${SLOT[slot]} logged as planned${frac!==1?` (${fq(frac)} portion)`:""}${p.left?" · −1 leftover portion from the Pantry":""}`, true);
+}
+
+// ---------- shared Today parts ----------
+const eatenSlot = i => S.log.filter(e=>e.slot===i).reduce((a,e)=>a+kc(e),0);
+const logged = i => S.log.some(e=>e.slot===i);
+function totals(){ const eaten=S.log.reduce((a,e)=>a+kc(e),0); const fc=SLOT.reduce((a,_,i)=>a+(logged(i)?eatenSlot(i):PLAN[i].k),0); return {eaten,fc}; }
+function header(compact){
+  const {eaten,fc}=totals(), left=TARGET-eaten, over=fc>TARGET;
+  if(compact) return `<div class="row" style="padding:12px 16px 6px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)"><b>Fri · Oct 2</b><span class="sp"></span><span class="small"><b style="font-size:17px">${fmt(left)}</b> left · forecast <span class="${over?'warn':''}">${fmt(fc)}</span></span></div>`;
+  return `<div class="row" style="padding:16px 16px 4px"><h2 class="sp">Fri · Oct 2</h2><button class="btn ghost">Recap</button><button class="btn ghost">☰</button></div>
+    <div style="padding:0 16px"><div style="font-size:40px;font-weight:800;line-height:1.1">${fmt(left)} <span style="font-size:15px;font-weight:500" class="mute">left</span></div>
+    <div class="small mute">${fmt(eaten)} eaten of ${fmt(TARGET)} · forecast <span class="${over?'warn':''}">${fmt(fc)}</span></div>
+    <div class="bar" style="margin-top:8px"><i class="fc ${over?'over':''}" style="width:${Math.min(100,fc/TARGET*100)}%"></i><i style="width:${Math.min(100,eaten/TARGET*100)}%"></i></div></div>`;
+}
+function foodLine(e){ return `<div class="food" onclick="openEdit(${e.id})"><span class="sp">${e.name}${e.q!==1||e.u!=="portion"?` <span class="mute">· ${amt(e).split(" · ")[0]}</span>`:""} ${e.est?`<span class="chip est">est.</span>`:""}${e.src==="plan"?`<span class="chip">as planned</span>`:""}</span><span>${fmt(kc(e))}</span></div>`; }
+function dayTable(){
+  return `<div class="card" style="padding:6px 14px"><table class="tbl"><tr><td class="xs mute">Meal</td><td class="num xs mute">Planned</td><td class="num xs mute">Eaten</td></tr>
+    ${SLOT.map((s,i)=>`<tr><td><b>${s}</b> <span class="mute small">${PLAN[i].out?"⌂ ":""}${PLAN[i].d}${PLAN[i].left?" ↺":""}</span>${S.log.filter(e=>e.slot===i).map(foodLine).join("")}</td>
+      <td class="num">${fmt(PLAN[i].k)}</td><td class="num"><b>${logged(i)?fmt(eatenSlot(i)):"–"}</b></td></tr>`).join("")}</table>
+    <div class="xs mute" style="padding:4px 0 6px">Tap a logged food to change its amount, match or meal.</div></div>`;
+}
+function stateBox(){
+  return `<div class="statebox"><b>Prototype state</b> · Agent calls today: <b style="color:var(--ai)">${S.ai}</b> · logged with no Agent call: <b class="good">${S.local}</b>
+    ${S.pantry.length?`<br>Pantry changes: ${S.pantry.join(", ")}`:""}${S.ana.length?`<br>Ana's log: ${S.ana.map(i=>i.name).join(", ")}`:""}</div>`;
+}
+
+// ---------- edit a logged food (shared) ----------
+function openEdit(id){ ui.edit=id; ui.editSnap=JSON.stringify(S); if(variant==="C"){ ui.cEdit=ui.cEdit===id?null:id; ui.edit=null; render(); return; } showSheet(editSheet); }
+const ent = id => S.log.find(e=>e.id===id);
+function editorHTML(e){
+  const x = e.lib ? L[e.lib] : null;
+  const alts = e.est ? search(e.query||e.name).slice(0,4).map(r=>r.it) : (x&&x.alt ? Object.values(L).filter(y=>y.alt===x.alt&&y.id!==x.id) : []);
+  return `<div class="row"><div class="sp"><div style="font-weight:700">${e.name}</div><div>${e.est?`<span class="chip est">est. · Agent estimate</span>`:e.src==="plan"?`<span class="chip">as planned</span>`:x&&x.dish?`<span class="chip dish">Dish</span>`:`<span class="chip lib">FoodData Central</span>`}</div></div><b>${fmt(kc(e))}</b></div>
+    <div class="row" style="margin-top:10px"><span class="small mute" style="width:60px">Amount</span><span class="step"><button onclick="eQ(${e.id},-1)">−</button><span>${amt(e)}</span><button onclick="eQ(${e.id},1)">+</button></span></div>
+    <div class="row wrap" style="margin-top:8px;gap:5px"><span class="small mute" style="width:60px">Meal</span>${SLOT.map((s,i)=>`<button class="pill ${e.slot===i?'on':''}" style="padding:3px 9px;font-size:12px" onclick="eSlot(${e.id},${i})">${s}</button>`).join("")}</div>
+    ${e.pan?`<div class="xs" style="margin-top:8px;color:#7a5a17">🏠 Taken from the Pantry. Changing the amount changes the Pantry too. <button class="btn ghost xs" onclick="ePan(${e.id})">It wasn't from the Pantry</button></div>`:""}
+    ${e.src!=="plan"&&e.src!=="out"?`<div style="margin-top:10px"><div class="small" style="font-weight:600">${e.est?"Swap the estimate for a library food":"Wrong match?"}</div>
+      ${alts.map(y=>pickRow(y,`eSwap(${e.id},'${y.id}')`)).join("")}
+      <input class="search" style="padding:8px 10px;font-size:14px;margin-top:6px" placeholder="Search the Food Library" oninput="document.getElementById('er${e.id}').innerHTML=search(this.value).map(r=>pickRow(r.it,'eSwap(${e.id},&quot;'+r.it.id+'&quot;)',r.why)).join('')">
+      <div id="er${e.id}"></div></div>`:""}
+    <div class="row" style="margin-top:12px"><button class="btn line sm warn" onclick="eDel(${e.id})">Delete</button><span class="sp"></span><button class="btn sm" onclick="eDone()">Done</button></div>`;
+}
+function editSheet(){ const e=ent(ui.edit); if(!e) return ""; return `<div class="pad"><div class="row" style="margin-bottom:8px"><h2 class="sp">Change logged food</h2><button class="btn ghost" onclick="eDone()">✕</button></div><div class="card" style="margin:0">${editorHTML(e)}</div></div>`; }
+function eQ(id,dir){ const e=ent(id); e.q=Math.max(stepOf(e), +(e.q+dir*stepOf(e)).toFixed(2)); render(); refreshSheet(); }
+function eSlot(id,s){ ent(id).slot=s; render(); refreshSheet(); }
+function ePan(id){ const e=ent(id); e.pan=false; S.pantry.push(`+${amt(e).split(" · ")[0]} ${e.name.split(",")[0].toLowerCase()} put back`); render(); refreshSheet(); }
+function eSwap(id,lid){ const e=ent(id), n=fromLib(lid); Object.assign(e,{lib:lid,name:n.name,u:n.u,k:n.k,g:n.g,est:false,src:"lib",q:e.u===n.u?e.q:n.q}); S.freq[lid]=(S.freq[lid]||0)+1; render(); refreshSheet(); }
+function eDel(id){ undoStack.push(ui.editSnap); S.log=S.log.filter(e=>e.id!==id); ui.edit=null; ui.cEdit=null; closeSheet(true); render(); toast("Deleted",true); }
+function eDone(){ if(ui.editSnap && ui.editSnap!==JSON.stringify(S)){ undoStack.push(ui.editSnap); toast("Saved",true); } ui.edit=null; ui.cEdit=null; ui.editSnap=null; closeSheet(true); render(); }
+
+// ---------- sheet plumbing ----------
+let sheetFn = null;
+function showSheet(fn){ sheetFn=fn; refreshSheet(); }
+function refreshSheet(){ if(!sheetFn) return; const box=document.getElementById("sheet"); const keep=document.activeElement&&document.activeElement.id==="q"; box.innerHTML=`<div class="shade" onclick="closeSheet()"></div><div class="sheet" id="sheetbody">${sheetFn()}</div>`; if(keep){ const q=document.getElementById("q"); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length);} } }
+function closeSheet(silent){ if(sheetFn===editSheet && !silent){ eDone(); return; } sheetFn=null; document.getElementById("sheet").innerHTML=""; }
+function refresh(){ render(); refreshSheet(); }
+
+// ================= A: + opens a search sheet; chat is a separate Agent flow =================
+function VariantA(){
+  return header() + dayTable() + stateBox() + `<div class="entry"><button class="plus" onclick="openAdd()">+</button><input id="chatA" placeholder="Tell the Agent what you ate…" onkeydown="if(event.key==='Enter'&&this.value.trim()){chatA(this.value.trim());this.value=''}"></div>`;
+}
+function openAdd(){ ui.slot=NOW_SLOT; ui.q=""; showSheet(addSheet); setTimeout(()=>{ const q=document.getElementById("q"); if(q) q.focus(); },30); }
+function addSheet(){
+  return `<div class="pad"><div class="row"><h2 class="sp">Add food</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
+    <div class="row wrap" style="gap:5px;margin:8px 0">${SLOT.map((s,i)=>`<button class="pill ${ui.slot===i?'on':''}" onclick="ui.slot=${i};const t=card(ui.tray);if(t)cSlot(t.id,${i});else refreshSheet()">${s}</button>`).join("")}</div>
+    ${plannedBox(ui.slot,"A")}
+    <input id="q" class="search" placeholder="Search foods and Dishes" value="${ui.q.replace(/"/g,"&quot;")}" oninput="ui.q=this.value;document.getElementById('resA').innerHTML=resultsA()" autocomplete="off">
+    <div id="resA">${resultsA()}</div></div>
+    ${ui.tray&&card(ui.tray)&&card(ui.tray).st==="open"?`<div style="position:sticky;bottom:-90px;padding-bottom:4px">${cardHTML(card(ui.tray),{noSlot:true})}</div>`:""}`;
+}
+function plannedBox(slot, v){
+  const p=PLAN[slot]; if(logged(slot)) return `<div class="small mute" style="margin:2px 0 8px">${SLOT[slot]} already has ${fmt(eatenSlot(slot))} logged. Anything you add goes on top.</div>`;
+  if(p.out) return `<div class="card" style="margin:0 0 10px;background:#f7f2fc"><div class="small"><b>⌂ ${p.d}</b> · Eating Out · aim ${p.k}</div><div class="xs mute">Logged ${S.occ} times so far. After 3 occasions the aim is learned from what you log.</div>
+      <div class="qbtns"><button class="btn sm" style="background:var(--out)" onclick="logPlanned(${slot},1)">Log the aim (${p.k})</button>${v==="A"?`<span class="xs mute" style="align-self:center">or search / describe it below</span>`:""}</div></div>`;
+  return `<div class="card" style="margin:0 0 10px"><div class="small"><b>Planned: ${p.d}</b>${p.left?` <span class="chip">↺ leftover from ${p.left}</span>`:""} · ${p.k}</div>
+    <div class="qbtns"><button class="btn good sm" onclick="logPlanned(${slot},1)">✓ Ate as planned</button>${[.5,.75,1.25].map(f=>`<button class="btn line sm" onclick="logPlanned(${slot},${f})">${fq(f)} portion</button>`).join("")}</div>
+    ${p.left?`<div class="xs mute" style="margin-top:4px">Takes the leftover portion out of the Pantry.</div>`:""}</div>`;
+}
+function resultsA(){
+  const q=ui.q.trim();
+  if(!q){ const rec=S.recent.slice(0,6).map(id=>L[id]); return `<div class="tag mute" style="margin:10px 0 2px">Recent and frequent</div>${rec.map(x=>resRow(x,"",null)).join("")}`; }
+  const pq = parseQty(q), rs = search(pq.rest), parts=splitText(q);
+  let html = rs.map(r=>resRow(r.it,r.why,pq.q)).join("");
+  if(parts.length>1) html = `<div class="xs mute" style="margin:8px 0 0">Several foods? Search one at a time, or ask the Agent below.</div>`+html;
+  if(!rs.length) html = `<div class="small mute" style="padding:10px 2px">Nothing in the Food Library for "${q}".</div>`;
+  return html + `<div class="res" onclick="askAgentA()"><span style="font-size:20px">✨</span><div class="sp"><div class="nm" style="color:var(--ai)">Ask the Agent: "${q}"</div><div class="xs mute">Splits it into foods and estimates anything the library doesn't have. Uses an Agent call.</div></div></div>`;
+}
+function resRow(x, why, q){
+  const it = fromLib(x.id, q!=null ? (x.u==="g"?x.def*q:q) : undefined);
+  return `<div class="res" onclick="trayAdd('${x.id}',${q==null?"null":q})"><div class="sp"><div class="nm">${x.name}</div>
+    <div class="xs mute">${x.dish?`<span class="chip dish">Dish</span> `:""}${amt(it)} · <b>${fmt(kc(it))}</b>${x.pan?` · <span style="color:#7a5a17">Pantry: ${x.pan}</span>`:""}${why?` · <span style="color:var(--accent)">${why}</span>`:""}</div></div><button class="add">+</button></div>`;
+}
+function trayAdd(id,q){
+  let t = card(ui.tray); if(!t || t.st!=="open"){ t=newCard([], "library"); ui.tray=t.id; }
+  const ex = t.items.find(i=>i.lib===id);
+  const n = fromLib(id, q!=null ? (L[id].u==="g"?L[id].def*q:q) : undefined); n.pan=!!L[id].pan&&!PLAN[t.slot].out;
+  if(ex) ex.q += n.q; else t.items.push(n);
+  ui.q=""; refreshSheet(); const qi=document.getElementById("q"); if(qi) qi.focus();
+  toast(`Added ${n.name} to the list below`);
+}
+function askAgentA(){
+  const text=ui.q.trim(); if(!text) return;
+  let t = card(ui.tray); if(!t || t.st!=="open"){ t=newCard([], "agent"); ui.tray=t.id; }
+  const r = agentParse(text); r.items.forEach(it=>{ it.pan=!!(it.lib&&L[it.lib].pan)&&!PLAN[t.slot].out; });
+  t.items.push(...r.items); t.src="agent"; t.aiN=S.ai; t.notes.push(...r.notes); t.text=text;
+  ui.q=""; refresh();
+}
+function chatA(text){
+  S.chat=[{who:"me",text}]; ui.slot=NOW_SLOT; ui.thinking=true; showSheet(chatSheetA);
+  setTimeout(()=>{ ui.thinking=false; const r=agentParse(text); const c=newCard(r.items,"agent",text,r.notes); S.chat.push({who:"ag",text:"Here's what I got. Check it, then log it.",card:c.id}); refresh(); },700);
+}
+function chatSheetA(){
+  return `<div class="pad row"><h2 class="sp">Chat</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
+    ${S.chat.map(m=>`<div class="bub ${m.who}">${m.text}</div>${m.card?cardHTML(card(m.card)):""}`).join("")}
+    ${ui.thinking?`<div class="bub ag"><span class="typing">✨ Reading that…</span></div>`:""}`;
+}
+
+// ================= B: one box, library first, Agent only when needed =================
+function VariantB(){
+  const stream = S.chat.map((m,mi)=>{
+    if(m.who==="me") return `<div class="bub me">${m.text}</div>`;
+    if(m.who==="sys") return `<div class="sys">${m.text}</div>${m.card?cardHTML(card(m.card)):""}`;
+    let h = `<div class="bub ag">${m.text}${m.tpl?`<div class="xs mute" style="margin-top:3px">⚡ template, no Agent call</div>`:""}</div>`;
+    if(m.qr==="plan1" && !logged(1)) h += `<div class="row wrap" style="margin:0 16px;gap:6px"><button class="btn good sm" onclick="logPlanned(1,1);S.chat.push({who:'sys',text:'Lunch logged as planned · −1 leftover portion'});render()">✓ Ate as planned</button><button class="btn line sm" onclick="logPlanned(1,.75);render()">¾ portion</button><button class="btn line sm" onclick="document.getElementById('boxB').focus()">Something else</button></div>`;
+    if(m.card) h += cardHTML(card(m.card));
+    return h;
+  }).join("");
+  return header(true) + `<div style="padding-top:8px">${stream}</div>${ui.thinking?`<div class="bub ag"><span class="typing">✨ Reading that…</span></div>`:""}` + stateBox()
+    + `<div class="sugg" id="suggB">${suggB()}</div>
+    <div class="entry"><input id="boxB" placeholder="What did you eat? e.g. 2 eggs and toast" value="${ui.btext.replace(/"/g,"&quot;")}" autocomplete="off"
+      oninput="ui.btext=this.value;document.getElementById('suggB').innerHTML=suggB()" onkeydown="if(event.key==='Enter'&&this.value.trim())sendB()"><button class="plus" style="font-size:18px" onclick="sendB()">➤</button></div>`;
+}
+function suggB(){
+  const t=ui.btext.trim(); if(!t) return "";
+  const parts=splitText(t), last=parts[parts.length-1]||"", pq=parseQty(last), rs=search(pq.rest).slice(0,4);
+  const local = localParse(t);
+  return `<div class="s">${rs.map(r=>{ const it=fromLib(r.it.id, pq.q!=null?(r.it.u==="g"?r.it.def*pq.q:pq.q):undefined);
+      return `<div class="res" style="padding:8px 12px" onmousedown="event.preventDefault();pickB('${r.it.id}',${pq.q==null?"null":pq.q})"><div class="sp"><div class="small" style="font-weight:600">${r.it.name}</div><div class="xs mute">${amt(it)} · ${fmt(kc(it))}${r.why?` · <span style="color:var(--accent)">${r.why}</span>`:""}</div></div><span class="chip lib">⚡</span></div>`; }).join("")}
+    <div class="xs" style="padding:7px 12px;background:#faf9f6;color:${local?"var(--good)":"var(--ai)"}">Enter: ${local?`⚡ all ${local.length} part${local.length>1?"s":""} found in the library, no Agent call`:`✨ ${parts.length>1?"something":"this"} isn't in the library, so the Agent reads it`}</div></div>`;
+}
+function pickB(id,q){
+  const t=ui.btext.trim(), parts=splitText(t); parts.pop();
+  const earlier = parts.length ? (localParse(parts.join(", "))||[]).map(r=>r.it) : [];   // foods typed before this one, if the library has them
+  ui.slot=NOW_SLOT; const items=[...earlier, fromLib(id, q!=null?(L[id].u==="g"?L[id].def*q:q):undefined)];
+  S.chat.push({who:"me",text:t}); const c=newCard(items,"library",t); S.chat.push({who:"sys",text:"⚡ From the Food Library. No Agent call.",card:c.id});
+  ui.btext=""; render(); scrollTo(0,document.body.scrollHeight);
+}
+function sendB(){
+  const t=ui.btext.trim(); if(!t) return; ui.slot=NOW_SLOT;
+  S.chat.push({who:"me",text:t}); ui.btext="";
+  const local=localParse(t);
+  if(local){ const c=newCard(local.map(r=>r.it),"library",t,local.map(r=>r.note).filter(Boolean)); S.chat.push({who:"sys",text:"⚡ Matched in the Food Library. No Agent call."+(local.some(r=>r.why)?" ("+local.map(r=>r.why).filter(Boolean).join("; ")+")":""),card:c.id}); render(); scrollTo(0,document.body.scrollHeight); return; }
+  ui.thinking=true; render(); scrollTo(0,document.body.scrollHeight);
+  setTimeout(()=>{ ui.thinking=false; const r=agentParse(t); const c=newCard(r.items,"agent",t,r.notes); S.chat.push({who:"ag",text:r.items.some(i=>i.est)?"Some of that isn't in the Food Library, so I estimated it (orange). Check it, then log it.":"Here's what I got. Check it, then log it.",card:c.id}); render(); scrollTo(0,document.body.scrollHeight); },700);
+}
+
+// ================= C: meal rows, log with one tap, undo instead of a card =================
+function VariantC(){
+  return header() + SLOT.map((s,i)=>rowC(i)).join("") + `<div class="xs mute" style="margin:0 16px">Taps log straight away, with Undo. Only the Agent's readings of free text wait for a confirm.</div>` + stateBox();
+}
+function rowC(i){
+  const p=PLAN[i], items=S.log.filter(e=>e.slot===i), open=ui.cOpen===i;
+  const plannedBtns = !items.length ? (p.out
+      ? `<div class="qbtns"><button class="btn sm" style="background:var(--out)" onclick="logPlanned(${i},1)">Log the aim (${p.k})</button><button class="btn line sm" onclick="cOpenRow(${i})">What did you have?</button></div><div class="xs mute" style="margin-top:4px">Eating Out · logged ${S.occ} times. The aim is learned after 3.</div>`
+      : `<div class="qbtns"><button class="btn good sm" onclick="logPlanned(${i},1)">✓ As planned</button>${[.5,.75,1.25].map(f=>`<button class="btn line sm" onclick="logPlanned(${i},${f})">${fq(f)}</button>`).join("")}<button class="btn line sm" onclick="cOpenRow(${i})">Something else</button></div>`) : "";
+  const list = items.map(e=>`<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px">
+      <div class="row small" style="cursor:pointer" onclick="openEdit(${e.id})"><span class="sp">${e.name} <span class="mute">· ${amt(e).split(" · ")[0]}</span> ${e.est?`<span class="chip est">est.</span>`:""}</span><b>${fmt(kc(e))}</b><span class="mute">${ui.cEdit===e.id?"▴":"✎"}</span></div>
+      ${e.pan===null?`<div class="row xs" style="gap:6px;margin-top:4px;color:#7a5a17">🏠 From the Pantry (has ${L[e.lib].pan})? <button class="btn line sm" style="padding:2px 8px" onclick="cPanAns(${e.id},true)">Yes, subtract</button><button class="btn line sm" style="padding:2px 8px" onclick="cPanAns(${e.id},false)">No</button></div>`:""}
+      ${ui.cEdit===e.id?`<div class="fix" style="margin-top:6px">${editorHTML(e)}</div>`:""}</div>`).join("");
+  const searchBox = open ? `<div class="fix" style="margin-top:8px"><input id="q${i}" class="search" placeholder="Search, or describe it for the Agent" autocomplete="off" oninput="document.getElementById('res${i}').innerHTML=resultsC(${i},this.value)" onkeydown="if(event.key==='Enter')describeC(${i},this.value)">
+      <div id="res${i}">${resultsC(i,"")}</div></div>` : (items.length?`<button class="btn ghost small" onclick="cOpenRow(${i})">+ Add food</button>`:"");
+  const agentCard = S.cards.filter(c=>c.slot===i&&c.st==="open"&&c.src==="agent").map(c=>cardHTML(c,{noSlot:true})).join("");
+  return `<div class="mrow ${i===NOW_SLOT?'cur':''}"><div class="row"><b class="sp">${SLOT[i]}${i===NOW_SLOT?` <span class="xs" style="color:var(--accent)">· now</span>`:""}</b><span class="small">${logged(i)?`<b>${fmt(eatenSlot(i))}</b>`:"–"} <span class="mute">/ ${p.k}</span></span></div>
+    <div class="small mute">${p.out?"⌂ ":""}${p.d}${p.left?` · ↺ leftover from ${p.left}`:""}</div>${plannedBtns}${list}${searchBox}</div>${agentCard?`<div style="margin:-4px 0 0">${agentCard}</div>`:""}`;
+}
+function cOpenRow(i){ ui.cOpen = ui.cOpen===i?null:i; ui.slot=i; render(); setTimeout(()=>{ const q=document.getElementById("q"+i); if(q) q.focus(); },20); }
+function resultsC(i, raw){
+  const q=raw.trim();
+  if(!q) return `<div class="tag mute" style="margin:8px 0 0">Recent and frequent</div>`+S.recent.slice(0,5).map(id=>rowResC(i,L[id],"",null)).join("");
+  const pq=parseQty(q), rs=search(pq.rest);
+  return rs.map(r=>rowResC(i,r.it,r.why,pq.q)).join("") + `<div class="res" onclick="describeC(${i},document.getElementById('q${i}').value)"><span>✨</span><div class="sp small" style="color:var(--ai);font-weight:600">Describe it to the Agent: "${q}"</div></div>`;
+}
+function rowResC(i,x,why,q){ const it=fromLib(x.id, q!=null?(x.u==="g"?x.def*q:q):undefined);
+  return `<div class="res" style="padding:7px 2px" onclick="quickLogC(${i},'${x.id}',${q==null?"null":q})"><div class="sp"><div class="small" style="font-weight:600">${x.name}</div><div class="xs mute">${amt(it)} · <b>${fmt(kc(it))}</b>${why?` · <span style="color:var(--accent)">${why}</span>`:""}</div></div><span class="chip lib">tap to log</span></div>`; }
+function quickLogC(i,id,q){
+  snap(); const it=fromLib(id, q!=null?(L[id].u==="g"?L[id].def*q:q):undefined);
+  it.pan = L[id].pan && !PLAN[i].out ? null : false;            // null = ask after
+  S.log.push({...it,id:S.nid++,slot:i,src:"lib"}); S.local++; S.freq[id]=(S.freq[id]||0)+1; S.recent=[id,...S.recent.filter(x=>x!==id)];
+  ui.cOpen=null; render(); toast(`Logged ${it.name.split(",")[0]} · ${fmt(kc(it))}`, true);
+}
+function cPanAns(id,yes){ const e=ent(id); e.pan=yes; if(yes) S.pantry.push(`−${amt(e).split(" · ")[0]} ${e.name.split(",")[0].toLowerCase()}`); render(); }
+function describeC(i,text){
+  text=(text||"").trim(); if(!text) return; ui.slot=i;
+  const local=localParse(text);
+  if(local && local.length===1){ quickLogC(i,local[0].it.lib,null); const e=S.log[S.log.length-1]; e.q=local[0].it.q; render(); return; }
+  ui.cOpen=null; ui.thinking=true; render();
+  setTimeout(()=>{ ui.thinking=false; const r=agentParse(text); newCard(r.items,"agent",text,r.notes); render(); },600);
+}
+
+// ---------- shell + switcher ----------
+function toast(msg, withUndo){
+  const box=document.getElementById("toastbox");
+  box.innerHTML = `<div class="toast"><span>${msg}</span>${withUndo?`<button onclick="undo()">Undo</button>`:""}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>box.innerHTML="", withUndo?6000:2200);
+}
+const VARIANTS = {A:["+ search sheet, chat separate",VariantA], B:["One box, library first",VariantB], C:["Meal rows, tap to log",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.cOpen=null; ui.cEdit=null; closeSheet(true); render(); scrollTo(0,0); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  const tab = variant==="B" ? "Chat" : "Today";
+  document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
+    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n===tab?'cur':''}" onclick="toast('Not in this prototype')"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <button onclick="S=fresh();undoStack=[];ui.tray=null;ui.btext='';closeSheet(true);render()" title="Reset state">↺</button>`;
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
+render();
+</script>
+</body>
+</html>

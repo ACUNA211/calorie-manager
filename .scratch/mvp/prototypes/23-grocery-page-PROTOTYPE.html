@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Grocery page (#23)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp/issues/23-grocery-page.md
+  Question: what does the Grocery tab look like when it's used one-handed in a store? How do ticking and then correcting
+  the amount work without slowing shopping down? How are the Agent's suggestions told apart from needed items, and
+  accepted or dismissed? How does the page show it's offline and that ticks are waiting to sync? Where does chat sit?
+  How are items the Member added shown with their label?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: one checklist by store section. Tick on the left; a ticked line shows "got 2 · change" on the right, which opens
+       a stepper in the line. Suggestions sit in their section with a dashed border and Add / ✕. Chat is a floating button
+       plus "Can't find it?" on each line.
+    B: one aisle at a time. Huge rows, the whole row ticks, ± sits under the thumb once ticked, and big Previous / Next
+       aisle buttons at the bottom. The Agent's suggestions come as a last step before checkout.
+    C: to buy / in the cart. A tick moves the line into a cart tray; amounts are checked once, at the end, on a review
+       screen. Suggestions are a chip row at the top. Chat is the entry bar at the bottom.
+  Shared in all three: one measure per food (#07), combined lines with "for: …", "needed today / Sun" tags, the automatic
+  remainder line when less was bought, staples set to "have", crossed-off items staying until midnight, the Other
+  section, an offline switch (ticks queue with ⏳ and sync when back online), and canned substitutes from chat.
+  Scenario: Sat Oct 3, 10:20am, in the store (same week as the #21 prototype). Next week's Meal Plan was approved
+  Friday, so its Missing Ingredients are on the list, plus shrimp for tonight. All state is in memory; reload or ↺ resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--warn:#c0572b;--accent:#3056d3;--soft:#eef2ff;--ai:#7a4fd0;--aibg:#f1ebfc;--you:#0f7a8a;--youbg:#e0f3f5;--off:#8a6d00;--offbg:#fff3c4}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:220px}
+  button{font:inherit;cursor:pointer}
+  input{font:inherit}
+  .row{display:flex;align-items:center;gap:8px}
+  .wrap{flex-wrap:wrap}
+  .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px}
+  .good{color:var(--good)} .warn{color:var(--warn)}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 16px;box-shadow:0 1px 2px #0001}
+  .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 4px}
+  .btn.line{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .btn.big{padding:16px 14px;font-size:16px;border-radius:14px}
+  .btn.good{background:var(--good)} .btn.ai{background:var(--ai)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  h1,h2,h3{margin:0} h2{font-size:17px} h3{font-size:14px}
+  .chip{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 6px;margin:2px 3px 0 0;background:#f0efea;color:#555;white-space:nowrap}
+  .chip.soon{background:#fbe3dc;color:var(--warn);font-weight:700} .chip.ai{background:var(--aibg);color:var(--ai)} .chip.you{background:var(--youbg);color:var(--you)}
+  .chip.rem{background:#fdf0dc;color:#9a5a00} .chip.q{background:var(--offbg);color:var(--off)}
+  .net{margin:8px 16px 0;border-radius:10px;padding:7px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px}
+  .net.on{background:#e6f3ea;color:var(--good)} .net.off{background:var(--offbg);color:var(--off);font-weight:600}
+  .sec{margin:14px 16px 4px;display:flex;align-items:center;gap:8px}
+  .sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+  .list{background:#fff;border-radius:14px;margin:0 16px;box-shadow:0 1px 2px #0001;overflow:hidden}
+  .ln{display:flex;align-items:flex-start;gap:10px;padding:12px 12px;border-top:1px solid var(--line);min-height:56px}
+  .ln:first-child{border-top:0}
+  .ln .tick{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid #b5b2a9;background:#fff;font-size:16px;color:#fff;line-height:1;margin-top:1px}
+  .ln.done .tick{background:var(--good);border-color:var(--good)}
+  .ln .nm{font-weight:600;font-size:15.5px}
+  .ln.done .nm{text-decoration:line-through;color:var(--mute);font-weight:500}
+  .ln.sugg{background:repeating-linear-gradient(135deg,#fff 0 10px,#faf7ff 10px 20px);border:1.5px dashed #c6b3ee;border-radius:12px;margin:6px}
+  .ln .amt{font-size:13px;color:#444}
+  .step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none;background:#fff}
+  .step button{border:0;background:#f4f3ef;width:40px;height:38px;font-size:18px}
+  .step span{min-width:110px;text-align:center;font-size:13.5px;padding:0 6px}
+  .aisle .ln{min-height:74px;padding:16px 14px;cursor:pointer}
+  .aisle .ln .nm{font-size:18px}
+  .prog{display:flex;gap:4px;margin:10px 16px 0}
+  .prog i{flex:1;height:6px;border-radius:3px;background:#dcd9d1}
+  .prog i.d{background:var(--good)} .prog i.c{background:var(--accent)}
+  .thumb{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:8px 12px;display:flex;gap:8px;z-index:12;background:linear-gradient(transparent,var(--bg) 30%)}
+  .cart{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:396px;z-index:12;background:#1d1d1b;color:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px #0004}
+  .entry{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:8px 12px;display:flex;gap:8px;z-index:11;background:linear-gradient(transparent,var(--bg) 30%)}
+  .entry input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:#fff}
+  .fab{position:fixed;bottom:134px;right:max(16px,calc(50% - 194px));width:54px;height:54px;border-radius:50%;border:0;background:var(--ai);color:#fff;font-size:22px;z-index:12;box-shadow:0 4px 14px #0004}
+  .sugchips{display:flex;gap:6px;overflow-x:auto;padding:8px 16px 2px;scrollbar-width:none}
+  .sugchips .sc{flex:none;border:1.5px dashed #c6b3ee;background:#faf7ff;border-radius:999px;padding:6px 6px 6px 12px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .sugchips .sc button{border:0;border-radius:999px;width:26px;height:26px}
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 62px;z-index:10}
+  .tabs button{flex:1;border:0;background:none;font-size:11.5px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tabs button .i{font-size:19px}
+  .tabs button.cur{color:var(--accent);font-weight:700}
+  .shade{position:fixed;inset:0;background:#0006;z-index:50}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:420px;max-height:88vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:51;padding:16px 0 90px}
+  .sheet .pad{padding:0 16px}
+  .bub{max-width:85%;border-radius:14px;padding:8px 12px;margin:6px 16px;font-size:14px}
+  .bub.me{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+  .bub.ag{background:#fff;border-bottom-left-radius:4px;box-shadow:0 1px 2px #0001}
+  .opt{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 16px 0;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--accent)}
+  .statebox{margin:18px 16px;padding:10px 12px;border:1px dashed #b5b2a9;border-radius:10px;font-size:12px;color:var(--mute);background:#fbfaf7}
+  #sw{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 20px #0005;z-index:99;font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:0;border-radius:999px;padding:5px 10px}
+  #sw button.offbtn{background:#5a4a00}
+  .toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 14px;border-radius:10px;z-index:98;font-size:13px;display:flex;gap:12px;align-items:center;max-width:92vw}
+  .toast button{background:none;border:0;color:#9db4ff;font-weight:700;padding:0}
+  .typing{display:inline-block;animation:bl 1s infinite}
+  @keyframes bl{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sheet"></div>
+<div id="toastbox"></div>
+<div id="sw"></div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const params = new URLSearchParams(location.search);
+let variant = params.get("variant") || "A";
+const SEC = ["Produce","Meat & fish","Dairy & eggs","Bakery","Dry goods & staples","Frozen","Other"];
+
+// ---------- data ----------
+// m: measure (pc pieces, cup = cups plus grams, ml = cups plus mL, g grams, staple = have/low/out, other = no amount)
+// need/got in the measure's base (pieces, grams or mL). for: the meals it's for. by: "today" | "Sun" (needed within 2 days).
+// src: plan | agent (a suggestion, starts unticked and not yet on the list) | you (added by a Member, keeps its label).
+function fresh(){
+  const Ln=(id,n,sec,m,per,need,x={})=>({id,n,sec,m,per,need,got:null,done:false,src:"plan",for:[],lbl:null,...x});
+  return { lines:[
+    Ln("berries","Berries","Produce","cup",150,300,{for:["Sun breakfast · Pancakes & berries"],by:"Sun"}),
+    Ln("pepper","Bell pepper","Produce","pc",150,2,{for:["Tue dinner · Beef stir-fry"],lbl:["pepper","peppers"]}),
+    Ln("lemon","Lemons","Produce","pc",100,2,{for:["Thu dinner · Lemon chicken & orzo"],lbl:["lemon","lemons"]}),
+    Ln("apple","Apples","Produce","pc",182,6,{for:["Sun snack · Apple + peanut butter","Sat snack · Apple + peanut butter"],lbl:["apple","apples"],you:{n:4,label:"for the week"},by:"Sun"}),
+    Ln("shrimp","Shrimp, peeled","Meat & fish","g",0,450,{for:["Tonight · Shrimp tacos"],by:"today"}),
+    Ln("chick","Chicken breast","Meat & fish","pc",230,1,{for:["Sun dinner · Sheet-pan chicken & veg"],lbl:["piece","pieces"],by:"Sun",note:"Pantry has 3, the week needs 4"}),
+    Ln("roti","Rotisserie chicken","Meat & fish","pc",900,1,{for:["Wed dinner · Rotisserie chicken & salad"],lbl:["chicken","chickens"]}),
+    Ln("yog","Greek yogurt","Dairy & eggs","cup",245,500,{src:"agent",why:"You usually buy it. 70 g will be left after this week's breakfasts"}),
+    Ln("tort","Flour tortillas","Bakery","pc",49,2,{for:["Mon dinner · Turkey wraps"],lbl:["tortilla","tortillas"],note:"Pantry has 6, the week needs 8"}),
+    Ln("coco","Coconut milk","Dry goods & staples","ml",240,400,{for:["Sun Prep Session · Chickpea curry"],by:"Sun"}),
+    Ln("orzo","Orzo","Dry goods & staples","cup",170,255,{for:["Thu dinner · Lemon chicken & orzo"]}),
+    Ln("choc","Dark chocolate","Dry goods & staples","g",0,100,{src:"you",label:"added by you"}),
+    Ln("oil","Olive oil","Dry goods & staples","staple",0,0,{src:"agent",why:"Marked low in the Pantry"}),
+    Ln("cumin","Cumin","Dry goods & staples","staple",0,0,{src:"agent",why:"Marked out in the Pantry"}),
+    Ln("honey","Honey","Dry goods & staples","staple",0,0,{src:"agent",why:"Marked low in the Pantry"}),
+    Ln("towels","Paper towels","Other","other",0,0,{src:"you",label:"added by you"}),
+    Ln("soap","Dish soap","Other","other",0,0,{src:"you",label:"added by you"}),
+  ], online:true, queue:[], pantry:[], log:[], chat:[], nid:100, sugg:{} };
+}
+let S = fresh();
+let undoStack = [];
+let ui = {open:null, exp:{}, aisle:0, step:"aisles", review:false, chatFor:null, thinking:false};
+const snap = () => undoStack.push(JSON.stringify(S));
+function undo(){ if(!undoStack.length) return; S=JSON.parse(undoStack.pop()); closeSheet(); render(); toast("Undone"); }
+const L = id => S.lines.find(l=>l.id===id);
+const active = l => l.src!=="agent" || S.sugg[l.id]==="added";         // a suggestion is only on the list once added
+const pendingSugg = () => S.lines.filter(l=>l.src==="agent" && !S.sugg[l.id]);
+
+// ---------- amounts ----------
+function fq(q){ const w=Math.floor(q+1e-9), r=q-w; if(r>.87) return String(w+1); const f=Math.abs(r-.667)<.04?"⅔":Math.abs(r-.333)<.04?"⅓":Math.abs(r-.5)<.13?"½":Math.abs(r-.25)<.13?"¼":Math.abs(r-.75)<.13?"¾":""; return f?(w||"")+f:String(w); }
+function amt(l, q){
+  if(q==null) q=l.need;
+  if(l.m==="pc") return `${fmt(q)} ${q===1?l.lbl[0]:l.lbl[1]}`;
+  if(l.m==="cup") return `${fq(q/l.per)} cup${q/l.per>1.1?"s":""} · about ${fmt(q)} g`;
+  if(l.m==="ml") return `${fq(q/l.per)} cups · ${fmt(q)} mL`;
+  if(l.m==="g") return `${fmt(q)} g`;
+  return "";
+}
+const stepOf = l => l.m==="pc" ? 1 : l.m==="cup" ? Math.round(l.per/4) : l.m==="ml" ? 100 : 50;
+
+// ---------- tick, amount, remainder ----------
+function tick(id){
+  const l=L(id); snap();
+  l.done=!l.done;
+  if(l.done){ l.got = l.need; if(l.src==="agent") S.sugg[id]="added";
+    S.pantry.push(l.m==="staple" ? `${l.n}: set to have` : l.m==="other" ? null : `+${amt(l).split(" · ")[0]} ${l.n.toLowerCase()}`);
+    if(!S.online) S.queue.push(id); }
+  else { l.got=null; S.queue=S.queue.filter(x=>x!==id); removeRem(id); }
+  S.pantry=S.pantry.filter(Boolean);
+  render();
+}
+function setGot(id, d){
+  const l=L(id); l.got=Math.max(0, l.got + d*stepOf(l)); fixRem(l); if(!S.online && !S.queue.includes(id)) S.queue.push(id); render();
+}
+function fixRem(l){
+  const r = S.lines.find(x=>x.remOf===l.id);
+  if(l.got < l.need){
+    const rest = l.need - l.got;
+    if(r) r.need = rest;
+    else { const i=S.lines.indexOf(l); S.lines.splice(i+1,0,{...JSON.parse(JSON.stringify(l)),id:"r"+S.nid++,remOf:l.id,need:rest,got:null,done:false,src:"plan",you:null}); toast(`Only got ${amt(l,l.got).split(" · ")[0]}: a line for the other ${amt(l,rest).split(" · ")[0]} was added`); }
+  } else if(r) removeRem(l.id);
+}
+function removeRem(id){ S.lines=S.lines.filter(x=>x.remOf!==id); }
+function suggest(id, yes){ snap(); S.sugg[id] = yes ? "added" : "dismissed"; render(); toast(yes?`${L(id).n} added to the list`:`${L(id).n}: not this time`, true); }
+
+// ---------- offline ----------
+function toggleNet(){
+  S.online=!S.online;
+  if(S.online && S.queue.length){ const n=S.queue.length; render(); setTimeout(()=>{ S.queue=[]; render(); toast(`Back online · synced ${n} tick${n>1?"s":""}`); },900); return; }
+  render(); toast(S.online?"Back online":"Offline: ticks are saved on this phone and sync later");
+}
+function netBar(){
+  if(S.online) return `<div class="net on">● Online · synced${S.queue.length?` · <span class="typing">syncing ${S.queue.length}…</span>`:""}</div>`;
+  return `<div class="net off">⚠ Offline · ${S.queue.length?`${S.queue.length} tick${S.queue.length>1?"s":""} waiting to sync`:"ticks will sync when you're back online"}</div>`;
+}
+const queued = id => S.queue.includes(id);
+
+// ---------- shared line bits ----------
+function tags(l){
+  return [l.by?`<span class="chip soon">needed ${l.by}</span>`:"", l.remOf?`<span class="chip rem">remainder</span>`:"",
+    l.src==="you"?`<span class="chip you">${l.label}</span>`:"", l.you?`<span class="chip you">+${l.you.n} added by you · ${l.you.label}</span>`:"",
+    l.src==="agent"&&S.sugg[l.id]==="added"?`<span class="chip ai">✨ suggested</span>`:"", queued(l.id)?`<span class="chip q">⏳ not synced</span>`:""].join("");
+}
+function forLine(l){
+  if(!l.for.length) return "";
+  if(l.for.length===1) return `<div class="xs mute">for ${l.for[0]}</div>`;
+  return `<div class="xs" style="color:var(--accent);cursor:pointer" onclick="event.stopPropagation();ui.exp['${l.id}']=!ui.exp['${l.id}'];render()">for ${l.for.length} meals ${ui.exp[l.id]?"▴":"▾"}</div>${ui.exp[l.id]?l.for.map(f=>`<div class="xs mute">· ${f}</div>`).join(""):""}`;
+}
+function amtText(l){ return l.m==="staple" ? "staple · ticking sets it to have" : l.m==="other" ? "" : amt(l); }
+function gotText(l){ return l.m==="staple" ? "set to have" : l.m==="other" ? "" : `got ${amt(l,l.got).split(" · ")[0]}`; }
+const sections = () => SEC.map(s=>[s, S.lines.filter(l=>l.sec===s && active(l))]).filter(([,ls])=>ls.length);
+const counts = () => { const a=S.lines.filter(active); return {done:a.filter(l=>l.done).length, all:a.length}; };
+function header(){ const c=counts(); return `<div class="row" style="padding:16px 16px 0"><h2 class="sp">Grocery List</h2><span class="small mute">${c.done} of ${c.all}</span><button class="btn ghost" onclick="toast('Settings…')">☰</button></div>${netBar()}`; }
+function stateBox(){
+  return `<div class="statebox"><b>Prototype state</b> · Into the Pantry: ${S.pantry.length?S.pantry.join(", "):"nothing yet"}${S.log.length?`<br>Activity Log: ${S.log.join("; ")}`:""}<br>Crossed-off lines stay until midnight, then leave the list.</div>`;
+}
+
+// ---------- chat: can't find it → substitute ----------
+const SUBS = {
+  orzo:{sub:["Small pasta shells","Dry goods & staples","cup",170],dish:"Thu dinner becomes Lemon chicken & shells",alt:"Change Thu dinner to Sheet-pan chicken & veg (all in the Pantry). Orzo and lemons come off the list."},
+  coco:{sub:["Light coconut cream","Dry goods & staples","ml",240],dish:"The chickpea curry uses coconut cream, ~40 kcal more per portion",alt:"Make the curry with crushed tomatoes instead (in the Pantry). Coconut milk comes off the list."},
+  berries:{sub:["Frozen berries","Frozen","cup",150],dish:"Same Pancakes & berries, frozen berries thawed",alt:"Swap Sun breakfast to Eggs & toast (all in the Pantry). Berries come off the list."},
+  shrimp:{sub:["Frozen shrimp, peeled","Frozen","g",0],dish:"Tonight's tacos use frozen shrimp (thaw 20 min in cold water)",alt:"Change tonight to Turkey wraps (all in the Pantry). Shrimp comes off the list."},
+};
+function openChat(id){
+  ui.chatFor=id||null; S.chat=[];
+  if(id){ S.chat.push({who:"me",text:`I can't find ${L(id).n.toLowerCase()}. Can we substitute it?`}); ui.thinking=true;
+    setTimeout(()=>{ ui.thinking=false; const s=SUBS[id]; S.chat.push({who:"ag",id,text:s?`No problem. Two options:`:`I don't have a good substitute for ${L(id).n.toLowerCase()}. Skip it this week? I'll keep the meal and you can pick it up another day.`}); refreshSheet(); },600); }
+  showSheet(chatSheet);
+}
+function chatSheet(){
+  return `<div class="pad row"><h2 class="sp">Chat</h2><button class="btn ghost" onclick="closeSheet()">✕</button></div>
+    ${S.chat.length?"":`<div class="small mute pad" style="margin:8px 0">Ask about anything on the list. Try "Can't find it?" on a line, or pick one:</div>${["orzo","coco","berries","shrimp"].map(id=>`<div class="opt" onclick="openChat('${id}')">I can't find ${L(id).n.toLowerCase()}</div>`).join("")}`}
+    ${S.chat.map(m=>`<div class="bub ${m.who}">${m.text}</div>${m.id&&SUBS[m.id]&&!m.done?subOpts(m.id):""}${m.done?`<div class="small mute" style="margin:4px 16px">${m.done}</div>`:""}`).join("")}
+    ${ui.thinking?`<div class="bub ag"><span class="typing">✨ …</span></div>`:""}`;
+}
+function subOpts(id){ const s=SUBS[id], l=L(id);
+  return `<div class="opt" onclick="applySub('${id}',1)"><b>1. Buy ${s.sub[0].toLowerCase()} instead</b><div class="xs mute">${s.dish}. "${l.n}" → "${s.sub[0]}" on the list${s.sub[1]!==l.sec?`, under ${s.sub[1]}`:""}.</div></div>
+    <div class="opt" onclick="applySub('${id}',2)"><b>2. Change the meal</b><div class="xs mute">${s.alt}</div></div>
+    <div class="xs mute" style="margin:6px 16px">Nothing changes until you pick one. Undo is in the Activity Log.</div>`; }
+function applySub(id,opt){
+  snap(); const s=SUBS[id], l=L(id), m=S.chat.find(x=>x.id===id);
+  if(opt===1){ const old=l.n; l.n=s.sub[0]; l.sec=s.sub[1]; l.subFrom=old; S.log.push(`Swapped ${old} → ${l.n}`); m.done=`✓ Done. ${old} is now ${l.n} on the list, and the Dish is updated.`; }
+  else { S.lines=S.lines.filter(x=>x.id!==id && !(id==="orzo"&&x.id==="lemon")); S.log.push(`Meal changed, removed ${l.n}`); m.done=`✓ Done. The Meal Plan is changed and ${l.n.toLowerCase()} is off the list.`; }
+  render(); refreshSheet(); toast(opt===1?`${l.subFrom} → ${l.n}`:`${l.n} removed, meal changed`, true);
+}
+
+// ================= A: checklist =================
+function VariantA(){
+  const sugN = pendingSugg().length;
+  const body = sections().map(([s,ls])=>{
+    const sg = S.lines.filter(l=>l.sec===s && l.src==="agent" && !S.sugg[l.id]);
+    return `<div class="sec"><h3>${s}</h3><span class="sp"></span><span class="xs mute">${ls.filter(l=>l.done).length}/${ls.length}</span></div><div class="list">${ls.map(lineA).join("")}${sg.map(suggA).join("")}</div>`;
+  }).join("") + SEC.filter(s=>!sections().some(([x])=>x===s)).map(s=>{ const sg=S.lines.filter(l=>l.sec===s&&l.src==="agent"&&!S.sugg[l.id]); return sg.length?`<div class="sec"><h3>${s}</h3></div><div class="list">${sg.map(suggA).join("")}</div>`:""; }).join("");
+  return header() + (sugN?`<div class="xs" style="margin:8px 16px 0;color:var(--ai)">✨ ${sugN} suggestions from the Agent are in their aisles (dashed). They aren't on the list until you add them.</div>`:"")
+    + body + stateBox() + `<button class="fab" onclick="openChat()">💬</button>`;
+}
+function lineA(l){
+  const open = ui.open===l.id;
+  return `<div class="ln ${l.done?'done':''}"><button class="tick" onclick="tick('${l.id}')">${l.done?"✓":""}</button>
+    <div class="sp" onclick="${l.done?"":`tick('${l.id}')`}" style="cursor:pointer"><div class="nm">${l.n}</div>
+      <div class="amt">${l.done?"":amtText(l)}</div>${l.done?"":forLine(l)}<div>${tags(l)}</div>
+      ${l.note&&!l.done?`<div class="xs mute">${l.note}</div>`:""}</div>
+    <div style="text-align:right;flex:none">${l.done&&l.m!=="other"?`<button class="btn line sm" onclick="ui.open=${open?"null":`'${l.id}'`};render()">${gotText(l)} ${l.m==="staple"?"":"✎"}</button>`
+      : l.done ? "" : `<button class="btn ghost xs" style="color:var(--mute)" onclick="openChat('${l.id}')">Can't find it?</button>`}</div></div>
+    ${open&&l.done&&l.m!=="staple"?`<div class="row" style="padding:0 12px 12px 52px;margin-top:-4px"><span class="step"><button onclick="setGot('${l.id}',-1)">−</button><span>${amt(l,l.got)}</span><button onclick="setGot('${l.id}',1)">+</button></span><button class="btn ghost sm" onclick="ui.open=null;render()">OK</button></div>
+      <div class="xs mute" style="padding:0 12px 10px 52px;margin-top:-6px">Needed ${amt(l).split(" · ")[0]}. Extra goes into the Pantry; less adds a line for the rest.</div>`:""}`;
+}
+function suggA(l){
+  return `<div class="ln sugg"><span style="font-size:20px;width:30px;text-align:center">✨</span><div class="sp"><div class="nm" style="color:var(--ai)">${l.n}</div><div class="xs mute">${l.why}${l.m!=="staple"?` · ${amt(l)}`:""}</div></div>
+    <button class="btn ai sm" onclick="suggest('${l.id}',true)">Add</button><button class="btn line sm" onclick="suggest('${l.id}',false)">✕</button></div>`;
+}
+
+// ================= B: one aisle at a time =================
+function VariantB(){
+  const secs = sections();
+  if(ui.step==="sugg") return header() + suggStepB() + stateBox();
+  if(ui.aisle>=secs.length) ui.aisle=Math.max(0,secs.length-1);
+  const [s,ls] = secs[ui.aisle]||["",[]];
+  const prog = `<div class="prog">${secs.map(([x,y],i)=>`<i class="${y.every(l=>l.done)?'d':i===ui.aisle?'c':''}"></i>`).join("")}<i class="${pendingSugg().length?'':'d'}" title="suggestions"></i></div>`;
+  const left = ls.filter(l=>!l.done).length;
+  return header() + prog
+    + `<div class="row" style="margin:14px 16px 6px"><div class="sp"><div class="tag mute">Aisle ${ui.aisle+1} of ${secs.length}</div><h2 style="font-size:24px">${s}</h2></div><span class="small ${left?"":"good"}">${left?`${left} to get`:"✓ done"}</span></div>
+    <div class="list aisle">${[...ls.filter(l=>!l.done),...ls.filter(l=>l.done)].map(lineB).join("")}</div>
+    <div class="xs mute" style="margin:8px 16px">Tap anywhere on a line to tick it. Ticked lines drop to the bottom with − / + under your thumb.</div>
+    <div class="row wrap" style="margin:0 16px;gap:6px">${secs.map(([x,y],i)=>`<button class="btn ${i===ui.aisle?"":"line"} sm" style="padding:4px 8px" onclick="ui.aisle=${i};render()">${x.split(" ")[0]} ${y.every(l=>l.done)?"✓":y.filter(l=>!l.done).length}</button>`).join("")}</div>`
+    + stateBox()
+    + `<div class="thumb"><button class="btn line big" style="flex:1" ${ui.aisle===0?"disabled":""} onclick="ui.aisle--;render();scrollTo(0,0)">‹ Previous</button>
+       ${ui.aisle<secs.length-1?`<button class="btn big" style="flex:1.4" onclick="ui.aisle++;render();scrollTo(0,0)">Next: ${secs[ui.aisle+1][0]} ›</button>`
+         :`<button class="btn big ai" style="flex:1.4" onclick="ui.step='sugg';render();scrollTo(0,0)">${pendingSugg().length?`✨ ${pendingSugg().length} suggestions ›`:"Finish ›"}</button>`}</div>`;
+}
+function lineB(l){
+  return `<div class="ln ${l.done?'done':''}" onclick="tick('${l.id}')"><span class="tick" style="display:flex;align-items:center;justify-content:center">${l.done?"✓":""}</span>
+    <div class="sp"><div class="nm">${l.n}</div><div class="amt" style="font-size:14.5px">${l.done?gotText(l):amtText(l)}</div>${l.done?"":forLine(l)}<div>${tags(l)}</div></div>
+    ${l.done&&!["staple","other"].includes(l.m)?`<span class="step" onclick="event.stopPropagation()"><button onclick="setGot('${l.id}',-1)">−</button><button onclick="setGot('${l.id}',1)">+</button></span>`
+      : l.done?"":`<button class="btn line sm" onclick="event.stopPropagation();openChat('${l.id}')">Can't find</button>`}</div>`;
+}
+function suggStepB(){
+  const ps = pendingSugg();
+  return `<div style="margin:14px 16px 6px"><div class="tag mute">Before you check out</div><h2 style="font-size:22px">✨ The Agent suggests</h2><div class="small mute">Not needed for a meal. Add what you want, skip the rest.</div></div>
+    ${ps.map(l=>`<div class="card" style="border:1.5px dashed #c6b3ee"><div class="row"><div class="sp"><div style="font-weight:700;font-size:17px">${l.n}</div><div class="small mute">${l.why}${l.m!=="staple"?` · ${amt(l)}`:""}</div><div class="xs mute">${SEC.includes(l.sec)?`Aisle: ${l.sec}`:""}</div></div></div>
+      <div class="row" style="margin-top:10px;gap:8px"><button class="btn line big" style="flex:1" onclick="suggest('${l.id}',false)">Skip</button><button class="btn ai big" style="flex:1" onclick="suggest('${l.id}',true);tick('${l.id}')">Got it ✓</button></div></div>`).join("")}
+    ${ps.length?"":`<div class="card small good">All done. ${counts().done} of ${counts().all} ticked.${S.lines.some(l=>active(l)&&!l.done)?` Still to get: ${S.lines.filter(l=>active(l)&&!l.done).map(l=>l.n).join(", ")}.`:""}</div>`}
+    <div class="thumb"><button class="btn line big" style="flex:1" onclick="ui.step='aisles';render();scrollTo(0,0)">‹ Back to the aisles</button><button class="btn big" style="flex:1;background:var(--ai)" onclick="openChat()">💬 Chat</button></div>`;
+}
+
+// ================= C: to buy / in the cart =================
+function VariantC(){
+  if(ui.review) return reviewC();
+  const ps = pendingSugg();
+  const chips = ps.length?`<div class="xs mute" style="margin:10px 16px 0">✨ Also? The Agent suggests (not on the list yet):</div><div class="sugchips">${ps.map(l=>`<span class="sc" title="${l.why}"><span><b>${l.n}</b> <span class="xs mute">${l.why.split(".")[0].replace("Marked ","").replace(" in the Pantry","").replace("You usually buy it","usual buy")}</span></span><button style="background:var(--ai);color:#fff" onclick="suggest('${l.id}',true)">+</button><button style="background:#eee" onclick="suggest('${l.id}',false)">✕</button></span>`).join("")}</div>`:"";
+  const toBuy = sections().map(([s,ls])=>{ const t=ls.filter(l=>!l.done); return t.length?`<div class="sec"><h3>${s}</h3></div><div class="list">${t.map(l=>`<div class="ln"><button class="tick" onclick="tick('${l.id}')"></button><div class="sp" style="cursor:pointer" onclick="tick('${l.id}')"><div class="nm">${l.n}</div><div class="amt">${amtText(l)}</div>${forLine(l)}<div>${tags(l)}</div></div></div>`).join("")}</div>`:""; }).join("");
+  const inCart = S.lines.filter(l=>active(l)&&l.done);
+  const cart = `<div class="cart"><div class="row"><span style="font-size:20px">🛒</span><div class="sp"><b>${inCart.length} in the cart</b><div class="xs" style="opacity:.75">${inCart.slice(-3).map(l=>l.n).join(", ")}${inCart.length>3?"…":""}</div></div>
+    <button class="btn sm" ${inCart.length?"":"disabled"} onclick="ui.review=true;render();scrollTo(0,0)">Check amounts</button></div></div>`;
+  return header() + chips + (toBuy || `<div class="card good">Everything's in the cart. Check the amounts, then you're done.</div>`) + stateBox()
+    + `<div class="entry" style="bottom:182px"><input placeholder="💬 Can't find something? Ask the Agent" onkeydown="if(event.key==='Enter'){const v=this.value.toLowerCase();const hit=S.lines.find(l=>v.includes(l.n.toLowerCase().split(',')[0]));openChat(hit&&hit.id);this.value=''}"></div><div style="height:90px"></div>` + cart;
+}
+function reviewC(){
+  const inCart = S.lines.filter(l=>active(l)&&l.done);
+  return `<div class="row" style="padding:16px 16px 0"><button class="btn line sm" onclick="ui.review=false;render()">‹ List</button><h2 class="sp" style="text-align:center">Check amounts</h2><span style="width:50px"></span></div>${netBar()}
+    <div class="small mute" style="margin:8px 16px">Each line was ticked at the amount the list needed. Fix anything you bought more or less of. Less adds a line for the rest.</div>
+    <div class="list">${inCart.map(l=>`<div class="ln" style="align-items:center"><div class="sp"><div class="nm">${l.n}</div><div class="xs mute">needed ${l.m==="staple"?"(staple)":l.m==="other"?"":amt(l).split(" · ")[0]}</div><div>${tags(l)}</div></div>
+      ${["staple","other"].includes(l.m)?`<span class="small good">${l.m==="staple"?"set to have":"✓"}</span>`:`<span class="step"><button onclick="setGot('${l.id}',-1)">−</button><span style="min-width:96px">${amt(l,l.got).split(" · ")[0]}</span><button onclick="setGot('${l.id}',1)">+</button></span>`}
+      <button class="btn ghost" style="color:var(--mute)" onclick="tick('${l.id}')" title="Take out of the cart">↩</button></div>`).join("")}</div>
+    ${S.lines.some(l=>l.remOf&&!l.done)?`<div class="card small" style="background:#fdf0dc">Added for the rest: ${S.lines.filter(l=>l.remOf&&!l.done).map(l=>`${l.n} ${amt(l).split(" · ")[0]}`).join(", ")}. They stay on the list.</div>`:""}
+    <div class="row" style="margin:12px 16px"><span class="sp"></span><button class="btn good big" onclick="ui.review=false;render();toast('Done. Amounts are in the Pantry')">Done shopping</button></div>` + stateBox();
+}
+
+// ---------- shell + switcher ----------
+let sheetFn=null;
+function showSheet(fn){ sheetFn=fn; refreshSheet(); }
+function refreshSheet(){ if(!sheetFn) return; document.getElementById("sheet").innerHTML=`<div class="shade" onclick="closeSheet()"></div><div class="sheet">${sheetFn()}</div>`; }
+function closeSheet(){ sheetFn=null; document.getElementById("sheet").innerHTML=""; }
+function toast(msg, withUndo){
+  const box=document.getElementById("toastbox");
+  box.innerHTML = `<div class="toast"><span>${msg}</span>${withUndo?`<button onclick="undo()">Undo</button>`:""}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>box.innerHTML="", withUndo?6000:2500);
+}
+const VARIANTS = {A:["Checklist",VariantA], B:["One aisle at a time",VariantB], C:["To buy / in the cart",VariantC]};
+const KEYS = Object.keys(VARIANTS);
+function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.open=null; ui.review=false; ui.step="aisles"; closeSheet(); render(); scrollTo(0,0); }
+function render(){
+  if(!VARIANTS[variant]) variant="A";
+  document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
+    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n==='Grocery'?'cur':''}" onclick="${n==='Grocery'?'':`toast('Not in this prototype')`}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+  document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
+    <button class="${S.online?"":"offbtn"}" onclick="toggleNet()" title="Pretend the phone lost signal">${S.online?"📶 Online":"✈ Offline"}</button>
+    <button onclick="S=fresh();undoStack=[];ui.aisle=0;ui.step='aisles';ui.review=false;closeSheet();render()" title="Reset state">↺</button>`;
+}
+addEventListener("keydown", e => { if(e.target.closest("input,textarea,[contenteditable]")) return; if(e.key==="ArrowLeft") cycle(-1); if(e.key==="ArrowRight") cycle(1); if(e.key==="Escape") closeSheet(); });
+render();
+</script>
+</body>
+</html>
