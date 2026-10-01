@@ -1,7 +1,7 @@
 # What does the Pantry page look like?
 
 Type: prototype
-Status: open
+Status: on hold
 Assignee: ACUNA211
 Blocked by:
 
@@ -75,4 +75,4 @@ Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is lef
   - **📅 Schedule it** (ready to eat only): four suggested meals, each marked replace / add alongside / free; **Select another** (date + meal); and **🗓 Put it on the map myself**, a Today–Thu × meals grid of what's planned where you tap a cell (past meals greyed, draft days yellow). Then you pick Replace or Add alongside and Schedule.
   - Staples get have / low / out and Add to a recipe. Edit details (where it's kept, delete) is still a link.
 
-Waiting for the Member's reaction.
+**On hold (2026-10-01):** the Member has a lot of issues with this ticket and wants to plan things better before going on. Round 5 stays as the latest prototype. Pick it up again from the Member's notes.

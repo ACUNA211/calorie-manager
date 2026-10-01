@@ -62,7 +62,7 @@ An **MVP spec** for a two-person Household app, with every product and tech deci
 
 ## Not yet specified
 
-- Nothing outside the open tickets: [#18](issues/18-model-bake-off.md) (waiting for the Agent to be built), [#21](issues/21-plan-page.md) Plan, [#22](issues/22-pantry-page.md) Pantry, [#23](issues/23-grocery-page.md) Grocery, [#24](issues/24-chat-page.md) Chat (now unblocked by #20) and [#25](issues/25-settings.md) Settings, plus [#27](issues/27-cooking-page.md) Cooking page and planned cooks and [#28](issues/28-dish-database.md) the Dish database (both split out of #22). Once #21–#25, #27 and #28 are resolved, the spec is ready to split into build tickets.
+- Nothing outside the open tickets: [#18](issues/18-model-bake-off.md) (waiting for the Agent to be built), [#21](issues/21-plan-page.md) Plan, [#22](issues/22-pantry-page.md) Pantry (on hold while the Member replans it), [#23](issues/23-grocery-page.md) Grocery, [#24](issues/24-chat-page.md) Chat (now unblocked by #20) and [#25](issues/25-settings.md) Settings, plus [#27](issues/27-cooking-page.md) Cooking page and planned cooks and [#28](issues/28-dish-database.md) the Dish database (both split out of #22). Once #21–#25, #27 and #28 are resolved, the spec is ready to split into build tickets.
 - Later: [#26](issues/26-agent-estimates.md) how the Agent estimates calories (and maybe macros) for foods the library doesn't have. It doesn't block the spec, but should be settled before the logging prompts are written.
 
 ## Out of scope
