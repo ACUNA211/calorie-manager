@@ -65,7 +65,7 @@ An **MVP spec** for a two-person Household app, with every product and tech deci
 
 ## Out of scope
 
-- Macros (protein, carbs, fat)
+- Macros (protein, carbs, fat). To reconsider: FoodData Central already returns them, so the Food Library could store them from day one and showing them later would need no backfill.
 - Recipes
 - Barcode scanning
 - More than one Household, or users outside the Household
