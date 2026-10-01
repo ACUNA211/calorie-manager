@@ -14,7 +14,9 @@
     A: + opens a search sheet (no Agent). Picks collect in a tray that is the confirmation card. The chat box is a separate
        Agent flow that ends in the same card.
     B: one box. The chat box shows live Food Library matches as you type (no Agent). Enter logs locally when every part
-       matches the library, and only calls the Agent when something doesn't. Everything lands as a card in a chat stream.
+       matches the library, and only calls the Agent when something doesn't. Default after feedback round 1: Today has a
+       confirm card for the current meal (✓ Ate as planned, portions, Something else), a one-tap ✓ on every other unlogged
+       meal, and the box's cards show up there too. The Chat tab keeps the same cards as a stream.
     C: meal rows. Today's table is the logging surface: "As planned" and portion buttons per meal, search inline in the row,
        a tap logs straight away with undo (no confirmation card), and the Pantry question comes after.
   Shared in all three: the search (synonyms, typos, recent and frequent first, Dishes and foods), the edit controls for a
@@ -117,7 +119,7 @@ const SLOT = ["Breakfast","Lunch","Dinner","Snack"];
 const NOW_SLOT = 1;                                  // 12:40pm → Lunch
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const params = new URLSearchParams(location.search);
-let variant = params.get("variant") || "A";
+let variant = params.get("variant") || "B";
 
 // ---------- Food Library (FoodData Central foods, plus Dishes) ----------
 // u: unit, k: kcal per unit (per gram when u is g), g: grams per unit, def: default amount, al: synonyms, alt: group of near matches, pan: in the Pantry
@@ -191,7 +193,7 @@ function fresh(){ return {
 }; }
 let S = fresh();
 let undoStack = [];
-let ui = {sheet:null, slot:NOW_SLOT, q:"", tray:null, edit:null, editSnap:null, cOpen:null, cEdit:null, btext:"", thinking:false};
+let ui = {sheet:null, slot:NOW_SLOT, q:"", tray:null, edit:null, editSnap:null, cOpen:null, cEdit:null, btext:"", thinking:false, btab:"Today"};
 const snap = () => undoStack.push(JSON.stringify(S));
 function undo(){ if(!undoStack.length) return; S = JSON.parse(undoStack.pop()); ui.edit=null; ui.cEdit=null; closeSheet(true); render(); toast("Undone"); }
 
@@ -344,6 +346,7 @@ function logPlanned(slot, frac){
     S.log.push({id:S.nid++,slot,lib:p.lib,name:p.d,u:"portion",k:p.k,g:0,q:frac,est:false,src:"plan",pan:!!p.left});
     if(p.left) S.pantry.push(`−1 leftover portion of ${p.d.toLowerCase()}`);
   }
+  S.chat.push({who:"sys",text:`✓ ${SLOT[slot]} logged ${p.out?`at its aim, ${p.k}`:"as planned"+(frac!==1?` (${fq(frac)} portion)`:"")}${p.left?" · −1 leftover portion":""}`});
   closeSheet(true); render();
   toast(p.out?`Logged ${p.d} at its aim, ${p.k}`:`${SLOT[slot]} logged as planned${frac!==1?` (${fq(frac)} portion)`:""}${p.left?" · −1 leftover portion from the Pantry":""}`, true);
 }
@@ -363,7 +366,7 @@ function header(compact){
 function foodLine(e){ return `<div class="food" onclick="openEdit(${e.id})"><span class="sp">${e.name}${e.q!==1||e.u!=="portion"?` <span class="mute">· ${amt(e).split(" · ")[0]}</span>`:""} ${e.est?`<span class="chip est">est.</span>`:""}${e.src==="plan"?`<span class="chip">as planned</span>`:""}</span><span>${fmt(kc(e))}</span></div>`; }
 function dayTable(){
   return `<div class="card" style="padding:6px 14px"><table class="tbl"><tr><td class="xs mute">Meal</td><td class="num xs mute">Planned</td><td class="num xs mute">Eaten</td></tr>
-    ${SLOT.map((s,i)=>`<tr><td><b>${s}</b> <span class="mute small">${PLAN[i].out?"⌂ ":""}${PLAN[i].d}${PLAN[i].left?" ↺":""}</span>${S.log.filter(e=>e.slot===i).map(foodLine).join("")}</td>
+    ${SLOT.map((s,i)=>`<tr><td><b>${s}</b> <span class="mute small">${PLAN[i].out?"⌂ ":""}${PLAN[i].d}${PLAN[i].left?" ↺":""}</span>${S.log.filter(e=>e.slot===i).map(foodLine).join("")}${variant==="B"&&!logged(i)&&i!==nowSlotB()?`<div><button class="btn ghost small good" style="padding:4px 0 0" onclick="logPlanned(${i},1)">${PLAN[i].out?`Log the aim (${PLAN[i].k})`:"✓ Ate as planned"}</button></div>`:""}</td>
       <td class="num">${fmt(PLAN[i].k)}</td><td class="num"><b>${logged(i)?fmt(eatenSlot(i)):"–"}</b></td></tr>`).join("")}</table>
     <div class="xs mute" style="padding:4px 0 6px">Tap a logged food to change its amount, match or meal.</div></div>`;
 }
@@ -419,9 +422,9 @@ function addSheet(){
 function plannedBox(slot, v){
   const p=PLAN[slot]; if(logged(slot)) return `<div class="small mute" style="margin:2px 0 8px">${SLOT[slot]} already has ${fmt(eatenSlot(slot))} logged. Anything you add goes on top.</div>`;
   if(p.out) return `<div class="card" style="margin:0 0 10px;background:#f7f2fc"><div class="small"><b>⌂ ${p.d}</b> · Eating Out · aim ${p.k}</div><div class="xs mute">Logged ${S.occ} times so far. After 3 occasions the aim is learned from what you log.</div>
-      <div class="qbtns"><button class="btn sm" style="background:var(--out)" onclick="logPlanned(${slot},1)">Log the aim (${p.k})</button>${v==="A"?`<span class="xs mute" style="align-self:center">or search / describe it below</span>`:""}</div></div>`;
+      <div class="qbtns"><button class="btn sm" style="background:var(--out)" onclick="logPlanned(${slot},1)">Log the aim (${p.k})</button>${v==="A"?`<span class="xs mute" style="align-self:center">or search / describe it below</span>`:""}${v==="B"?`<button class="btn line sm" onclick="focusB()">Something else</button>`:""}</div></div>`;
   return `<div class="card" style="margin:0 0 10px"><div class="small"><b>Planned: ${p.d}</b>${p.left?` <span class="chip">↺ leftover from ${p.left}</span>`:""} · ${p.k}</div>
-    <div class="qbtns"><button class="btn good sm" onclick="logPlanned(${slot},1)">✓ Ate as planned</button>${[.5,.75,1.25].map(f=>`<button class="btn line sm" onclick="logPlanned(${slot},${f})">${fq(f)} portion</button>`).join("")}</div>
+    <div class="qbtns"><button class="btn good sm" onclick="logPlanned(${slot},1)">✓ Ate as planned</button>${[.5,.75,1.25].map(f=>`<button class="btn line sm" onclick="logPlanned(${slot},${f})">${fq(f)} portion</button>`).join("")}${v==="B"?`<button class="btn line sm" onclick="focusB()">Something else</button>`:""}</div>
     ${p.left?`<div class="xs mute" style="margin-top:4px">Takes the leftover portion out of the Pantry.</div>`:""}</div>`;
 }
 function resultsA(){
@@ -464,19 +467,34 @@ function chatSheetA(){
 }
 
 // ================= B: one box, library first, Agent only when needed =================
-function VariantB(){
+function VariantB(){ return (ui.btab==="Chat" ? chatB() : todayB()) + boxB(); }
+// The meal Today's confirm card asks about: the first unlogged one (a missed earlier meal, the current one, or the next).
+const nowSlotB = () => SLOT.findIndex((_,j)=>!logged(j));
+function todayB(){
+  const i=nowSlotB(), when = i<NOW_SLOT ? "not logged yet" : i===NOW_SLOT ? "now · 12:40" : "up next";
+  const confirm = i<0 ? `<div class="card small mute">Everything planned today is logged. Use the box to add anything extra.</div>`
+    : `<div class="card" style="border-left:4px solid var(--good)"><div class="row xs mute" style="margin-bottom:6px"><span class="tag" style="color:var(--good)">${SLOT[i]}</span><span>· ${when}</span><span class="sp"></span><span>⚡ no Agent call</span></div>${plannedBox(i,"B").replace('class="card" style="margin:0 0 10px','style="margin:0')}</div>`;
+  const pending = S.cards.filter(c=>c.st==="open").map(c=>cardHTML(c)).join("");
+  return header() + confirm + pending + (ui.thinking?`<div class="bub ag"><span class="typing">✨ Reading that…</span></div>`:"") + dayTable() + stateBox();
+}
+function focusB(){ const b=document.getElementById("boxB"); if(b) b.focus(); }
+function boxB(){
+  return `<div class="sugg" id="suggB">${suggB()}</div>
+    <div class="entry"><input id="boxB" placeholder="What did you eat? e.g. 2 eggs and toast" value="${ui.btext.replace(/"/g,"&quot;")}" autocomplete="off"
+      oninput="ui.btext=this.value;document.getElementById('suggB').innerHTML=suggB()" onkeydown="if(event.key==='Enter'&&this.value.trim())sendB()"><button class="plus" style="font-size:18px" onclick="sendB()">➤</button></div>`;
+}
+// After the box makes a card: on Today scroll to it, in Chat scroll to the bottom.
+function showCardB(id){ render(); const el=ui.btab==="Today"&&document.getElementById("card"+id); if(el) el.scrollIntoView({block:"center"}); else scrollTo(0,document.body.scrollHeight); }
+function chatB(){
   const stream = S.chat.map((m,mi)=>{
     if(m.who==="me") return `<div class="bub me">${m.text}</div>`;
     if(m.who==="sys") return `<div class="sys">${m.text}</div>${m.card?cardHTML(card(m.card)):""}`;
     let h = `<div class="bub ag">${m.text}${m.tpl?`<div class="xs mute" style="margin-top:3px">⚡ template, no Agent call</div>`:""}</div>`;
-    if(m.qr==="plan1" && !logged(1)) h += `<div class="row wrap" style="margin:0 16px;gap:6px"><button class="btn good sm" onclick="logPlanned(1,1);S.chat.push({who:'sys',text:'Lunch logged as planned · −1 leftover portion'});render()">✓ Ate as planned</button><button class="btn line sm" onclick="logPlanned(1,.75);render()">¾ portion</button><button class="btn line sm" onclick="document.getElementById('boxB').focus()">Something else</button></div>`;
+    if(m.qr==="plan1" && !logged(1)) h += `<div class="row wrap" style="margin:0 16px;gap:6px"><button class="btn good sm" onclick="logPlanned(1,1)">✓ Ate as planned</button><button class="btn line sm" onclick="logPlanned(1,.75)">¾ portion</button><button class="btn line sm" onclick="focusB()">Something else</button></div>`;
     if(m.card) h += cardHTML(card(m.card));
     return h;
   }).join("");
-  return header(true) + `<div style="padding-top:8px">${stream}</div>${ui.thinking?`<div class="bub ag"><span class="typing">✨ Reading that…</span></div>`:""}` + stateBox()
-    + `<div class="sugg" id="suggB">${suggB()}</div>
-    <div class="entry"><input id="boxB" placeholder="What did you eat? e.g. 2 eggs and toast" value="${ui.btext.replace(/"/g,"&quot;")}" autocomplete="off"
-      oninput="ui.btext=this.value;document.getElementById('suggB').innerHTML=suggB()" onkeydown="if(event.key==='Enter'&&this.value.trim())sendB()"><button class="plus" style="font-size:18px" onclick="sendB()">➤</button></div>`;
+  return header(true) + `<div style="padding-top:8px">${stream}</div>${ui.thinking?`<div class="bub ag"><span class="typing">✨ Reading that…</span></div>`:""}` + stateBox();
 }
 function suggB(){
   const t=ui.btext.trim(); if(!t) return "";
@@ -491,15 +509,15 @@ function pickB(id,q){
   const earlier = parts.length ? (localParse(parts.join(", "))||[]).map(r=>r.it) : [];   // foods typed before this one, if the library has them
   ui.slot=NOW_SLOT; const items=[...earlier, fromLib(id, q!=null?(L[id].u==="g"?L[id].def*q:q):undefined)];
   S.chat.push({who:"me",text:t}); const c=newCard(items,"library",t); S.chat.push({who:"sys",text:"⚡ From the Food Library. No Agent call.",card:c.id});
-  ui.btext=""; render(); scrollTo(0,document.body.scrollHeight);
+  ui.btext=""; showCardB(c.id);
 }
 function sendB(){
   const t=ui.btext.trim(); if(!t) return; ui.slot=NOW_SLOT;
   S.chat.push({who:"me",text:t}); ui.btext="";
   const local=localParse(t);
-  if(local){ const c=newCard(local.map(r=>r.it),"library",t,local.map(r=>r.note).filter(Boolean)); S.chat.push({who:"sys",text:"⚡ Matched in the Food Library. No Agent call."+(local.some(r=>r.why)?" ("+local.map(r=>r.why).filter(Boolean).join("; ")+")":""),card:c.id}); render(); scrollTo(0,document.body.scrollHeight); return; }
+  if(local){ const c=newCard(local.map(r=>r.it),"library",t,local.map(r=>r.note).filter(Boolean)); S.chat.push({who:"sys",text:"⚡ Matched in the Food Library. No Agent call."+(local.some(r=>r.why)?" ("+local.map(r=>r.why).filter(Boolean).join("; ")+")":""),card:c.id}); showCardB(c.id); return; }
   ui.thinking=true; render(); scrollTo(0,document.body.scrollHeight);
-  setTimeout(()=>{ ui.thinking=false; const r=agentParse(t); const c=newCard(r.items,"agent",t,r.notes); S.chat.push({who:"ag",text:r.items.some(i=>i.est)?"Some of that isn't in the Food Library, so I estimated it (orange). Check it, then log it.":"Here's what I got. Check it, then log it.",card:c.id}); render(); scrollTo(0,document.body.scrollHeight); },700);
+  setTimeout(()=>{ ui.thinking=false; const r=agentParse(t); const c=newCard(r.items,"agent",t,r.notes); S.chat.push({who:"ag",text:r.items.some(i=>i.est)?"Some of that isn't in the Food Library, so I estimated it (orange). Check it, then log it.":"Here's what I got. Check it, then log it.",card:c.id}); showCardB(c.id); },700);
 }
 
 // ================= C: meal rows, log with one tap, undo instead of a card =================
@@ -556,9 +574,9 @@ const KEYS = Object.keys(VARIANTS);
 function cycle(dir){ variant = KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.cOpen=null; ui.cEdit=null; closeSheet(true); render(); scrollTo(0,0); }
 function render(){
   if(!VARIANTS[variant]) variant="A";
-  const tab = variant==="B" ? "Chat" : "Today";
+  const tab = variant==="B" ? ui.btab : "Today";
   document.getElementById("app").innerHTML = VARIANTS[variant][1]() + `
-    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n===tab?'cur':''}" onclick="toast('Not in this prototype')"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
+    <div class="tabs">${[["Today","◉"],["Plan","▦"],["Pantry","▣"],["Grocery","☐"],["Chat","✉"]].map(([n,i])=>`<button class="${n===tab?'cur':''}" onclick="${variant==="B"&&(n==="Today"||n==="Chat")?`ui.btab='${n}';render();scrollTo(0,0)`:"toast('Not in this prototype')"}"><span class="i">${i}</span>${n}</button>`).join("")}</div>`;
   document.getElementById("sw").innerHTML = `<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>
     <button onclick="S=fresh();undoStack=[];ui.tray=null;ui.btext='';closeSheet(true);render()" title="Reset state">↺</button>`;
 }

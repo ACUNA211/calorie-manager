@@ -23,3 +23,7 @@ In every layout, a logged food can be changed by tapping it in Today: amount, me
 Scenario: Fri Oct 2, 12:40pm, the same week as the #21 prototype. Breakfast is logged as planned, lunch is a leftover Beef stir-fry, dinner is Pizza night.
 
 Waiting for the Member's reaction.
+
+**Feedback round 1 (2026-10-01):** **B (one box, library first) is the direction**, but the home screen needs a button to confirm the planned food without going through chat. B is now the default and has two tabs:
+- **Today** is the dashboard (#09): the calories-left counter, then a **confirm card** for the first unlogged meal ("Lunch · now · 12:40: Planned: Beef stir-fry ↺ leftover, 480") with **✓ Ate as planned**, ½ / ¾ / 1¼ portion and Something else (which focuses the box). For Eating Out it's **Log the aim (800)**. After logging, the card moves on to the next meal ("Dinner · up next"), or a missed earlier meal shows as "not logged yet". Every other unlogged meal in the table has its own one-tap ✓ Ate as planned / Log the aim. All of this is local, with no Agent call. Cards from the box (library or Agent) appear on Today above the table, so you confirm them where you are.
+- **Chat** keeps the same cards as a stream, and confirming the planned meal on Today adds a "✓ Lunch logged as planned" line there.
