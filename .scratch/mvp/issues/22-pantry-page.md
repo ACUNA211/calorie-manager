@@ -61,4 +61,18 @@ Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is lef
 - When the meal already has something planned: **Replace it** or **Add alongside it**. Replace is preset for leftovers, cooked food, and Ready-to-eat food of 300 kcal or more. Replacing frees what the old meal needed (chili for Sat lunch frees the chicken rice bowl's chicken, rice and broccoli), and the meal option then shows the new food.
 - The tile shows "📅 100 g Wed, Oct 14 · snack". A scheduled main food counts as planned in With Grocery List.
 
+**Member's reaction (2026-10-01):** this isn't converging, so split it up and work on one thing at a time. Remove the location tabs and make it a list like C's "Free to use", with no −/+ on the rows and the quantity in pieces/grams or cups/mL. Foods can be tagged Ready to eat, Ingredient, or both (apples). Tapping a food should give: a typed quantity with a unit toggle and a green + / red −; for ingredients, Add to a recipe (current recipes or a new one, which asks for its name); for ready-to-eat food, Eat (same unit options, next meal of the day) and Schedule (suggested replace/add meals, or placing it yourself on the plan). Everything else stays. Also wanted: a cooking page, planned cooking, and a recipe database.
+
+**Split (2026-10-01):** cooking and recipes move out of this ticket. [#27](27-cooking-page.md) covers the Cooking page and planned cooks, and starts from this prototype's recipe builder. [#28](28-dish-database.md) covers the Dish database and the Dish vs. recipe naming. #22 keeps the Pantry list and what happens when a food is tapped. Its "Add to a recipe" just hands off to #27.
+
+**Prototype, round 5 (2026-10-01):** all in `?variant=B`.
+- **List, no tabs:** Current / With Grocery List, the tag filter, then three lists: Leftovers & cooked, Foods and Staples. Short foods sort first, with the same red / yellow rows. Each row shows its tags, need line, 🍳 recipe line and 📅 schedule line, with the quantity on the right. A **pcs / cups ⇄ g / mL** switch on Foods changes every quantity ("9¾ cups" ⇄ "1,800 g"). Staples keep have / low / out on the row.
+- **Tags:** 🥕 Ingredient, 🍽 Ready to eat, or both (apples, bananas, yogurt, bread, cheddar, carrots). The filter counts a food with both tags under each. The sheet has a two-button tag toggle that won't let you remove both.
+- **Tapping a food** opens one sheet. The amount typed under Quantity is used by every action:
+  - **Quantity:** a big field, a red − and a green + on either side, and a pieces ⇄ grams (or cups ⇄ grams / mL) toggle that converts what's typed. "2 lb" also works. A live line shows "= 5 apples · 910 g · 473 kcal".
+  - **🍳 Add to a recipe** (ingredients only): a button per open recipe, plus **+ New recipe**, which asks for a name before it starts.
+  - **🍽 Eat** (ready to eat only): today's remaining meals, snack (now) and dinner (next), then "Eat as snack · 110 kcal".
+  - **📅 Schedule it** (ready to eat only): four suggested meals, each marked replace / add alongside / free; **Select another** (date + meal); and **🗓 Put it on the map myself**, a Today–Thu × meals grid of what's planned where you tap a cell (past meals greyed, draft days yellow). Then you pick Replace or Add alongside and Schedule.
+  - Staples get have / low / out and Add to a recipe. Edit details (where it's kept, delete) is still a link.
+
 Waiting for the Member's reaction.
