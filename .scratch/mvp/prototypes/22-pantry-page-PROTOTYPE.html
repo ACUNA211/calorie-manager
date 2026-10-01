@@ -13,9 +13,10 @@
     A: store sections (same order as the Grocery List). Leftovers on top, staples inline with a have/low/out switch,
        and a bar on each main food showing how much is set aside for planned meals.
     B: where it's kept (Fridge / Freezer / Cupboard / Spice rack). Tiles; a tap on a staple cycles have → low → out.
-       Revised after the Member's reaction: a Current / With Grocery List switch on top (instead of this / next week),
-       then "Needed in the next 7 days" listing every food the meals need (red = short today or tomorrow, yellow = short
-       later in the 7 days), then the where-it's-kept tabs, whose tiles use the same red / yellow.
+       Revised after the Member's reactions: a Current / With Grocery List switch on top (instead of this / next week),
+       then the where-it's-kept tabs. No list on top: every food the next 7 days of meals need shows only as a tile where
+       it's kept (red = short today or tomorrow, yellow = short later in the 7 days). With Grocery List adds every list
+       item to the Pantry and subtracts the planned meals, so each tile shows what's left after them.
     C: plan first. "Covered this week?" by meal, then leftovers to use, then food that's free to use, then what's set
        aside, with staples folded into one checklist.
   Shared in all three: the amount editor (− / +, "used ¼ / ½ / all", type "2 lb" or "3 cups"), planning a leftover
@@ -74,10 +75,9 @@
   .tile .nm{font-weight:700;font-size:14px}
   .tile.have{border-left:5px solid var(--good)} .tile.low{border-left:5px solid var(--low);background:var(--lowbg)} .tile.out{border-left:5px solid var(--warn);background:var(--outbg)}
   .tile.lo{border:2px solid var(--left)}
-  .tile.red,.nrow.red{background:var(--outbg);border-left:5px solid var(--warn)}
-  .tile.yel,.nrow.yel{background:var(--draft);border-left:5px solid var(--draftline)}
+  .tile.red{background:var(--outbg);border-left:5px solid var(--warn)}
+  .tile.yel{background:var(--draft);border-left:5px solid var(--draftline)}
   .tile.gl{border:1.5px dashed var(--accent)}
-  .nrow{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;margin-top:6px;font-size:13.5px}
   .chip.ok{background:#e6f3ea;color:var(--good)}
   .lcard{background:#fff;border-radius:14px;margin:8px 16px;padding:12px 14px;box-shadow:0 1px 2px #0001;border-left:5px solid var(--left)}
   .dots{letter-spacing:2px;color:var(--left)}
@@ -204,9 +204,11 @@ function fresh(){
     {id:"rotis",n:"Rotisserie chicken",sec:"Meat & fish",loc:"Fridge",kind:"exact",m:"pc",per:900,q:0,lbl:["chicken","chickens"]},
     {id:"orzo",n:"Orzo",sec:"Dry goods & staples",loc:"Cupboard",kind:"exact",m:"g",per:0,q:0},
     {id:"lemon",n:"Lemons",sec:"Produce",loc:"Fridge",kind:"exact",m:"pc",per:60,q:0,lbl:["lemon","lemons"]},
+    {id:"water",n:"Sparkling water",sec:"Dry goods & staples",loc:"Cupboard",kind:"exact",m:"pc",per:355,q:0,lbl:["can","cans"]},
   ],
-  // The Grocery List right now: this week's approved plan put shrimp on it. Next week's shortfalls join it when the draft is approved.
-  glist:{shrimp:450},
+  // The Grocery List right now: shrimp from this week's approved plan, olive oil and honey (staples running low), and two
+  // the Member added. Next week's shortfalls join it when the draft is approved. Staples on the list have no amount.
+  glist:{shrimp:450, oil:1, honey:1, banana:6, water:12},
   planChanges:[], ai:0, cards:[], nid:100,
 }; }
 let S = fresh();
@@ -433,14 +435,15 @@ function VariantA(){
     + `<div class="xs mute" style="margin:8px 16px">Purple = set aside for planned meals, red = short. Tap a food to change its amount.</div>` + stateBox() + entryBar();
 }
 
-// ================= B: where it's kept (revised after the Member's reaction) =================
-// Current / With Grocery List replaces This week / + next week. "With Grocery List" counts everything on the list as bought.
-// The needs card covers the next 7 days (today through Thu): red = short today or tomorrow, yellow = short later in the 7 days.
+// ================= B: where it's kept (revised after the Member's reactions) =================
+// Current / With Grocery List replaces This week / + next week. No list on top: each food the next 7 days of meals need
+// shows only as a tile where it's kept. Red = short today or tomorrow, yellow = short later in the 7 days (today through Thu).
+// With Grocery List adds every list item and subtracts the planned meals, so a tile shows what's left after them.
 const DAYS = ["Today","Tomorrow","Sun","Mon","Tue","Wed","Thu"];
 const food = id => item(id) || S.needOnly.find(f=>f.id===id);
 const onList = id => S.glist[id]!=null;
 function needStat(id){
-  const it=food(id), ns=[...S.need[id]].sort((a,b)=>a[0]-b[0]), stp=it.kind==="staple";
+  const it=food(id), ns=[...(S.need[id]||[])].sort((a,b)=>a[0]-b[0]), stp=it.kind==="staple";
   const listed = ui.gl && onList(id);
   const av = stp ? (it.st!=="out"||listed ? 1e9 : 0) : (it.q||0) + (listed ? S.glist[id] : 0);
   const total = stp ? 0 : ns.reduce((a,n)=>a+n[2],0);
@@ -448,64 +451,53 @@ function needStat(id){
   for(const n of ns){ cum += stp ? 1 : n[2]; if(cum>av){ day=n[0]; break; } }
   return {id, it, ns, av, total, day, lvl: day==null ? "ok" : day<=1 ? "red" : "yel", by: stp ? 0 : Math.max(0,total-av), listed};
 }
-function needAll(){
-  const ord={red:0,yel:1,ok:2};
-  return Object.keys(S.need).filter(id=>S.need[id].length&&food(id)).map(needStat)
-    .sort((a,b)=>ord[a.lvl]-ord[b.lvl] || (a.day??9)-(b.day??9) || a.ns[0][0]-b.ns[0][0]);
-}
 function listAdd(id){
   snap(); const was=ui.gl; ui.gl=false; const st=needStat(id); ui.gl=was;
   S.glist[id] = st.it.kind==="staple" ? 1 : st.by;
   render(); toast(`${st.it.n} added to the Grocery List`, true);
 }
-function needCard(){
-  const all=needAll(), red=all.filter(x=>x.lvl==="red"), yel=all.filter(x=>x.lvl==="yel"), ok=all.filter(x=>x.lvl==="ok");
-  const meals = x => x.ns.map(n=>`${DAYS[n[0]]} ${n[1].split(" · ")[0]}${x.it.kind==="staple"?"":` (${short(x.it,n[2])})`}`).join(" · ");
-  const row = x => { const it=x.it, stp=it.kind==="staple";
-    const have = stp ? `staple · ${it.st}`
-      : `have ${short(it,it.q||0)}${x.listed?` + ${short(it,S.glist[x.id])} on the list`:""} · need ${short(it,x.total)} · <b class="warn">short ${short(it,x.by)}</b>`;
-    const right = onList(x.id) ? `<span class="chip list">on list</span>`
-      : x.day>=2 ? `<span class="chip draft">list when draft approved</span>`
-      : `<button class="btn ghost xs" style="padding:0" onclick="listAdd('${x.id}')">+ Add to list</button>`;
-    const first = x.ns.find(n=>n[0]===x.day);
-    return `<div class="nrow ${x.lvl}"><div class="sp"><div><b>${it.n}</b> <span class="xs mute">${LOCI[it.loc]} ${it.loc}</span></div>
-      <div class="xs">${have}</div>
-      <div class="xs" style="font-weight:600;color:${x.lvl==="red"?"var(--warn)":"#8a6d00"}">Runs out ${x.day<=1?DAYS[x.day].toLowerCase():"on "+DAYS[x.day]}: ${first[1].split(" · ")[1]||first[1]}</div>
-      <div class="xs mute">${meals(x)}</div></div><div style="text-align:right;flex:none">${right}</div></div>`; };
-  return `<div class="card" style="padding:10px 12px"><div class="row"><b class="sp">Needed in the next 7 days</b><span class="xs mute">Fri Oct 2 – Thu Oct 8</span></div>
-    <div class="row wrap" style="gap:4px;margin-top:4px">${red.length?`<span class="chip short">${red.length} short today or tomorrow</span>`:""}${yel.length?`<span class="chip draft">${yel.length} short later in the week</span>`:""}<span class="chip ok">${ok.length} covered</span></div>
-    ${red.map(row).join("")}${yel.map(row).join("")}
-    ${!red.length&&!yel.length?`<div class="small good" style="margin-top:6px">✓ Everything for the next 7 days is ${ui.gl?"in the Pantry or on the list":"in the Pantry"}.</div>`:""}
-    <div class="xs mute" style="margin-top:10px">Covered</div>
-    <div>${ok.map(x=>`<span class="chip" ${item(x.id)?`onclick="openEdit('${x.id}')" style="cursor:pointer"`:""} title="${meals(x)}">${x.it.n}${x.it.kind==="staple"?(x.it.st==="low"?` <b style="color:var(--low)">low</b>`:""):` · ${short(x.it,x.total)} of ${short(x.it,x.av)}`}${x.listed?" 🛒":""}</span>`).join("")}</div>
-    <div class="xs mute" style="margin-top:8px">Red: runs out today or tomorrow. Yellow: runs out later in the 7 days. Sun–Thu are in next week's draft.${ui.gl?" 🛒 = covered once the list is bought.":""}</div></div>`;
-}
 function VariantB(){
-  const stats = Object.fromEntries(needAll().map(x=>[x.id,x]));
-  const lvlAt = l => { const xs=Object.values(stats).filter(x=>x.lvl!=="ok"&&x.it.loc===l); return xs.length?[xs.length, xs.some(x=>x.lvl==="red")?"var(--warn)":"#b08a00"]:null; };
+  // every food in the Pantry, plus foods that are only needed or only on the list
+  const foods = [...S.items, ...S.needOnly.filter(f=>(S.need[f.id]||[]).length || onList(f.id))];
+  const stats = Object.fromEntries(foods.map(f=>[f.id, needStat(f.id)]));
+  const lvlAt = l => { const xs=foods.filter(f=>f.loc===l&&stats[f.id].lvl!=="ok"); return xs.length?[xs.length, xs.some(f=>stats[f.id].lvl==="red")?"var(--warn)":"#b08a00"]:null; };
   const glN = Object.keys(S.glist).length;
   const seg = `<div class="seg" style="margin-top:8px"><button class="${!ui.gl?'on':''}" onclick="ui.gl=false;render()">Current</button><button class="${ui.gl?'on':''}" onclick="ui.gl=true;render()">With Grocery List <span class="xs mute">(${glN})</span></button></div>
-    <div class="xs mute" style="margin:4px 16px 0;text-align:center">${ui.gl?`As if the ${glN} item${glN===1?"":"s"} on the Grocery List ${glN===1?"was":"were"} bought`:"What's in the kitchen right now"}</div>`;
-  const tabs = `<div class="seg" style="margin-top:12px">${LOC.map(l=>{ const c=lvlAt(l); return `<button class="${ui.loc===l?'on':''}" onclick="ui.loc='${l}';render()">${LOCI[l]} ${l}${c?` <b style="color:${c[1]}">·${c[0]}</b>`:""}</button>`; }).join("")}</div>`;
+    <div class="xs mute" style="margin:4px 16px 0;text-align:center">${ui.gl?`The Pantry plus the ${glN} item${glN===1?"":"s"} on the list, minus the meals planned through Thu`:"What's in the kitchen right now"}</div>`;
+  const tabs = `<div class="seg" style="margin-top:10px">${LOC.map(l=>{ const c=lvlAt(l); return `<button class="${ui.loc===l?'on':''}" onclick="ui.loc='${l}';render()">${LOCI[l]} ${l}${c?` <b style="color:${c[1]}">·${c[0]}</b>`:""}</button>`; }).join("")}</div>`;
   const lefts = S.left.filter(l=>l.loc===ui.loc);
-  const its = S.items.filter(i=>i.loc===ui.loc);
-  const listOnly = ui.gl ? S.needOnly.filter(f=>f.loc===ui.loc&&onList(f.id)) : [];
-  const needLine = it => { const x=stats[it.id]; if(!x) return "";
-    if(it.kind==="staple") return x.lvl==="ok" ? `<div class="xs mute">needed ${DAYS[x.ns[0][0]]}</div>` : `<div class="xs warn" style="font-weight:600">needed ${DAYS[x.day]} · out</div>`;
-    return `<div class="xs" style="margin-top:3px;color:${x.lvl==="ok"?"#5b3fa0":x.lvl==="red"?"var(--warn)":"#8a6d00"};font-weight:${x.lvl==="ok"?400:600}">📅 ${short(it,x.total)} needed in 7 days${x.lvl==="ok"?"":` · short ${short(it,x.by)} from ${DAYS[x.day]}`}</div>`; };
-  const tile = it => { const x=stats[it.id], lv=x?x.lvl:"ok", plus=ui.gl&&onList(it.id)&&it.kind!=="staple";
-    if(it.kind==="staple") return `<div class="tile ${lv!=="ok"?lv:""}" onclick="cycleSt('${it.id}')"><div class="nm">${it.n}</div><div class="small" style="font-weight:700;color:${it.st==="have"?"var(--good)":it.st==="low"?"var(--low)":"var(--warn)"}">${it.st.toUpperCase()}${ui.gl&&onList(it.id)?` <span class="chip list">on list</span>`:""}</div>${needLine(it)}<div class="xs mute">tap: have → low → out</div><button class="btn ghost xs" style="position:absolute;top:4px;right:6px" onclick="event.stopPropagation();openEdit('${it.id}')">⋯</button></div>`;
-    const q = it.q + (plus?S.glist[it.id]:0);
-    return `<div class="tile ${lv!=="ok"?lv:""}" onclick="openEdit('${it.id}')"><div class="nm">${it.n}</div><div class="small">${q===0?"none left":show(it,q).split(" · ")[0]}</div>${plus?`<div class="xs" style="color:var(--accent)">+${short(it,S.glist[it.id])} from the list</div>`:`<div class="xs mute">${q?show(it,q).split(" · ")[1]||"":""}</div>`}${needLine(it)}</div>`; };
-  const gtile = f => { const x=stats[f.id]; return `<div class="tile gl ${x&&x.lvl!=="ok"?x.lvl:""}"><div class="nm">${f.n}</div><div class="small" style="color:var(--accent)">${short(f,S.glist[f.id])} on the list</div><div class="xs mute">not in the Pantry yet</div>${needLine(f)}</div>`; };
+  const its = foods.filter(f=>f.loc===ui.loc);
+  const meals = x => x.ns.map(n=>`${DAYS[n[0]]} ${n[1].split(" · ")[0]}${x.it.kind==="staple"?"":` (${short(x.it,n[2])})`}`).join(", ");
+  const fix = x => x.lvl==="ok" ? "" : onList(x.id) ? (ui.gl?"":`<span class="chip list">on list</span>`)
+    : x.day>=2 ? `<span class="chip draft">list when draft approved</span>`
+    : `<button class="btn ghost xs" style="padding:0" onclick="event.stopPropagation();listAdd('${x.id}')">+ Add to list</button>`;
+  const needLine = x => !x.ns.length ? "" : x.lvl==="ok"
+    ? `<div class="xs" style="color:#5b3fa0;margin-top:3px">📅 ${x.it.kind==="staple"?"needed "+DAYS[x.ns[0][0]]:`${short(x.it,x.total)} for ${x.ns.length} meal${x.ns.length>1?"s":""}`}</div>`
+    : `<div class="xs" style="margin-top:3px;font-weight:600;color:${x.lvl==="red"?"var(--warn)":"#8a6d00"}">${x.it.kind==="staple"?"out from":ui.gl?"runs out":`short ${short(x.it,x.by)} from`} ${DAYS[x.day]}: ${(x.ns.find(n=>n[0]===x.day)[1].split(" · ")[1])||""}</div>`;
+  const tile = it => { const x=stats[it.id], stp=it.kind==="staple", lv=x.lvl!=="ok"?x.lvl:"", isNew=!item(it.id);
+    const open = isNew ? "" : stp ? `cycleSt('${it.id}')` : `openEdit('${it.id}')`;
+    const listed = ui.gl && onList(it.id);
+    let amt, sub;
+    if(stp){
+      amt = `<span style="font-weight:700;color:${it.st==="have"?"var(--good)":it.st==="low"?"var(--low)":"var(--warn)"}">${it.st.toUpperCase()}</span>${listed?` <span class="chip list">+ on list</span>`:""}`;
+      sub = ui.gl ? "" : `<div class="xs mute">tap: have → low → out</div>`;
+    } else if(ui.gl){
+      const left = x.av - x.total;
+      amt = left<0 ? `<b class="warn">short ${short(it,-left)}</b>` : left===0 ? `<b>none left over</b>` : `<b>${short(it,left)}</b> <span class="xs mute">left over</span>`;
+      const parts = [it.q ? `${short(it,it.q)} have` : "none in the Pantry"]; if(listed) parts.push(`<span style="color:var(--accent)">+ ${short(it,S.glist[it.id])} list</span>`); if(x.total) parts.push(`− ${short(it,x.total)} planned`);
+      sub = `<div class="xs mute">${parts.join(" ")}</div>`;
+    } else {
+      amt = (it.q||0)===0 ? (isNew?`<span class="mute">not in the Pantry</span>`:"none left") : show(it).split(" · ")[0];
+      sub = `<div class="xs mute">${it.q?show(it).split(" · ")[1]||"":onList(it.id)?`<span style="color:var(--accent)">${short(it,S.glist[it.id])} on the list</span>`:""}</div>`;
+    }
+    return `<div class="tile ${lv} ${isNew&&listed?"gl":""}" ${open?`onclick="${open}"`:""} title="${x.ns.length?meals(x):""}"><div class="nm">${it.n}</div><div class="small">${amt}</div>${sub}${ui.gl&&!stp&&x.lvl==="ok"?"":needLine(x)}<div style="margin-top:3px">${fix(x)}</div>${stp&&!isNew?`<button class="btn ghost xs" style="position:absolute;top:4px;right:6px" onclick="event.stopPropagation();openEdit('${it.id}')">⋯</button>`:""}</div>`; };
   const ltile = l => `<div class="tile lo" onclick="openPlan('${l.id}')"><div class="nm">↺ ${l.n}</div><div class="small"><span class="dots">${"●".repeat(l.portions)}</span> ${l.portions} × ${l.kpp}</div><div class="xs ${l.plan?"good":"warn"}">${l.plan?"📅 "+l.plan.split(" · ")[0]:"Not planned · tap to plan"}</div><div class="xs mute">from ${l.from}</div></div>`;
-  const rank = it => { const x=stats[it.id]; return !x ? 3 : {red:0,yel:1,ok:2}[x.lvl]; };
-  const sortIt = [...its].sort((a,b)=>rank(a)-rank(b) || (a.kind==="staple")-(b.kind==="staple") || SEC.indexOf(a.sec)-SEC.indexOf(b.sec));
-  return head("Pantry") + seg + tabs + needCard() + chatParts()
-    + `<div class="sec"><h3>${LOCI[ui.loc]} ${ui.loc}</h3></div>`
-    + `<div class="tiles">${lefts.map(ltile).join("")}${listOnly.map(gtile).join("")}${sortIt.map(tile).join("")}</div>`
-    + (its.length||lefts.length||listOnly.length?"":`<div class="card small mute">Nothing kept here.</div>`)
-    + `<div class="xs mute" style="margin:0 16px">Red / yellow = short for a meal in the next 7 days. Green frame = leftover. Dashed = on the Grocery List, not bought yet.</div>` + stateBox() + entryBar();
+  const rank = it => ({red:0,yel:1,ok:2})[stats[it.id].lvl];
+  const sortIt = [...its].sort((a,b)=>rank(a)-rank(b) || (stats[a.id].day??9)-(stats[b.id].day??9) || (a.kind==="staple")-(b.kind==="staple") || SEC.indexOf(a.sec)-SEC.indexOf(b.sec));
+  return head("Pantry") + seg + tabs + chatParts()
+    + `<div class="tiles">${lefts.map(ltile).join("")}${sortIt.map(tile).join("")}</div>`
+    + (its.length||lefts.length?"":`<div class="card small mute">Nothing kept here.</div>`)
+    + `<div class="xs mute" style="margin:0 16px">Red = short for a meal today or tomorrow. Yellow = short for a meal later in the next 7 days (Sun–Thu are next week's draft). Green frame = leftover.${ui.gl?" Dashed = only on the Grocery List.":""}</div>` + stateBox() + entryBar();
 }
 
 // ================= C: plan first =================

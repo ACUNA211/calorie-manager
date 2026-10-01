@@ -35,4 +35,12 @@ Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is lef
 - Tiles use the same red / yellow and show "📅 needed in 7 days · short … from Sun". In With Grocery List, list amounts show as "+450 g from the list", and foods only on the list show as dashed tiles.
 - Planning the stir-fry leftover for Sat dinner drops the tacos' needs, and shrimp comes off the list.
 
+**Member's reaction (2026-10-01):** no full list on top. Remove the next-7-days card; a food should show only where it's kept. With Grocery List should show every Grocery List item together with the current Pantry, so it's easy to see if anything could still be missing, and it should subtract the meals already planned.
+
+**Prototype, B revised again (2026-10-01):** the 7-day card is gone. Order: Current / With Grocery List → location tabs (with a count of short foods) → tiles.
+- Every food the next 7 days of meals need now has a tile where it's kept, including foods not in the Pantry at all (berries, bell peppers, orzo…). The tile is red if it runs out today or tomorrow, yellow if it runs out later in the 7 days, and short ones sort first.
+- **Current:** the real amounts, with "📅 180 g for 2 meals" or "short 1 piece from Sun: Chicken rice bowl".
+- **With Grocery List:** the Grocery List now has 5 items (shrimp, olive oil, honey, 6 bananas, 12 cans of sparkling water). Each tile shows what's left over after the planned meals, for example "Eggs: 3 eggs left over · 10 eggs have − 7 eggs planned" and "Shrimp: none left over · + 450 g list − 450 g planned". Items only on the list get a dashed tile, and staples on the list show "+ on list". Shrimp turns covered, so only apples stay red. Next week's shortfalls stay yellow until the draft is approved.
+- Planned meals counted: everything through Thu, including next week's draft.
+
 Waiting for the Member's reaction.
