@@ -62,6 +62,7 @@ An **MVP spec** for a two-person Household app, with every product and tech deci
 ## Not yet specified
 
 - Nothing outside the open tickets: [#18](issues/18-model-bake-off.md) (waiting for the Agent to be built), [#20](issues/20-adding-food.md) food logging, [#21](issues/21-plan-page.md) Plan, [#22](issues/22-pantry-page.md) Pantry, [#23](issues/23-grocery-page.md) Grocery, [#24](issues/24-chat-page.md) Chat (after #20) and [#25](issues/25-settings.md) Settings. Once #20–#25 are resolved, the spec is ready to split into build tickets.
+- Later: [#26](issues/26-agent-estimates.md) how the Agent estimates calories (and maybe macros) for foods the library doesn't have. It doesn't block the spec, but should be settled before the logging prompts are written.
 
 ## Out of scope
 
