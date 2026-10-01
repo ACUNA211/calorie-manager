@@ -1,7 +1,7 @@
 # How does food get into the Calorie Log?
 
 Type: prototype
-Status: open
+Status: resolved
 Assignee: ACUNA211
 Blocked by:
 
@@ -27,3 +27,31 @@ Waiting for the Member's reaction.
 **Feedback round 1 (2026-10-01):** **B (one box, library first) is the direction**, but the home screen needs a button to confirm the planned food without going through chat. B is now the default and has two tabs:
 - **Today** is the dashboard (#09): the calories-left counter, then a **confirm card** for the first unlogged meal ("Lunch · now · 12:40: Planned: Beef stir-fry ↺ leftover, 480") with **✓ Ate as planned**, ½ / ¾ / 1¼ portion and Something else (which focuses the box). For Eating Out it's **Log the aim (800)**. After logging, the card moves on to the next meal ("Dinner · up next"), or a missed earlier meal shows as "not logged yet". Every other unlogged meal in the table has its own one-tap ✓ Ate as planned / Log the aim. All of this is local, with no Agent call. Cards from the box (library or Agent) appear on Today above the table, so you confirm them where you are.
 - **Chat** keeps the same cards as a stream, and confirming the planned meal on Today adds a "✓ Lunch logged as planned" line there.
+
+## Answer
+
+Settled with the prototype (`prototypes/20-adding-food-PROTOTYPE.html`, variant B, hosted on GitHub Pages). **B, one box with the Food Library first**, plus a confirm button for the planned meal on Today.
+
+### Logging the planned meal (Today)
+- Under the calories-left counter, a **confirm card** shows the first unlogged meal: its slot and time ("now", "up next", or "not logged yet" for a missed earlier meal), the planned Dish and calories, and a ↺ tag for a leftover. Buttons: **✓ Ate as planned**, **½ / ¾ / 1¼** portion, and **Something else** (focuses the box).
+- **Eating Out** shows **Log the aim** (e.g. 800) instead, and says which occasion this is until the aim is learned after 3 (#06).
+- Every other unlogged meal in Today's table has its own one-tap ✓ Ate as planned / Log the aim.
+- All of this is local, with **no Agent call**. A leftover takes its portion out of the Pantry. The Chat tab gets a "✓ Lunch logged as planned" line.
+
+### Logging anything else (the one box)
+- There's **no separate + form**. The box next to the tabs is the only way in, on Today and in Chat.
+- **Live Food Library matches** show above the keyboard as you type (⚡ no Agent call), with the amount and calories. They handle synonyms ("eggs" → Egg, whole, cooked), typos ("brocoli"), amounts typed in ("150g chicken", "4 oz" → grams), recent and frequent foods first, and Dishes mixed in with single foods. Tapping one makes a card.
+- A hint says what **Enter** will do. If every part of the text matches the library, it stays local. If anything doesn't ("chipotle burrito bowl with guac"), Enter sends it to the Agent, which splits it, looks parts up, and estimates the rest (#02).
+- Everything lands in a **confirmation card** before it's logged, shown on Today above the table (and in the Chat stream). The card has the meal slot (from the time, changeable), each item with an amount stepper, calories, its source (FoodData Central / Dish / orange **est.** for an Agent estimate), **Wrong match?** (near matches plus a search), **Find a library match** for an estimate, a **From the Pantry** tick for Pantry foods (pre-ticked, untick if it wasn't), + Add another food, ✕ to remove, Cancel, and **Log N · calories**. The header says whether it cost an Agent call.
+- Exact library matches still show the card (not C's log-straight-away), so the Pantry and slot are always checked before saving.
+
+### After it's logged
+- Tap a food in Today to change its amount, meal or match, swap an estimate for a library food, say "It wasn't from the Pantry" (puts it back), or Delete. Every change has Undo.
+
+### Eating Out and the other Member
+- An Eating Out slot on the card notes the aim and the occasion count. It can be logged at its aim, or described in the box for an Agent estimate.
+- In phase 3, a **For: You / Ana** switch on the card logs for the other Member, shown to her as "added by you" and in the Activity Log with undo (#13).
+
+### Cost (#17)
+- The default path (planned meal, library matches) costs nothing. The Agent is used only for free text the library can't match. The Food Library search must handle synonyms, typos, amounts, and recent and frequent foods for that to work.
+- How the Agent reaches its estimates (and whether it estimates macros too) is a separate ticket: [#26](26-agent-estimates.md).
