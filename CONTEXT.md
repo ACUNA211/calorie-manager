@@ -21,7 +21,7 @@ A named time the Member eats ("Breakfast 7:30", "Work lunch 12:00"), set for the
 _Avoid_: slot, breakfast/lunch/dinner as fixed categories, Eating Out, Fixed / Open required / Open optional
 
 **Cook**:
-One batch of a Recipe made on a given day. Its Portions are placed at several Meal Times (one Sunday chili feeds dinner plus two lunches), and the Shopping list counts its ingredients once.
+One batch of a Recipe made on a given day. Its Portions are placed at several Meal Times (one Sunday chili feeds dinner plus two lunches), and the Shopping list counts its ingredients once, scaled to the servings it makes. Servings it makes but no Portion uses are spare.
 _Avoid_: batch, meal prep (as a noun)
 
 **Portion**:
