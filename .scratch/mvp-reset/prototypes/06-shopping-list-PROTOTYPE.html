@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Shopping list (#06)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp-reset/issues/06-shopping-list.md
+  Question: what does the Shopping list look like? It is built when the plan is approved: each Cook's ingredients are
+  combined into one line per food, scaled to the servings each Cook makes. First comes a "have it" pass (it stands in
+  for a Pantry), then shopping. How are amounts shown? Can items be added by hand? What happens when the plan changes
+  after approval, or when a Rebalance needs something new? Is it ordered by store section, and where does that come
+  from? What happens to lines already ticked "have it" or bought?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: Two passes. Step 1 shows one food at a time (Have it / Need it / Have some). Step 2 is the shopping list by store
+       section, with what's at home folded away.
+    B: One list, two ticks. A single list by store section; every line has a 🏠 "have it" tick and a 🛒 "in cart" tick.
+       Filter chips instead of steps.
+    C: By when it's needed. Lines are grouped by the first cook day that needs them, so the list splits into shopping
+       trips (Sat for Sun–Tue, Tue for Wed–Sat). A Check home / Shopping switch changes what a tap does.
+  Shared in all three (proposals, not settled):
+    - One measure per food: the shopping measure is one of the food's Food Library serving sizes (broccoli in heads,
+      turkey in lb). Recipe amounts are converted through grams and rounded up (whole cans, pieces and tbsp, ¼ lb or cup,
+      10 g). Tap a line to see each Cook's share and pick another measure; the choice sticks to the food.
+    - Store section comes from the food's USDA FoodData Central category (Branded Foods have their own category, so
+      canned tomatoes land in Pantry, not Produce). Moving a food to another section is remembered for that food.
+    - Items can be added by hand (paper towels). Plan updates never touch them.
+    - "Have some" takes what's at home off the amount to buy.
+    - After approval, the "Prototype: change the plan" box fakes plan edits from #05. Only Cook changes (added,
+      removed, servings made) change the list; a Review shows each change and what happens to ticked lines:
+        to buy, more or less  → amount changes
+        had it, now more      → back to "to check", with what you'd checked before
+        bought, now more      → stays bought; a new line for the rest
+        bought, now less      → stays bought; the rest is spare
+        bought, now removed   → moves to "Bought, not needed now"
+        had it / to buy, removed → gone
+    - Rebalance only uses Cooks already planned, so moving or resizing Portions never changes the list. If a Rebalance
+      wants a Cook to make more servings, that is a Cook change and goes through the same Review.
+  Scenario: Sat Oct 3, the plan for Oct 4–10 was approved on Fri Oct 2 (the #05 draft). All state is in memory.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--goodbg:#e3f1e8;--bad:#c0392b;--badbg:#fbe5e1;--warn:#a0561a;--warnbg:#fdebd8;--accent:#3056d3;--soft:#eef2ff;--chg:#e08a1e}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding:0 0 90px}
+  button{font:inherit;cursor:pointer} input,select{font:inherit}
+  .row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px} .b{font-weight:600} .num{font-variant-numeric:tabular-nums}
+  header{padding:16px 16px 6px} header h1{margin:0;font-size:21px} header .sub{color:var(--mute);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 16px;padding:12px 14px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff} .btn.good{background:var(--good);border-color:var(--good);color:#fff}
+  .btn.ghost{border:none;background:none;color:var(--accent);padding:6px 4px} .btn.sm{padding:5px 9px;font-size:13px}
+  .btn.big{padding:12px 0;flex:1;font-size:16px;border-radius:12px}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12.5px;border:1px solid var(--line);background:#fff;margin:3px 3px 0 0;cursor:pointer}
+  .chip.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .chgbar{background:#fff4e5;border:1px solid #f3c58a;border-radius:12px;margin:10px 16px;padding:9px 12px;font-size:13px}
+  .flag{display:block;font-size:11.5px;color:var(--chg);font-weight:600}
+  .proto{border:1.5px dashed #a9a7a0;border-radius:12px;margin:10px 16px;padding:8px 12px;font-size:13px;background:#ecebe6}
+  .proto summary{cursor:pointer;color:var(--mute);font-weight:600}
+  .proto button{margin:4px 4px 0 0}
+  .sec{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:14px 16px 4px;display:flex;justify-content:space-between}
+  .list{background:#fff;border:1px solid var(--line);border-radius:14px;margin:0 16px}
+  .li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)} .li:last-child{border-bottom:none}
+  .li .nm{flex:1;min-width:0;cursor:pointer} .li .q{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .li.done .nm>span:first-child,.li.done .q{text-decoration:line-through;color:#a9a7a0}
+  .tick{width:28px;height:28px;border-radius:8px;border:1.5px solid #c9c7c0;background:#fff;flex:none;font-size:15px;line-height:1;padding:0}
+  .tick.on{background:var(--good);border-color:var(--good);color:#fff}
+  .tick.home.on{background:#7a6a4f;border-color:#7a6a4f}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+  .seg button{border:none;background:#fff;padding:5px 9px;font-size:12.5px;border-right:1px solid var(--line)} .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--ink);color:#fff;font-weight:600}
+  .tag{display:inline-block;border-radius:6px;padding:0 6px;font-size:10.5px;background:#ecebe6;color:var(--mute);margin-left:4px;font-weight:600}
+  .tag.man{background:var(--soft);color:var(--accent)}
+  .steps{display:flex;margin:6px 16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .steps button{flex:1;border:none;background:#fff;padding:9px 0;font-size:14px;border-right:1px solid var(--line)} .steps button:last-child{border-right:none}
+  .steps button.on{background:var(--ink);color:#fff;font-weight:600}
+  .bigcard{background:#fff;border:1px solid var(--line);border-radius:18px;margin:12px 16px;padding:20px 18px;text-align:center}
+  .bigcard .fn{font-size:24px;font-weight:700} .bigcard .fq{font-size:20px;margin:4px 0 2px}
+  .prog{height:6px;background:#e4e2dc;border-radius:3px;overflow:hidden;margin:6px 16px} .prog>div{height:100%;background:var(--accent)}
+  .addbox{display:flex;gap:6px;margin:10px 16px} .addbox input{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30}
+  .sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:86vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:31;padding:14px 16px 80px}
+  .grp{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
+  .opt{padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px} .opt:last-child{border-bottom:none}
+  #sw{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:none;border-radius:999px;width:30px;height:30px}
+  #state{margin:20px 16px;font-size:11px} #state pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;max-height:260px;overflow:auto}
+  .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:10px;z-index:60;font-size:13px;max-width:380px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+<script>
+// ---------- model ----------
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], DATES=[4,5,6,7,8,9,10];
+// Recipes from #04 / #05: servings per batch and ingredients per batch.
+const RECIPES=[
+  {id:1,name:"Turkey chili",serv:6,ings:[["Ground turkey",2,"lb"],["Kidney beans",2,"can"],["Onion",2,"pc"],["Diced tomatoes",2,"can"],["Olive oil",2,"tbsp"],["Chili seasoning",1,"packet"]]},
+  {id:2,name:"Overnight oats",serv:1,ings:[["Rolled oats",.5,"cup"],["Milk 2%",.75,"cup"],["Chia seeds",1,"tbsp"],["Banana",.5,"pc"]]},
+  {id:3,name:"Chicken rice bowl",serv:4,ings:[["Chicken breast",1.5,"lb"],["White rice",1.5,"cup"],["Broccoli",3,"cup"],["Olive oil",1,"tbsp"]]},
+  {id:4,name:"Yogurt + PB bowl",serv:1,ings:[["Greek yogurt",170,"g"],["Peanut butter",1,"tbsp"],["Banana",.5,"pc"]]},
+  {id:5,name:"Sheet-pan salmon + sweet potato",serv:2,ings:[["Salmon fillet",2,"pc"],["Sweet potato",2,"pc"],["Broccoli",2,"cup"],["Olive oil",1,"tbsp"]]},
+  {id:7,name:"Chicken fajitas",serv:4,ings:[["Chicken breast",1.5,"lb"],["Bell pepper",3,"pc"],["Onion",1,"pc"],["Flour tortillas",8,"pc"],["Olive oil",1,"tbsp"]]},
+  {id:8,name:"Lentil soup",serv:6,ings:[["Dry lentils",2,"cup"],["Carrot",3,"pc"],["Onion",1,"pc"],["Vegetable broth",2,"carton"],["Diced tomatoes",1,"can"]]},
+  {id:9,name:"Apple + peanut butter",serv:1,ings:[["Apple",1,"pc"],["Peanut butter",1,"tbsp"]]},
+  {id:10,name:"Dark chocolate + berries",serv:1,ings:[["Dark chocolate",20,"g"],["Berries",.5,"cup"]]},
+];
+// Food Library: serving sizes in grams (u), the shopping measure (buy), and the FoodData Central category it came from.
+const FOODS={
+  "Ground turkey":{u:{lb:454,g:1},buy:"lb",cat:"Poultry Products",sec:"Meat & fish"},
+  "Kidney beans":{u:{can:439,cup:256,g:1},buy:"can",cat:"Canned Beans (Branded)",sec:"Pantry"},
+  "Onion":{u:{pc:150,cup:160,g:1},buy:"pc",cat:"Vegetables and Vegetable Products",sec:"Produce"},
+  "Diced tomatoes":{u:{can:411,cup:240,g:1},buy:"can",cat:"Canned Vegetables (Branded)",sec:"Pantry"},
+  "Olive oil":{u:{tbsp:13.5,bottle:500,g:1},buy:"tbsp",cat:"Fats and Oils",sec:"Pantry"},
+  "Chili seasoning":{u:{packet:28,g:1},buy:"packet",cat:"Seasoning Mixes (Branded)",sec:"Pantry"},
+  "Rolled oats":{u:{cup:81,g:1},buy:"cup",cat:"Cereal Grains and Pasta",sec:"Pantry"},
+  "Milk 2%":{u:{cup:244,gallon:3904,g:1},buy:"cup",cat:"Dairy and Egg Products",sec:"Dairy & eggs"},
+  "Chia seeds":{u:{tbsp:12,g:1},buy:"tbsp",cat:"Nut and Seed Products",sec:"Pantry"},
+  "Banana":{u:{pc:118,g:1},buy:"pc",cat:"Fruits and Fruit Juices",sec:"Produce"},
+  "Chicken breast":{u:{lb:454,g:1},buy:"lb",cat:"Poultry Products",sec:"Meat & fish"},
+  "White rice":{u:{cup:185,g:1},buy:"cup",cat:"Cereal Grains and Pasta",sec:"Pantry"},
+  "Broccoli":{u:{cup:91,head:600,g:1},buy:"head",cat:"Vegetables and Vegetable Products",sec:"Produce"},
+  "Greek yogurt":{u:{g:1,tub:907},buy:"g",cat:"Dairy and Egg Products",sec:"Dairy & eggs"},
+  "Peanut butter":{u:{tbsp:16,jar:454,g:1},buy:"tbsp",cat:"Legumes and Legume Products",sec:"Pantry"},
+  "Salmon fillet":{u:{pc:170,lb:454,g:1},buy:"pc",cat:"Finfish and Shellfish Products",sec:"Meat & fish"},
+  "Sweet potato":{u:{pc:130,g:1},buy:"pc",cat:"Vegetables and Vegetable Products",sec:"Produce"},
+  "Bell pepper":{u:{pc:120,g:1},buy:"pc",cat:"Vegetables and Vegetable Products",sec:"Produce"},
+  "Flour tortillas":{u:{pc:45,g:1},buy:"pc",cat:"Baked Products",sec:"Bakery"},
+  "Dry lentils":{u:{cup:192,g:1},buy:"cup",cat:"Legumes and Legume Products",sec:"Pantry"},
+  "Carrot":{u:{pc:61,cup:128,g:1},buy:"pc",cat:"Vegetables and Vegetable Products",sec:"Produce"},
+  "Vegetable broth":{u:{carton:960,cup:240,g:1},buy:"carton",cat:"Soups, Sauces, and Gravies",sec:"Pantry"},
+  "Apple":{u:{pc:182,g:1},buy:"pc",cat:"Fruits and Fruit Juices",sec:"Produce"},
+  "Dark chocolate":{u:{g:1,bar:100},buy:"g",cat:"Sweets",sec:"Pantry"},
+  "Berries":{u:{cup:148,g:1},buy:"cup",cat:"Fruits and Fruit Juices",sec:"Produce"},
+};
+const SECTIONS=["Produce","Meat & fish","Dairy & eggs","Bakery","Frozen","Pantry","Other"];
+const WHOLE=["pc","tbsp","can","carton","packet","head","bottle","gallon","tub","jar","bar"];
+const R=id=>RECIPES.find(r=>r.id===id);
+// The approved plan from #05's draft: Cooks with their cook day and servings made.
+const PLAN=[
+  {id:1,rid:1,day:0,made:6},{id:2,rid:8,day:0,made:6},{id:3,rid:2,day:0,made:4},{id:4,rid:3,day:1,made:4},
+  {id:5,rid:2,day:3,made:3},{id:6,rid:5,day:3,made:2},{id:7,rid:7,day:5,made:4},
+  {id:8,rid:9,day:0,made:1},{id:9,rid:4,day:1,made:1},{id:10,rid:4,day:3,made:1},{id:11,rid:9,day:4,made:1},
+  {id:12,rid:9,day:5,made:1},{id:13,rid:10,day:5,made:1},
+];
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S={cooks:clone(PLAN),lines:[],buyO:{},secO:{},sims:[]}, nextL=1;
+const ui={sheet:null,stepA:1,filterB:"all",modeC:"check",tripC:"all",typed:""};
+
+// ---------- helpers ----------
+const frac=x=>{const w=Math.floor(x+1e-9),f=Math.round((x-w)*4);return (w||f?"":"0")+(w?w:"")+["","¼","½","¾"][f];};
+const buy=f=>S.buyO[f]||FOODS[f].buy;
+function roundQ(q,u){ if(WHOLE.includes(u))return Math.ceil(q-1e-6); if(u==="g")return Math.ceil(q/10-1e-6)*10; return Math.ceil(q*4-1e-6)/4; }
+const qty=(f,g)=>g<=0?0:roundQ(g/FOODS[f].u[buy(f)],buy(f));
+const PL={can:"cans",carton:"cartons",packet:"packets",head:"heads",bottle:"bottles",gallon:"gallons",tub:"tubs",jar:"jars",bar:"bars",cup:"cups"};
+function fmtU(q,u){ const s=u==="g"?Math.round(q).toLocaleString():frac(q); if(u==="pc")return s; return s+" "+(q>1&&PL[u]?PL[u]:u); }
+const fmt=(f,g)=>fmtU(qty(f,g),buy(f));
+const secOf=L=>L.manual?L.sec:(S.secO[L.food]||FOODS[L.food].sec);
+const toBuyG=L=>Math.max(0,L.g-(L.haveG||0));
+function grams(cooks){ const m={},uses={}; cooks.forEach(c=>{const r=R(c.rid),k=c.made/r.serv; r.ings.forEach(([f,q,u])=>{const g=q*k*FOODS[f].u[u]; m[f]=(m[f]||0)+g; (uses[f]=uses[f]||[]).push({c,q:q*k,u});});}); return {m,uses}; }
+function firstDay(f){ const u=grams(S.cooks).uses[f]; return u?Math.min(...u.map(x=>x.c.day)):null; }
+const L=id=>S.lines.find(l=>l.id===id);
+function toast(t){ const e=document.createElement("div"); e.className="toast"; e.textContent=t; document.body.appendChild(e); setTimeout(()=>e.remove(),3000); }
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- building and updating the list ----------
+function approve(){ const {m}=grams(S.cooks); S.lines=Object.keys(m).map(f=>({id:nextL++,food:f,g:m[f],state:"check",flag:null})); S.approvedCooks=clone(S.cooks); }
+approve();
+const planChanged=()=>JSON.stringify(S.cooks)!==JSON.stringify(S.approvedCooks);
+// A dry run: every food whose rounded amount changes, with what happens to its ticks.
+function review(){
+  const {m}=grams(S.cooks), ops=[];
+  const foods=new Set([...S.lines.filter(l=>!l.manual&&l.state!=="gone").map(l=>l.food),...Object.keys(m)]);
+  foods.forEach(f=>{
+    const main=S.lines.find(l=>l.food===f&&!l.extra&&!l.manual&&l.state!=="gone"), ext=S.lines.find(l=>l.food===f&&l.extra);
+    const oldG=(main?main.g:0)+(ext?ext.g:0), newG=m[f]||0, oq=qty(f,oldG), nq=qty(f,newG);
+    if(oq===nq){ if(main&&!ext) main.g=newG; return; }
+    const was=fmt(f,oldG), now=fmt(f,newG);
+    if(!main){ ops.push({f,kind:"add",txt:`${now}, new. It starts unchecked.`,go(){S.lines.push({id:nextL++,food:f,g:newG,state:"check",flag:"New since approval"});}}); return; }
+    const st=main.state, bought=st==="cart";
+    if(!newG){ ops.push({f,kind:"rm",txt: bought?`You already bought ${fmt(f,main.g)}. It moves to "Bought, not needed now".`:st==="have"?`Removed (you'd marked it have it).`:`Removed.`,
+      go(){ if(ext)S.lines=S.lines.filter(l=>l!==ext); if(bought){main.state="gone";main.flag=null;} else S.lines=S.lines.filter(l=>l!==main); }}); return; }
+    if(nq>oq){
+      if(bought) ops.push({f,kind:"chg",txt:`${was} → ${now}. You bought ${fmt(f,main.g)}, so a line for the other ${fmt(f,newG-main.g)} is added.`,
+        go(){ if(ext){ext.g=newG-main.g;ext.state="need";} else S.lines.push({id:nextL++,food:f,g:newG-main.g,state:"need",extra:true,flag:"The rest, after what you bought"}); }});
+      else if(st==="have") ops.push({f,kind:"chg",txt:`${was} → ${now}. You'd checked you have ${was}; it goes back to "to check".`,
+        go(){ main.g=newG; main.state="check"; main.flag=`Re-check: you had ${was}, it now needs ${now}`; }});
+      else ops.push({f,kind:"chg",txt:`${was} → ${now}.`,go(){ main.g=newG; main.flag=`Was ${was}`; }});
+    } else {
+      if(bought) ops.push({f,kind:"chg",txt:`${was} → ${now}. You bought ${fmt(f,main.g)}; the rest is spare.`,
+        go(){ if(ext)S.lines=S.lines.filter(l=>l!==ext); main.flag=`Bought ${fmt(f,main.g)}; plan needs ${now}`; }});
+      else ops.push({f,kind:"chg",txt:`${was} → ${now}.${st==="have"?" Still have it.":""}`,go(){ main.g=newG; main.flag=`Was ${was}`; }});
+    }
+  });
+  return ops;
+}
+function update(){ review().forEach(o=>o.go()); S.approvedCooks=clone(S.cooks); ui.sheet=null; toast("Shopping list updated"); render(); }
+
+// ---------- prototype: fake plan edits from #05 ----------
+const SIMS=[
+  ["Wed: swap salmon for Chicken fajitas (2 servings)",()=>{const c=S.cooks.find(c=>c.id===6); if(!c||c.rid!==5)return "Already swapped"; c.rid=7; c.made=2;}],
+  ["Chili makes 8 servings, not 6",()=>{const c=S.cooks.find(c=>c.id===1); if(c.made===8)return "Already 8"; c.made=8;}],
+  ["Remove Friday's dessert",()=>{ if(!S.cooks.some(c=>c.id===13))return "Already removed"; S.cooks=S.cooks.filter(c=>c.id!==13);}],
+  ["Add a Cook: Overnight oats Fri, 2 servings",()=>{ if(S.cooks.some(c=>c.id===14))return "Already added"; S.cooks.push({id:14,rid:2,day:5,made:2});}],
+  ["Resize Tue dinner to 1½ servings",()=>"Resizing a Portion doesn't change the list: it follows servings made."],
+  ["Rebalance today: spare chili for dinner, drop the snack",()=>"Rebalance only uses Cooks already planned, so the list doesn't change."],
+  ["Rebalance this week: lentil soup makes 8, not 6",()=>{const c=S.cooks.find(c=>c.id===2); if(c.made===8)return "Already 8"; c.made=8;}],
+];
+function sim(i){ const r=SIMS[i][1](); if(typeof r==="string"){toast(r);return;} S.sims.push(SIMS[i][0]); toast("Plan changed: "+SIMS[i][0]); render(); }
+function protoBox(){ return `<details class="proto"${S.sims.length?"":" open"}><summary>Prototype: change the plan after approval</summary>
+  <div class="xs mute" style="margin:4px 0 2px">These stand in for edits on the Plan page (#05) and Rebalance (#08).</div>
+  ${SIMS.map((s,i)=>`<button class="btn sm" onclick="sim(${i})">${s[0]}</button>`).join("")}</details>`; }
+function chgBar(){ if(!planChanged())return ""; const n=review().length;
+  return `<div class="chgbar row"><span class="sp">${n?`The plan changed since this list was built: <b>${n} line${n>1?"s":""}</b> would change.`:"The plan changed, but nothing on the list needs to."}</span>
+  ${n?`<button class="btn sm pri" onclick="ui.sheet={k:'review'};render()">Review</button>`:`<button class="btn sm" onclick="S.approvedCooks=clone(S.cooks);render()">OK</button>`}</div>`; }
+
+// ---------- actions ----------
+function set(id,st){ const l=L(id); l.state=l.state===st&&st!=="check"?(st==="have"?"check":"need"):st; l.flag=null; if(st!=="have"&&st!=="cart") delete l.answered; render(); }
+function answer(id,st){ const l=L(id); l.state=st; l.flag=null; render(); }
+function addItem(){ const t=ui.typed.trim(); if(!t)return; const f=Object.keys(FOODS).find(k=>k.toLowerCase()===t.toLowerCase());
+  S.lines.push(f?{id:nextL++,food:f,g:FOODS[f].u[buy(f)],state:"need",manual:false,byHand:true}:{id:nextL++,manual:true,name:t,sec:"Other",state:"need"});
+  ui.typed=""; toast(f?`Added ${f} (from the Food Library, so it goes in ${FOODS[f].sec})`:`Added to Other. Tap it to move it to a section.`); render(); }
+function setHave(id,v){ const l=L(id), q=parseFloat(v); if(isNaN(q)||q<=0){delete l.haveG;} else { l.haveG=q*FOODS[l.food].u[buy(l.food)]; if(toBuyG(l)<=0){l.state="have";delete l.haveG;} else l.state="need"; } l.flag=null; render(); }
+function dismiss(id){ S.lines=S.lines.filter(l=>l.id!==id); render(); }
+const nameOf=l=>l.manual?esc(l.name):l.food;
+const amtOf=l=>l.manual?"":(l.haveG?fmt(l.food,toBuyG(l)):fmt(l.food,l.g));
+function sub(l){ const bits=[];
+  if(l.manual) bits.push(`<span class="tag man">added by you</span>`);
+  if(l.byHand) bits.push(`<span class="tag man">added by you</span>`);
+  if(l.haveG) bits.push(`<span class="xs mute">need ${fmt(l.food,l.g)}, have ${fmt(l.food,l.haveG)}</span>`);
+  if(l.flag) bits.push(`<span class="flag">${l.flag}</span>`);
+  return bits.join(" "); }
+const counts=()=>{const ls=S.lines.filter(l=>l.state!=="gone"); return {check:ls.filter(l=>l.state==="check").length,need:ls.filter(l=>l.state==="need").length,have:ls.filter(l=>l.state==="have").length,cart:ls.filter(l=>l.state==="cart").length,all:ls.length};};
+function head(extra){ const c=counts(); return `<header><h1>Shopping list</h1><div class="sub">For Oct 4–10 · built when the plan was approved Fri Oct 2</div>
+  <div class="small mute" style="margin-top:4px">${c.check?`${c.check} to check · `:""}${c.need} to buy · ${c.have} at home · ${c.cart} in cart</div>${extra||""}</header>`; }
+function addBox(){ return `<div class="addbox"><input placeholder="Add an item (paper towels, coffee…)" value="${esc(ui.typed)}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter')addItem()"><button class="btn" onclick="addItem()">Add</button></div>`; }
+function bySection(lines,rowFn){ return SECTIONS.map(s=>{ const ls=lines.filter(l=>secOf(l)===s); if(!ls.length)return "";
+  ls.sort((a,b)=>(a.state==="cart")-(b.state==="cart")||nameOf(a).localeCompare(nameOf(b)));
+  return `<div class="sec"><span>${s}</span><span>${ls.filter(l=>l.state==="cart").length}/${ls.length}</span></div><div class="list">${ls.map(rowFn).join("")}</div>`; }).join(""); }
+function goneBlock(){ const g=S.lines.filter(l=>l.state==="gone"); if(!g.length)return "";
+  return `<div class="sec"><span>Bought, not needed now</span></div><div class="list">${g.map(l=>`<div class="li"><div class="nm"><span>${nameOf(l)}</span><div class="xs mute">The plan dropped it after you bought it. Use it another week.</div></div><span class="q">${amtOf(l)}</span><button class="btn sm" onclick="dismiss(${l.id})">OK</button></div>`).join("")}</div>`; }
+
+// ---------- A: two passes ----------
+function variantA(){
+  const c=counts(), todo=S.lines.filter(l=>l.state==="check");
+  let h=head(`<div class="steps" style="margin:10px 0 0"><button class="${ui.stepA===1?"on":""}" onclick="ui.stepA=1;render()">1 · At home?${c.check?` (${c.check})`:" ✓"}</button><button class="${ui.stepA===2?"on":""}" onclick="ui.stepA=2;render()">2 · Shop (${c.need+c.check})</button></div>`)+chgBar()+protoBox();
+  if(ui.stepA===1){
+    const all=S.lines.filter(l=>l.state!=="gone"&&!l.manual).length, done=all-todo.filter(l=>!l.manual).length;
+    h+=`<div class="prog"><div style="width:${all?done/all*100:100}%"></div></div><div class="small mute" style="margin:0 16px">${done} of ${all} checked. Anything you skip stays on the list to buy.</div>`;
+    const l=todo[0];
+    if(l){ const {uses}=grams(S.cooks);
+      h+=`<div class="bigcard"><div class="xs mute">${secOf(l).toUpperCase()}</div><div class="fn">${nameOf(l)}</div><div class="fq">${amtOf(l)}</div>
+        <div class="small mute">${l.manual?"added by you":(uses[l.food]||[]).map(u=>R(u.c.rid).name).filter((v,i,a)=>a.indexOf(v)===i).join(" · ")}</div>
+        ${l.flag?`<div class="flag" style="margin-top:6px">${l.flag}</div>`:""}
+        <div class="row" style="margin-top:16px"><button class="btn big good" onclick="answer(${l.id},'have')">Have it</button><button class="btn big pri" onclick="answer(${l.id},'need')">Need it</button></div>
+        ${l.manual?"":`<button class="btn ghost" style="margin-top:6px" onclick="ui.sheet={k:'line',id:${l.id},focus:1};render()">Have some…</button>`}</div>`;
+    } else h+=`<div class="bigcard"><div class="fn">All checked</div><div class="small mute" style="margin:6px 0 12px">${c.have} at home, ${c.need} to buy.</div><button class="btn pri" onclick="ui.stepA=2;render()">Go shopping</button></div>`;
+    const ans=S.lines.filter(l=>l.state==="have"||l.state==="need");
+    if(ans.length) h+=`<div class="sec"><span>Checked (tap to change)</span></div><div class="card" style="padding:6px 10px">${ans.map(l=>`<span class="chip${l.state==="have"?"":" on"}" onclick="answer(${l.id},'${l.state==="have"?"need":"have"}')">${l.state==="have"?"🏠":"🛒"} ${nameOf(l)}</span>`).join("")}</div>`;
+  } else {
+    if(c.check) h+=`<div class="chgbar">${c.check} not checked yet; they're on the list to buy. <button class="btn ghost" onclick="ui.stepA=1;render()">Check them</button></div>`;
+    h+=addBox()+bySection(S.lines.filter(l=>["need","check","cart"].includes(l.state)),l=>`<div class="li${l.state==="cart"?" done":""}">
+      <button class="tick${l.state==="cart"?" on":""}" onclick="set(${l.id},'cart')">${l.state==="cart"?"✓":""}</button>
+      <div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span>${l.state==="check"?`<span class="tag">not checked</span>`:""} ${sub(l)}</div><span class="q">${amtOf(l)}</span></div>`);
+    const hv=S.lines.filter(l=>l.state==="have");
+    if(hv.length) h+=`<details class="card"><summary class="small b">At home (${hv.length})</summary>${hv.map(l=>`<div class="li" style="padding:6px 0"><div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> ${sub(l)}</div><span class="q mute">${amtOf(l)}</span><button class="btn sm" onclick="answer(${l.id},'need')">Need it</button></div>`).join("")}</details>`;
+    h+=goneBlock();
+    if(!c.need&&!c.check&&c.cart) h+=`<div class="card" style="text-align:center">Everything's in the cart. 🎉</div>`;
+  }
+  return h;
+}
+
+// ---------- B: one list, two ticks ----------
+function variantB(){
+  const c=counts(), F=ui.filterB;
+  const show=l=>l.state!=="gone"&&(F==="all"||(F==="buy"&&(l.state==="need"||l.state==="check"))||(F==="home"&&l.state==="have")||(F==="cart"&&l.state==="cart"));
+  let h=head(`<div style="margin-top:8px">${[["all","All",c.all],["buy","To buy",c.need+c.check],["home","At home",c.have],["cart","In cart",c.cart]].map(([k,t,n])=>`<span class="chip${F===k?" on":""}" onclick="ui.filterB='${k}';render()">${t} ${n}</span>`).join("")}</div>
+    <div class="xs mute" style="margin-top:6px">🏠 = have it at home · 🛒 = in the cart. Do the 🏠 pass before you leave, the 🛒 pass in the store.</div>`)+chgBar()+protoBox()+addBox();
+  h+=bySection(S.lines.filter(show),l=>`<div class="li${l.state==="cart"||l.state==="have"?" done":""}">
+    <div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> ${sub(l)}</div><span class="q">${amtOf(l)}</span>
+    <button class="tick home${l.state==="have"?" on":""}" title="Have it" onclick="set(${l.id},'have')">🏠</button>
+    <button class="tick${l.state==="cart"?" on":""}" title="In cart" onclick="set(${l.id},'cart')">🛒</button></div>`);
+  if(!S.lines.some(show)) h+=`<div class="card mute small">Nothing here.</div>`;
+  return h+goneBlock();
+}
+
+// ---------- C: by when it's needed ----------
+const TRIPS={all:["Everything",[0,1,2,3,4,5,6]],sat:["Sat trip (cooks Sun–Tue)",[0,1,2]],tue:["Tue trip (cooks Wed–Sat)",[3,4,5,6]]};
+function variantC(){
+  const c=counts(), M=ui.modeC, T=ui.tripC;
+  let h=head(`<div class="row" style="margin-top:8px"><div class="seg"><button class="${M==="check"?"on":""}" onclick="ui.modeC='check';render()">Check home</button><button class="${M==="shop"?"on":""}" onclick="ui.modeC='shop';render()">Shopping</button></div><span class="sp"></span></div>
+    <div style="margin-top:6px">${Object.entries(TRIPS).map(([k,[t]])=>`<span class="chip${T===k?" on":""}" onclick="ui.tripC='${k}';render()">${t}</span>`).join("")}</div>`)+chgBar()+protoBox()+(M==="shop"?addBox():"");
+  const groups={};
+  S.lines.filter(l=>l.state!=="gone").forEach(l=>{ const d=l.manual||l.byHand?"any":firstDay(l.food); (groups[d]=groups[d]||[]).push(l); });
+  const keys=Object.keys(groups).filter(k=>k==="any"||TRIPS[T][1].includes(+k)).sort((a,b)=>(a==="any")-(b==="any")||a-b);
+  keys.forEach(k=>{ let ls=groups[k]; if(M==="shop") ls=ls.filter(l=>l.state!=="have");
+    const home=groups[k].filter(l=>l.state==="have").length;
+    ls.sort((a,b)=>SECTIONS.indexOf(secOf(a))-SECTIONS.indexOf(secOf(b))||(a.state==="cart")-(b.state==="cart"));
+    h+=`<div class="sec"><span>${k==="any"?"Added by you":`Needed by ${DAYS[k]} Oct ${DATES[k]}`}</span><span>${M==="shop"&&home?`${home} at home`:""}</span></div><div class="list">${ls.map(l=>{
+      const {uses}=grams(S.cooks), cooks=l.manual||!uses[l.food]?"":[...new Set(uses[l.food].map(u=>`${R(u.c.rid).name} ${DAYS[u.c.day]}`))].join(" · ");
+      const right=M==="check"?`<div class="seg"><button class="${l.state==="have"?"on":""}" onclick="answer(${l.id},'have')">Have</button><button class="${l.state==="need"||l.state==="cart"?"on":""}" onclick="answer(${l.id},'need')">Need</button></div>`
+        :`<button class="tick${l.state==="cart"?" on":""}" onclick="set(${l.id},'cart')">${l.state==="cart"?"✓":""}</button>`;
+      return `<div class="li${M==="shop"&&l.state==="cart"?" done":""}"><div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> <span class="tag">${secOf(l)}</span> ${sub(l)}${cooks?`<div class="xs mute">${cooks}</div>`:""}</div><span class="q">${amtOf(l)}</span>${right}</div>`; }).join("")||`<div class="li mute small">All at home.</div>`}</div>`; });
+  if(M==="check"&&c.check) h+=`<div class="small mute" style="margin:8px 16px">${c.check} not checked yet. Unchecked lines count as "need".</div>`;
+  return h+goneBlock();
+}
+
+// ---------- sheets ----------
+function sheetHTML(){
+  const s=ui.sheet; if(!s)return ""; let b="";
+  if(s.k==="review"){ const ops=review(), G={add:"Added",chg:"Changed",rm:"Removed"};
+    b=`<div class="row"><b class="sp" style="font-size:17px">Update the shopping list?</b><button class="btn ghost" onclick="ui.sheet=null;render()">Not now</button></div>
+      <div class="small mute">Plan changes since approval: ${S.sims.map(esc).join("; ")||"–"}.</div>
+      ${["add","chg","rm"].map(k=>{const o=ops.filter(o=>o.kind===k); return o.length?`<div class="grp">${G[k]}</div>`+o.map(o=>`<div class="opt"><b>${o.f}</b>: ${o.txt}</div>`).join(""):"";}).join("")}
+      <div class="small mute" style="margin-top:10px">Lines you added by hand aren't touched.</div>
+      <button class="btn pri" style="width:100%;margin-top:12px" onclick="update()">Update shopping list</button>`;
+  } else if(s.k==="line"){ const l=L(s.id); if(!l){ui.sheet=null;return "";}
+    if(l.manual){ b=`<div class="row"><b class="sp" style="font-size:17px">${esc(l.name)}</b><button class="btn ghost" onclick="ui.sheet=null;render()">Done</button></div>
+      <div class="small mute">Added by you. Not in the Food Library, so it has no amount. Plan updates leave it alone.</div>
+      <div class="grp">Section</div><div>${SECTIONS.map(x=>`<span class="chip${l.sec===x?" on":""}" onclick="L(${l.id}).sec='${x}';render()">${x}</span>`).join("")}</div>
+      <button class="btn danger" style="margin-top:14px;color:var(--bad)" onclick="dismiss(${l.id});ui.sheet=null;render()">Remove from list</button>`; }
+    else { const F=FOODS[l.food], {uses}=grams(S.cooks), us=uses[l.food]||[];
+      b=`<div class="row"><b class="sp" style="font-size:17px">${l.food}</b><button class="btn ghost" onclick="ui.sheet=null;render()">Done</button></div>
+      <div style="font-size:20px;font-weight:700">${fmt(l.food,l.g)}</div>
+      <div class="small mute">${Math.round(l.g).toLocaleString()} g in all, rounded up to whole ${buy(l.food)==="pc"?"pieces":buy(l.food)+"s"}.</div>
+      ${l.byHand?`<div class="small mute">Added by you.</div>`:`<div class="grp">Used by</div>${us.map(u=>`<div class="opt row"><span class="sp">${R(u.c.rid).name} · cooked ${DAYS[u.c.day]} · makes ${u.c.made}</span><span class="num">${fmtU(Math.round(u.q*100)/100,u.u)}</span></div>`).join("")||`<div class="small mute">No Cook uses it any more.</div>`}`}
+      <div class="grp">Have some at home?</div>
+      <div class="row"><input type="number" min="0" step="0.25" style="width:90px;border:1px solid var(--line);border-radius:8px;padding:6px 8px" ${s.focus?"autofocus":""} value="${l.haveG?Math.round(l.haveG/F.u[buy(l.food)]*100)/100:""}" onchange="setHave(${l.id},this.value)"><span>${buy(l.food)==="pc"?"pieces":buy(l.food)}</span><span class="small mute sp">${l.haveG?`buy ${fmt(l.food,toBuyG(l))}`:"buy only the rest"}</span></div>
+      <div class="grp">Shopping measure</div>
+      <div>${Object.keys(F.u).map(u=>`<span class="chip${buy(l.food)===u?" on":""}" onclick="S.buyO['${l.food}']='${u}';render()">${u==="pc"?"pieces":u}${u==="g"?"":` (${F.u[u]} g)`}</span>`).join("")}</div>
+      <div class="xs mute">From the food's serving sizes in the Food Library. Remembered for ${l.food}.</div>
+      <div class="grp">Section</div>
+      <div>${SECTIONS.map(x=>`<span class="chip${secOf(l)===x?" on":""}" onclick="S.secO['${l.food}']='${x}';render()">${x}</span>`).join("")}</div>
+      <div class="xs mute">${S.secO[l.food]?`You moved it from ${F.sec}. Remembered for ${l.food}.`:`From its USDA category, "${F.cat}".`}</div>`;
+      if(l.state==="gone") b+=`<button class="btn" style="margin-top:12px" onclick="dismiss(${l.id});ui.sheet=null;render()">OK, take it off</button>`;
+    }
+  }
+  return `<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet">${b}</div>`;
+}
+
+// ---------- switcher ----------
+const VARIANTS={A:["Two passes",variantA],B:["One list, two ticks",variantB],C:["By when it's needed",variantC]}, KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; render(); scrollTo(0,0); }
+document.addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });
+function render(){
+  document.getElementById("app").innerHTML=VARIANTS[variant][1]()+sheetHTML()+`<details id="state"><summary class="mute">State</summary><pre>${esc(JSON.stringify({cooks:S.cooks,lines:S.lines,shoppingMeasures:S.buyO,sections:S.secO,planEdits:S.sims},null,1))}</pre></details>`;
+  document.getElementById("sw").innerHTML=`<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>`;
+  const a=document.querySelector(".sheet input[autofocus]"); if(a)a.focus();
+}
+render();
+</script>
+</body>
+</html>
