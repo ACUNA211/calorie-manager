@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Recipe entry (#04)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp-reset/issues/04-recipe-entry.md
+  Question: what does creating and editing a Recipe look like? A name, ingredients picked from the Food Library with
+  amounts (grams, or pieces / cups converted), a branded item typed in once from its label, the total cooked weight,
+  and "makes N servings" as the fallback. Calories per gram and per serving shown as it's built. How is the Recipe list
+  browsed and searched? Can a Recipe be copied and changed? Is anything else needed for planning (Meal Time tags, a star)?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: List + form. A plain searchable list; the editor is a form with one row per ingredient (amount + unit picker),
+       a search sheet to add one, and a sticky totals bar. Copy = "Duplicate". Star only, no tags.
+    B: Type it in. Cards grouped by the Meal Times a Recipe suits. The editor is one line you type ingredients into
+       ("2 cups rice", "400g ground turkey"), the way logging works; each line shows its match and can be switched.
+       Per-serving and per-100 g numbers at the top. Copy = "Copy and change". Star + Meal Time tags.
+    C: Recipe facts. A sortable table (cal/serving, cal/g) with filters. The editor is a table with each ingredient's
+       share of the calories, a facts panel like a Nutrition Facts label, and a "weigh the pot" helper (full pot minus
+       empty pot). Copy = "Make a variation", kept under the original. Star + Meal Time tags.
+  Shared in all three: the Food Library search sheet (USDA foods + label foods), the "type it in from the label" form
+  (brand, serving size in g, calories per serving → stored per 100 g), and the weighed / servings yield.
+  Try: open Turkey chili, change the cooked weight, add "Mission Carb Balance tortilla" (not in the library: type it
+  from the label), copy a Recipe, then search the list.
+  All state is in memory; reload resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--goodbg:#e3f1e8;--bad:#c0392b;--badbg:#fbe5e1;--warn:#a0561a;--warnbg:#fdebd8;--accent:#3056d3;--soft:#eef2ff;--star:#e0a000}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding:0 0 130px}
+  button{font:inherit;cursor:pointer} input,select,textarea{font:inherit}
+  .row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px} .b{font-weight:600} .num{font-variant-numeric:tabular-nums}
+  header{padding:18px 16px 8px} header h1{margin:0;font-size:22px} header .sub{color:var(--mute);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 16px;padding:12px 14px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{border:none;background:none;color:var(--accent);padding:6px 4px}
+  .btn.danger{color:var(--bad)}
+  .chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;border:1px solid var(--line);background:#fff;margin:2px 2px 2px 0}
+  .chip.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .tag{display:inline-block;border-radius:999px;padding:0 7px;font-size:11px;background:#ecebe6;color:var(--mute);margin-right:3px}
+  .lbl{display:inline-block;border-radius:4px;padding:0 5px;font-size:10.5px;font-weight:700;background:#fff3c4;color:#8a6a00}
+  .infobox{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .okbox{background:var(--goodbg);color:var(--good);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px}
+  input.t,select.t,textarea.t{border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;background:#fff}
+  input.n{width:76px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{flex:1;border:none;background:#fff;padding:7px 4px;font-size:13px;border-right:1px solid var(--line)} .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--soft);color:var(--accent);font-weight:600}
+  .star{border:none;background:none;font-size:20px;color:#c9c8c1;padding:0 2px;line-height:1} .star.on{color:var(--star)}
+  .search{border:1px solid var(--line);border-radius:12px;padding:9px 12px;width:100%;background:#fff}
+  /* sheet */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20}
+  .sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:86vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:21;padding:14px 16px 90px}
+  .fl{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer} .fl:last-child{border-bottom:none}
+  /* A */
+  .rl{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer} .rl:last-child{border-bottom:none}
+  .ing{display:flex;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .ing select{width:84px;padding:5px 4px} .ing input{width:60px;padding:5px 6px}
+  .sticky{position:sticky;bottom:58px;margin:10px 16px;background:#1d1d1b;color:#fff;border-radius:14px;padding:10px 14px;z-index:5}
+  /* B */
+  .grp{margin:14px 16px 4px;font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px}
+  .rc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;position:relative;min-height:84px}
+  .rc .big{font-size:20px;font-weight:700}
+  .hero{display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;gap:4px}
+  .hero .big{font-size:22px;font-weight:700} .hero>div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 2px}
+  .line{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .bar1{height:5px;background:#f0efea;border-radius:3px;margin-top:4px;overflow:hidden} .bar1>div{height:100%;background:var(--accent)}
+  /* C */
+  table.tb{width:100%;border-collapse:collapse;font-size:13px}
+  table.tb th{font-size:11px;color:var(--mute);font-weight:600;text-align:left;padding:4px 3px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+  table.tb td{padding:7px 3px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.tb td.r,table.tb th.r{text-align:right}
+  .facts{border:2px solid var(--ink);border-radius:4px;padding:8px 10px;background:#fff;font-size:13px}
+  .facts h3{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em}
+  .facts .thick{border-top:7px solid var(--ink);margin:4px 0} .facts .thin{border-top:1px solid var(--ink);margin:3px 0}
+  .stack{display:flex;height:14px;border-radius:4px;overflow:hidden;margin:8px 0 4px}
+  .stack>div{height:100%;border-right:1px solid #fff}
+  /* switcher + state */
+  #sw{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:none;border-radius:999px;width:30px;height:30px}
+  #state{margin:20px 16px;font-size:11px} #state pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;max-height:260px;overflow:auto}
+  .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:10px;z-index:60;font-size:13px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+<script>
+// ---------- model ----------
+const MEALS=["Breakfast","Lunch","Dinner","Snack","Dessert"];
+const COLORS=["#3056d3","#2f7d4f","#c0392b","#8a5cc2","#e0a000","#1f8a9e","#a0561a","#7b7a74","#d35d9a","#5a6b2f"];
+// Food Library: kcal per 100 g, serving sizes in grams. source USDA or Label (typed once from a label).
+let FOODS=[
+  {id:1,name:"Ground turkey, 93% lean, raw",src:"USDA",per100:150,units:{g:1,lb:454}},
+  {id:2,name:"Kidney beans, canned, drained",src:"USDA",per100:127,units:{g:1,cup:177,can:256}},
+  {id:3,name:"Onion, raw",src:"USDA",per100:40,units:{g:1,piece:150,cup:160}},
+  {id:4,name:"Diced tomatoes, canned",src:"USDA",per100:21,units:{g:1,can:411,cup:240}},
+  {id:5,name:"Olive oil",src:"USDA",per100:884,units:{g:1,tbsp:13.5,tsp:4.5}},
+  {id:6,name:"Rice, white, cooked",src:"USDA",per100:130,units:{g:1,cup:158}},
+  {id:7,name:"Rice, white, uncooked",src:"USDA",per100:365,units:{g:1,cup:185}},
+  {id:8,name:"Chicken breast, raw",src:"USDA",per100:120,units:{g:1,piece:174,lb:454}},
+  {id:9,name:"Rolled oats",src:"USDA",per100:379,units:{g:1,cup:81}},
+  {id:10,name:"Milk, 2%",src:"USDA",per100:50,units:{g:1,cup:244}},
+  {id:11,name:"Banana",src:"USDA",per100:89,units:{g:1,piece:118}},
+  {id:12,name:"Greek yogurt, plain, nonfat",src:"USDA",per100:59,units:{g:1,cup:227}},
+  {id:13,name:"Broccoli, raw",src:"USDA",per100:34,units:{g:1,cup:91,piece:148}},
+  {id:14,name:"Salmon, Atlantic, raw",src:"USDA",per100:208,units:{g:1,piece:170}},
+  {id:15,name:"Sweet potato, raw",src:"USDA",per100:86,units:{g:1,piece:130,cup:133}},
+  {id:16,name:"Egg, whole, raw",src:"USDA",per100:143,units:{g:1,piece:50}},
+  {id:17,name:"Cheddar cheese",src:"USDA",per100:403,units:{g:1,cup:113,slice:28}},
+  {id:18,name:"Chia seeds",src:"USDA",per100:486,units:{g:1,tbsp:12}},
+  {id:19,name:"Kirkland Signature Organic Peanut Butter",brand:"Kirkland",src:"Label",per100:594,units:{g:1,serving:32,tbsp:16}},
+  {id:20,name:"Chili seasoning mix",brand:"McCormick",src:"Label",per100:300,units:{g:1,packet:28,tbsp:8}},
+  {id:21,name:"Spinach, raw",src:"USDA",per100:23,units:{g:1,cup:30}},
+];
+let nextFood=22;
+// Recipes: ingredients {fid,qty,unit}; yield "weight" (cooked weight in g, optional servings) or "servings".
+let RECIPES=[
+  {id:1,name:"Turkey chili",star:true,tags:["Lunch","Dinner"],yield:"weight",cooked:2600,servings:6,ings:[{fid:1,qty:2,unit:"lb"},{fid:2,qty:2,unit:"can"},{fid:3,qty:2,unit:"piece"},{fid:4,qty:2,unit:"can"},{fid:5,qty:2,unit:"tbsp"},{fid:20,qty:1,unit:"packet"}]},
+  {id:2,name:"Overnight oats",star:true,tags:["Breakfast"],yield:"servings",cooked:0,servings:1,ings:[{fid:9,qty:0.5,unit:"cup"},{fid:10,qty:0.75,unit:"cup"},{fid:18,qty:1,unit:"tbsp"},{fid:11,qty:0.5,unit:"piece"}]},
+  {id:3,name:"Chicken rice bowl",star:false,tags:["Lunch","Dinner"],yield:"weight",cooked:1650,servings:4,ings:[{fid:8,qty:1.5,unit:"lb"},{fid:7,qty:1.5,unit:"cup"},{fid:13,qty:3,unit:"cup"},{fid:5,qty:1,unit:"tbsp"}]},
+  {id:4,name:"Yogurt + PB bowl",star:false,tags:["Snack","Dessert"],yield:"servings",cooked:0,servings:1,ings:[{fid:12,qty:170,unit:"g"},{fid:19,qty:1,unit:"tbsp"},{fid:11,qty:0.5,unit:"piece"}]},
+  {id:5,name:"Sheet-pan salmon + sweet potato",star:false,tags:["Dinner"],yield:"servings",cooked:0,servings:2,ings:[{fid:14,qty:2,unit:"piece"},{fid:15,qty:2,unit:"piece"},{fid:13,qty:2,unit:"cup"},{fid:5,qty:1,unit:"tbsp"}]},
+  {id:6,name:"Spinach egg scramble",star:false,tags:["Breakfast"],yield:"servings",cooked:0,servings:1,ings:[{fid:16,qty:3,unit:"piece"},{fid:21,qty:2,unit:"cup"},{fid:17,qty:1,unit:"slice"}]},
+];
+let nextRecipe=7;
+const ui={open:null,draft:null,q:"",sheet:null,sheetQ:"",label:null,typed:"",sort:"name",star:false,tagF:null,tare:{full:"",empty:""},showVar:{}};
+const food=id=>FOODS.find(f=>f.id===id);
+const n=x=>Math.round(x).toLocaleString("en-US");
+const n1=x=>(Math.round(x*100)/100).toString();
+const gramsOf=i=>i.qty*(food(i.fid).units[i.unit]||1);
+const kcalOf=i=>gramsOf(i)*food(i.fid).per100/100;
+function totals(r){
+  const kcal=r.ings.reduce((s,i)=>s+kcalOf(i),0), raw=r.ings.reduce((s,i)=>s+gramsOf(i),0);
+  const weighed=r.yield==="weight"&&r.cooked>0, w=weighed?r.cooked:raw;
+  const perG=w?kcal/w:0, serv=Math.max(1,r.servings||1);
+  return {kcal,raw,weighed,perG,per100:perG*100,perServ:kcal/serv,servG:w/serv,serv};
+}
+const unitLabel=(u,q)=>u==="g"?"g":u==="piece"?(q===1?"piece":"pieces"):u==="cup"?(q===1?"cup":"cups"):u==="can"?(q===1?"can":"cans"):u;
+const amt=i=>`${n1(i.qty)} ${unitLabel(i.unit,i.qty)}${i.unit!=="g"?` <span class="mute">(${n(gramsOf(i))} g)</span>`:""}`;
+const srcTag=f=>f.src==="Label"?`<span class="lbl">LABEL</span>`:"";
+const fname=f=>f.brand&&!f.name.startsWith(f.brand)?`${f.brand} ${f.name}`:f.name;
+
+// ---------- shared actions ----------
+const clone=o=>JSON.parse(JSON.stringify(o));
+function openRecipe(id){ ui.open=id; ui.draft=clone(RECIPES.find(r=>r.id===id)); ui.tare={full:"",empty:""}; render(); scrollTo(0,0); }
+function newRecipe(){ ui.draft={id:nextRecipe++,name:"",star:false,tags:[],yield:"weight",cooked:0,servings:4,ings:[],isNew:true}; ui.open=ui.draft.id; render(); scrollTo(0,0); }
+function save(){ const d=ui.draft; if(!d.name.trim()){toast("Give it a name first");return;} delete d.isNew; const i=RECIPES.findIndex(r=>r.id===d.id); if(i<0)RECIPES.push(d); else RECIPES[i]=d; toast(`Saved ${d.name}`); closeEd(); }
+function closeEd(){ ui.open=null; ui.draft=null; ui.sheet=null; ui.label=null; render(); scrollTo(0,0); }
+function del(){ RECIPES=RECIPES.filter(r=>r.id!==ui.draft.id); toast(`Deleted ${ui.draft.name}`); closeEd(); }
+function copyRecipe(suffix,keepParent){ const src=ui.draft; const c=clone(src); c.id=nextRecipe++; c.name=src.name+suffix; c.isNew=true; c.star=false; if(keepParent)c.parent=src.id; ui.draft=c; ui.open=c.id; toast("Copied. Change it and save."); render(); scrollTo(0,0); }
+function addIng(fid){ const f=food(fid); const u=Object.keys(f.units).find(k=>k!=="g")||"g"; ui.draft.ings.push({fid,qty:u==="g"?100:1,unit:u}); ui.sheet=null; ui.sheetQ=""; render(); }
+function setQty(i,v){ ui.draft.ings[i].qty=+v||0; render(); }
+function setUnit(i,u){ const g=gramsOf(ui.draft.ings[i]); ui.draft.ings[i].unit=u; ui.draft.ings[i].qty=Math.round(g/food(ui.draft.ings[i].fid).units[u]*100)/100; render(); }
+function rmIng(i){ ui.draft.ings.splice(i,1); render(); }
+function toggleTag(t){ const d=ui.draft; d.tags=d.tags.includes(t)?d.tags.filter(x=>x!==t):[...d.tags,t]; render(); }
+function toast(t){ const e=document.createElement("div"); e.className="toast"; e.textContent=t; document.body.appendChild(e); setTimeout(()=>e.remove(),2200); }
+function match(q,list,key){ q=q.toLowerCase().trim(); if(!q)return list; const w=q.split(/\s+/); return list.map(x=>({x,s:w.filter(t=>key(x).toLowerCase().includes(t)).length})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s).map(o=>o.x); }
+
+// ---------- shared: Food Library sheet + label form ----------
+function foodSheet(){
+  if(ui.label) return labelSheet();
+  if(!ui.sheet) return "";
+  const res=match(ui.sheetQ,FOODS,fname).slice(0,9);
+  return `<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet">
+    <div class="row"><b style="font-size:17px">Add an ingredient</b><span class="sp"></span><button class="btn ghost" onclick="ui.sheet=null;render()">✕</button></div>
+    <input class="search" id="fq" placeholder="Search the Food Library" value="${ui.sheetQ}" oninput="ui.sheetQ=this.value;render();refocus('fq')" style="margin-top:8px">
+    <div class="card" style="margin:10px 0;padding:2px 12px">${res.map(f=>`<div class="fl" onclick="addIng(${f.id})"><div class="sp"><div class="small">${fname(f)} ${srcTag(f)}</div><div class="xs mute">${f.per100} cal / 100 g · ${Object.keys(f.units).filter(u=>u!=="g").map(u=>`1 ${u} = ${f.units[u]} g`).join(" · ")||"grams only"}</div></div><span class="btn ghost">Add</span></div>`).join("")||`<div class="small mute" style="padding:10px 0">Nothing in the Food Library matches “${ui.sheetQ}”.</div>`}</div>
+    <div class="xs mute">USDA FoodData Central foods (searched live in the real app) and foods you've typed in from a label.</div>
+    <button class="btn" style="margin-top:10px;width:100%" onclick="ui.label={name:ui.sheetQ,brand:'',serving:'',kcal:'',unit:'serving'};render()">Not here? Type it in from the label</button>
+  </div>`;
+}
+function labelSheet(){
+  const L=ui.label, per100=L.serving&&L.kcal?Math.round(L.kcal/L.serving*100):null;
+  return `<div class="scrim" onclick="ui.label=null;render()"></div><div class="sheet">
+    <div class="row"><b style="font-size:17px">From the label</b><span class="sp"></span><button class="btn ghost" onclick="ui.label=null;render()">✕</button></div>
+    <div class="xs mute">Typed in once. After that it's in the Food Library like any other food.</div>
+    <label class="f">Name</label><input class="t" value="${L.name}" oninput="ui.label.name=this.value">
+    <label class="f">Brand</label><input class="t" value="${L.brand}" placeholder="optional" oninput="ui.label.brand=this.value">
+    <div class="row" style="gap:12px">
+      <div><label class="f">Serving size</label><div class="row"><input class="t n" type="number" value="${L.serving}" onchange="ui.label.serving=+this.value;render()"> g</div></div>
+      <div><label class="f">Calories per serving</label><input class="t n" type="number" value="${L.kcal}" onchange="ui.label.kcal=+this.value;render()"></div>
+    </div>
+    <label class="f">The label calls a serving</label><input class="t" value="${L.unit}" placeholder="serving, piece, tortilla, bar…" oninput="ui.label.unit=this.value">
+    ${per100?`<div class="okbox">Stored as <b>${per100} cal / 100 g</b>, and 1 ${L.unit||"serving"} = ${L.serving} g.</div>`:`<div class="xs mute" style="margin-top:8px">Example: Mission Carb Balance tortilla, serving 45 g, 70 cal, “tortilla”.</div>`}
+    <div class="row" style="margin-top:14px"><button class="btn pri" ${per100&&L.name?"":"disabled style='opacity:.5'"} onclick="saveLabel()">Add to Food Library and Recipe</button><button class="btn" onclick="ui.label=null;render()">Back</button></div>
+  </div>`;
+}
+function saveLabel(){ const L=ui.label, u=(L.unit||"serving").trim(); const f={id:nextFood++,name:L.name,brand:L.brand||undefined,src:"Label",per100:Math.round(L.kcal/L.serving*100),units:{g:1,[u]:L.serving}}; FOODS.push(f); ui.label=null; ui.sheet=null; ui.draft.ings.push({fid:f.id,qty:1,unit:u}); toast(`${f.name} added to the Food Library`); render(); }
+function refocus(id){ const e=document.getElementById(id); if(e){e.focus(); e.setSelectionRange(e.value.length,e.value.length);} }
+function unitSelect(i,ing){ return `<select class="t" onchange="setUnit(${i},this.value)">${Object.keys(food(ing.fid).units).map(u=>`<option ${u===ing.unit?"selected":""}>${u}</option>`).join("")}</select>`; }
+function yieldFields(d,t){
+  return `<div class="seg" style="margin-top:6px"><button class="${d.yield==="weight"?"on":""}" onclick="ui.draft.yield='weight';render()">I weigh the cooked food</button><button class="${d.yield==="servings"?"on":""}" onclick="ui.draft.yield='servings';render()">It makes N servings</button></div>
+  ${d.yield==="weight"?`<div class="row wrap" style="gap:12px;margin-top:6px">
+      <div><label class="f">Cooked weight</label><div class="row"><input class="t n" type="number" step="10" value="${d.cooked||""}" placeholder="${n(t.raw)}" onchange="ui.draft.cooked=+this.value;render()"> g</div></div>
+      <div><label class="f">Usual servings (optional)</label><input class="t n" type="number" value="${d.servings}" onchange="ui.draft.servings=+this.value;render()"></div></div>
+      ${d.cooked?`<div class="xs mute" style="margin-top:4px">Raw ingredients weigh ${n(t.raw)} g; cooked it's ${n(d.cooked)} g (${t.raw>d.cooked?"water cooked off":"water absorbed"}). A Portion is logged by weight.</div>`:`<div class="infobox">Not weighed yet: using the raw weight (${n(t.raw)} g) until you weigh it after the first Cook.</div>`}`
+    :`<label class="f">Makes</label><div class="row"><input class="t n" type="number" value="${d.servings}" onchange="ui.draft.servings=+this.value;render()"> servings</div><div class="xs mute" style="margin-top:4px">A Portion is logged as servings (1, ½, 1½…).</div>`}`;
+}
+
+// ---------- Variant A: list + form ----------
+function VariantA(){
+  if(ui.draft) return EditorA();
+  const list=match(ui.q,RECIPES,r=>r.name+" "+r.ings.map(i=>food(i.fid).name).join(" ")).filter(r=>!ui.star||r.star).sort((a,b)=>(b.star-a.star)||a.name.localeCompare(b.name));
+  return `<header><h1>Recipes</h1><div class="sub">${RECIPES.length} recipes</div></header>
+  <div style="margin:0 16px"><input class="search" id="rq" placeholder="Search recipes or ingredients" value="${ui.q}" oninput="ui.q=this.value;render();refocus('rq')"></div>
+  <div class="row" style="margin:8px 16px 0"><button class="chip ${ui.star?"on":""}" onclick="ui.star=!ui.star;render()">★ Starred</button><span class="sp"></span><button class="btn pri small" onclick="newRecipe()">+ New Recipe</button></div>
+  <div class="card" style="padding:2px 14px">${list.map(r=>{const t=totals(r);return `<div class="rl" onclick="openRecipe(${r.id})"><span class="star ${r.star?"on":""}" style="font-size:16px">★</span><div class="sp"><div class="b">${r.name}</div><div class="xs mute">${r.ings.length} ingredients · ${t.weighed?`${n(r.cooked)} g cooked`:`makes ${r.servings}`}</div></div><div style="text-align:right" class="num"><div class="b">${n(t.perServ)}</div><div class="xs mute">cal / serving</div></div></div>`}).join("")||`<div class="small mute" style="padding:12px 0">No recipes match.</div>`}</div>`;
+}
+function EditorA(){
+  const d=ui.draft,t=totals(d);
+  return `<header class="row"><button class="btn ghost" onclick="closeEd()">‹ Recipes</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost" onclick="copyRecipe(' (copy)')">Duplicate</button>`}</header>
+  <div class="card"><div class="row"><input class="t" style="font-size:18px;font-weight:600" placeholder="Recipe name" value="${d.name}" oninput="ui.draft.name=this.value"><button class="star ${d.star?"on":""}" onclick="ui.draft.star=!ui.draft.star;render()">★</button></div></div>
+  <div class="card"><div class="b">Ingredients</div>
+    ${d.ings.map((ing,i)=>{const f=food(ing.fid);return `<div class="ing"><div class="sp" style="min-width:0"><div class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fname(f)} ${srcTag(f)}</div><div class="xs mute">${ing.unit!=="g"?`${n(gramsOf(ing))} g · `:""}${n(kcalOf(ing))} cal</div></div><input class="t" type="number" step="0.25" value="${ing.qty}" onchange="setQty(${i},this.value)">${unitSelect(i,ing)}<button class="btn ghost danger" onclick="rmIng(${i})">✕</button></div>`}).join("")||`<div class="small mute" style="padding:8px 0">No ingredients yet.</div>`}
+    <button class="btn ghost" onclick="ui.sheet=true;ui.sheetQ='';render();refocus('fq')">+ Add ingredient</button></div>
+  <div class="card"><div class="b">How much it makes</div>${yieldFields(d,t)}</div>
+  <div class="card row"><button class="btn pri" onclick="save()">Save</button><button class="btn" onclick="closeEd()">Cancel</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost danger" onclick="del()">Delete</button>`}</div>
+  <div class="sticky num"><div class="row"><div><div class="xs" style="opacity:.7">Total</div><b>${n(t.kcal)} cal</b></div><span class="sp"></span><div><div class="xs" style="opacity:.7">Per gram</div><b>${n1(t.perG)}</b></div><span class="sp"></span><div style="text-align:right"><div class="xs" style="opacity:.7">Per serving${t.serv>1?` (÷${t.serv})`:""}</div><b>${n(t.perServ)} cal</b>${t.weighed?` <span class="xs" style="opacity:.7">≈${n(t.servG)} g</span>`:""}</div></div></div>
+  ${foodSheet()}`;
+}
+
+// ---------- Variant B: type it in ----------
+function parseLine(s){
+  const m=s.trim().match(/^([\d.]+(?:\/\d+)?|½|¼|¾)?\s*(g|grams?|cups?|tbsp|tsp|pieces?|pcs?|lbs?|cans?|slices?|packets?|x)?\b\s*(?:of\s+)?(.*)$/i);
+  if(!m) return null;
+  let q=m[1]||"1"; q=q==="½"?0.5:q==="¼"?0.25:q==="¾"?0.75:q.includes("/")?eval(q):+q;
+  let u=(m[2]||"").toLowerCase().replace(/s$/,"").replace(/^gram$/,"g").replace(/^pc$/,"piece").replace(/^x$/,"piece");
+  const cands=match(m[3],FOODS,fname);
+  if(!m[3]||!cands.length) return {q,u,text:m[3],cands:[]};
+  return {q,u,text:m[3],cands};
+}
+function typedAdd(){
+  const p=parseLine(ui.typed); if(!p||!ui.typed.trim())return;
+  if(!p.cands.length){ ui.label={name:p.text,brand:"",serving:"",kcal:"",unit:"serving"}; render(); return; }
+  const f=p.cands[0]; let u=p.u&&f.units[p.u]?p.u:(p.u?null:Object.keys(f.units).find(k=>k!=="g")||"g");
+  let q=p.q; if(!u){ u="g"; toast(`${f.name} has no “${p.u}”: entered as grams, check it`); }
+  if(!p.u&&p.q>=20){u="g";}
+  ui.draft.ings.push({fid:f.id,qty:q,unit:u,alts:p.cands.slice(1,4).map(x=>x.id)}); ui.typed=""; render(); refocus("ty");
+}
+function swapFood(i,fid){ const ing=ui.draft.ings[i], g=gramsOf(ing), f=food(+fid); ing.fid=f.id; if(!f.units[ing.unit]){ing.unit="g";ing.qty=Math.round(g);} render(); }
+function VariantB(){
+  if(ui.draft) return EditorB();
+  const list=match(ui.q,RECIPES,r=>r.name+" "+r.ings.map(i=>food(i.fid).name).join(" ")+" "+r.tags.join(" ")).filter(r=>!ui.star||r.star);
+  const card=r=>{const t=totals(r);return `<div class="rc" onclick="openRecipe(${r.id})">${r.star?`<span style="position:absolute;top:6px;right:8px;color:var(--star)">★</span>`:""}<div class="b small" style="padding-right:14px">${r.name}</div><div class="big num" style="margin-top:6px">${n(t.perServ)}</div><div class="xs mute">cal / serving · ${n(t.per100)} / 100 g</div></div>`};
+  let h=`<header><h1>Recipes</h1><div class="sub">Grouped by the Meal Times they suit</div></header>
+  <div style="margin:0 16px"><input class="search" id="rq" placeholder="Search name, ingredient or Meal Time" value="${ui.q}" oninput="ui.q=this.value;render();refocus('rq')"></div>
+  <div class="row" style="margin:8px 16px 0"><button class="chip ${ui.star?"on":""}" onclick="ui.star=!ui.star;render()">★ Starred only</button><span class="sp"></span><button class="btn pri small" onclick="newRecipe()">+ New</button></div>`;
+  [...MEALS,"Not tagged"].forEach(g=>{const rs=list.filter(r=>g==="Not tagged"?!r.tags.length:r.tags.includes(g)); if(rs.length) h+=`<div class="grp">${g} · ${rs.length}</div><div class="cards">${rs.map(card).join("")}</div>`;});
+  if(!list.length) h+=`<div class="card small mute">No recipes match.</div>`;
+  return h+`<div class="xs mute" style="margin:10px 16px">A Recipe tagged Lunch and Dinner shows under both.</div>`;
+}
+function EditorB(){
+  const d=ui.draft,t=totals(d),p=ui.typed.trim()?parseLine(ui.typed):null;
+  let preview="";
+  if(p&&p.cands.length){const f=p.cands[0];preview=`<div class="xs" style="margin-top:6px;color:var(--good)">→ ${n1(p.q)} ${p.u||Object.keys(f.units).find(k=>k!=="g")||"g"} ${fname(f)}${p.u&&!f.units[p.u]?` <span style="color:var(--warn)">(no “${p.u}” for this food)</span>`:""}. Press Enter to add.</div>`;}
+  else if(p&&p.text) preview=`<div class="xs" style="margin-top:6px;color:var(--warn)">No match for “${p.text}”. Enter to type it in from the label.</div>`;
+  return `<header class="row"><button class="btn ghost" onclick="closeEd()">‹ Recipes</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost" onclick="copyRecipe(' (changed)')">Copy and change</button>`}</header>
+  <div style="margin:0 16px"><div class="row"><input class="t" style="font-size:20px;font-weight:700;border:none;background:none;padding:4px 0" placeholder="Name this Recipe" value="${d.name}" oninput="ui.draft.name=this.value"><button class="star ${d.star?"on":""}" onclick="ui.draft.star=!ui.draft.star;render()">★</button></div>
+  <div style="margin:4px 0 10px">${MEALS.map(m=>`<button class="chip ${d.tags.includes(m)?"on":""}" onclick="toggleTag('${m}')">${m}</button>`).join("")}<div class="xs mute">Suits these Meal Times (the Agent only places it there)</div></div>
+  <div class="hero num"><div><div class="big">${n(t.perServ)}</div><div class="xs mute">cal / serving</div></div><div><div class="big">${n(t.per100)}</div><div class="xs mute">cal / 100 g</div></div><div><div class="big">${n(t.kcal)}</div><div class="xs mute">cal total</div></div></div></div>
+  <div class="card"><input class="t" id="ty" placeholder="Type an ingredient: 2 cups rice, 400g turkey…" value="${ui.typed}" oninput="ui.typed=this.value;render();refocus('ty')" onkeydown="if(event.key==='Enter')typedAdd()">${preview}
+    <div style="margin-top:6px">${d.ings.map((ing,i)=>{const f=food(ing.fid),k=kcalOf(ing),alts=(ing.alts||[]).map(food).filter(Boolean);return `<div class="line"><div class="sp" style="min-width:0">
+      <div class="small"><b class="num">${n1(ing.qty)} ${unitLabel(ing.unit,ing.qty)}</b> ${fname(f)} ${srcTag(f)}</div>
+      ${alts.length?`<select class="xs" style="border:none;background:none;color:var(--accent);padding:0;max-width:100%" onchange="swapFood(${i},this.value)"><option value="${f.id}">Matched: ${f.name}. Not right?</option>${alts.map(a=>`<option value="${a.id}">${fname(a)}</option>`).join("")}</select>`:""}
+      <div class="bar1"><div style="width:${t.kcal?k/t.kcal*100:0}%"></div></div></div><div class="num small" style="text-align:right;width:58px">${n(k)}<div class="xs mute">${n(gramsOf(ing))} g</div></div><button class="btn ghost danger xs" onclick="rmIng(${i})">✕</button></div>`}).join("")||`<div class="small mute" style="padding:10px 0">One ingredient per line. Amounts in g, cups, tbsp, pieces, cans or lb.</div>`}</div>
+    <button class="btn ghost small" onclick="ui.sheet=true;ui.sheetQ='';render();refocus('fq')">Browse the Food Library instead</button></div>
+  <div class="card"><div class="b">How much it makes</div>${yieldFields(d,t)}${t.weighed&&d.servings?`<div class="okbox">${d.servings} servings of about ${n(t.servG)} g, ${n(t.perServ)} cal each.</div>`:""}</div>
+  <div class="card row"><button class="btn pri" onclick="save()">Save</button><button class="btn" onclick="closeEd()">Cancel</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost danger" onclick="del()">Delete</button>`}</div>
+  ${foodSheet()}`;
+}
+
+// ---------- Variant C: recipe facts ----------
+function VariantC(){
+  if(ui.draft) return EditorC();
+  const key={name:r=>r.name.toLowerCase(),serv:r=>totals(r).perServ,g:r=>totals(r).perG}[ui.sort];
+  let list=match(ui.q,RECIPES,r=>r.name+" "+r.ings.map(i=>food(i.fid).name).join(" ")).filter(r=>(!ui.star||r.star)&&(!ui.tagF||r.tags.includes(ui.tagF)));
+  list.sort((a,b)=>key(a)<key(b)?-1:key(a)>key(b)?1:0);
+  const roots=list.filter(r=>!r.parent||!list.some(p=>p.id===r.parent));
+  const row=(r,sub)=>{const t=totals(r),kids=list.filter(k=>k.parent===r.id);return `<tr onclick="openRecipe(${r.id})" style="cursor:pointer"><td>${sub?`<span class="mute" style="padding-left:10px">↳ </span>`:""}${r.star?`<span style="color:var(--star)">★</span> `:""}<span class="${sub?"":"b"}">${r.name}</span><div class="xs mute">${r.tags.join(", ")||"no tags"}</div></td><td class="r num">${n(t.perServ)}</td><td class="r num">${n1(t.perG)}</td><td class="r xs mute">${t.weighed?n(r.cooked)+" g":"×"+r.servings}</td></tr>${kids.map(k=>row(k,true)).join("")}`};
+  const th=(k,l,cls="")=>`<th class="${cls}" onclick="ui.sort='${k}';render()">${l}${ui.sort===k?" ▾":""}</th>`;
+  return `<header><h1>Recipes</h1><div class="sub">Tap a column to sort. Variations sit under their original.</div></header>
+  <div style="margin:0 16px"><input class="search" id="rq" placeholder="Search" value="${ui.q}" oninput="ui.q=this.value;render();refocus('rq')"></div>
+  <div style="margin:8px 16px 0"><button class="chip ${ui.star?"on":""}" onclick="ui.star=!ui.star;render()">★</button>${MEALS.map(m=>`<button class="chip ${ui.tagF===m?"on":""}" onclick="ui.tagF=ui.tagF==='${m}'?null:'${m}';render()">${m}</button>`).join("")}</div>
+  <div class="card" style="padding:6px 10px"><table class="tb"><tr>${th("name","Recipe")}${th("serv","cal/serv","r")}${th("g","cal/g","r")}<th class="r">yield</th></tr>${roots.map(r=>row(r,false)).join("")||`<tr><td colspan="4" class="mute small">No recipes match.</td></tr>`}</table>
+  <button class="btn ghost" onclick="newRecipe()" style="margin-top:6px">+ New Recipe</button></div>`;
+}
+function EditorC(){
+  const d=ui.draft,t=totals(d),parent=d.parent&&RECIPES.find(r=>r.id===d.parent);
+  const T=ui.tare, tareW=T.full&&T.empty?T.full-T.empty:null;
+  return `<header class="row"><button class="btn ghost" onclick="closeEd()">‹ Recipes</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost" onclick="copyRecipe(' variation',true)">Make a variation</button>`}</header>
+  <div class="card"><div class="row"><input class="t" style="font-size:18px;font-weight:600" placeholder="Recipe name" value="${d.name}" oninput="ui.draft.name=this.value"><button class="star ${d.star?"on":""}" onclick="ui.draft.star=!ui.draft.star;render()">★</button></div>
+    ${parent?`<div class="xs mute" style="margin-top:4px">Variation of <b>${parent.name}</b> (${n(totals(parent).perServ)} cal/serving). Changes here don't touch it.</div>`:""}
+    <div style="margin-top:8px">${MEALS.map(m=>`<button class="chip ${d.tags.includes(m)?"on":""}" onclick="toggleTag('${m}')">${m}</button>`).join("")}</div></div>
+  <div style="margin:10px 16px"><div class="facts num"><h3>Recipe Facts</h3><div class="small">${t.weighed?`${n(d.cooked)} g cooked`:`Makes ${t.serv} serving${t.serv>1?"s":""}`}${t.weighed&&d.servings?`, about ${d.servings} servings`:""}</div>
+    <div class="thick"></div><div class="row"><span class="b">Serving size</span><span class="sp"></span><span>${t.weighed?`${n(t.servG)} g`:`1 of ${t.serv}`}</span></div>
+    <div class="thin"></div><div class="row"><span style="font-size:20px;font-weight:900">Calories</span><span class="sp"></span><span style="font-size:26px;font-weight:900">${n(t.perServ)}</span></div>
+    <div class="thick" style="border-top-width:4px"></div><div class="row"><span>Per 100 g</span><span class="sp"></span><b>${n(t.per100)}</b></div><div class="thin"></div>
+    <div class="row"><span>Per gram</span><span class="sp"></span><b>${n1(t.perG)}</b></div><div class="thin"></div><div class="row"><span>Whole batch</span><span class="sp"></span><b>${n(t.kcal)}</b></div></div></div>
+  <div class="card" style="padding:8px 10px"><div class="b" style="margin:2px 2px 0">Ingredients</div>
+    <div class="stack">${d.ings.map((ing,i)=>`<div title="${food(ing.fid).name}" style="width:${t.kcal?kcalOf(ing)/t.kcal*100:0}%;background:${COLORS[i%COLORS.length]}"></div>`).join("")}</div>
+    <table class="tb"><tr><th>Food</th><th>Amount</th><th class="r">cal</th><th class="r">%</th><th></th></tr>
+    ${d.ings.map((ing,i)=>{const f=food(ing.fid),k=kcalOf(ing);return `<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${COLORS[i%COLORS.length]}"></span> <span class="small">${f.name}</span> ${srcTag(f)}</td><td style="white-space:nowrap"><input class="t" style="width:52px;padding:3px 4px" type="number" step="0.25" value="${ing.qty}" onchange="setQty(${i},this.value)"> <select class="t" style="width:auto;padding:3px" onchange="setUnit(${i},this.value)">${Object.keys(f.units).map(u=>`<option ${u===ing.unit?"selected":""}>${u}</option>`).join("")}</select>${ing.unit!=="g"?`<div class="xs mute">${n(gramsOf(ing))} g</div>`:""}</td><td class="r num">${n(k)}</td><td class="r num xs">${t.kcal?Math.round(k/t.kcal*100):0}</td><td><button class="btn ghost danger xs" onclick="rmIng(${i})">✕</button></td></tr>`}).join("")}
+    <tr><td class="b">Raw total</td><td class="num xs mute">${n(t.raw)} g</td><td class="r b num">${n(t.kcal)}</td><td></td><td></td></tr></table>
+    <button class="btn ghost" onclick="ui.sheet=true;ui.sheetQ='';render();refocus('fq')">+ Add ingredient</button></div>
+  <div class="card"><div class="b">How much it makes</div>${yieldFields(d,t)}
+    ${d.yield==="weight"?`<details style="margin-top:8px" ${T.full||T.empty?"open":""}><summary class="small" style="color:var(--accent);cursor:pointer">Weigh the pot</summary>
+      <div class="row wrap" style="gap:10px;margin-top:6px"><div><label class="f">Pot with food</label><div class="row"><input class="t n" type="number" value="${T.full}" onchange="ui.tare.full=+this.value;render()"> g</div></div><div><label class="f">Empty pot</label><div class="row"><input class="t n" type="number" value="${T.empty}" onchange="ui.tare.empty=+this.value;render()"> g</div></div></div>
+      ${tareW>0?`<div class="okbox">Food weighs ${n(tareW)} g. <button class="btn small" onclick="ui.draft.cooked=${tareW};ui.tare={full:'',empty:''};render()">Use it</button></div>`:`<div class="xs mute" style="margin-top:4px">The app remembers your pots in the real thing.</div>`}</details>`:""}</div>
+  <div class="card row"><button class="btn pri" onclick="save()">Save</button><button class="btn" onclick="closeEd()">Cancel</button><span class="sp"></span>${d.isNew?"":`<button class="btn ghost danger" onclick="del()">Delete</button>`}</div>
+  ${foodSheet()}`;
+}
+
+// ---------- shell + switcher ----------
+const VARIANTS={A:["List + form",VariantA],B:["Type it in",VariantB],C:["Recipe facts",VariantC]}; const KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; ui.label=null; ui.q=""; ui.typed=""; render(); scrollTo(0,0); }
+function render(){
+  const y=scrollY, sh=document.querySelector(".sheet"), sy=sh?sh.scrollTop:0;
+  const st=ui.draft?{draft:{...ui.draft,ings:ui.draft.ings.map(i=>`${n1(i.qty)} ${i.unit} ${food(i.fid).name} = ${n(gramsOf(i))} g, ${n(kcalOf(i))} cal`)},totals:Object.fromEntries(Object.entries(totals(ui.draft)).map(([k,v])=>[k,typeof v==="number"?Math.round(v*100)/100:v]))}
+    :{recipes:RECIPES.map(r=>{const t=totals(r);return `${r.star?"★ ":""}${r.name} [${r.tags.join(",")}] ${n(t.kcal)} cal, ${n(t.perServ)}/serving, ${n1(t.perG)}/g${r.parent?" (variation of #"+r.parent+")":""}`}),labelFoods:FOODS.filter(f=>f.src==="Label").map(f=>`${fname(f)}: ${f.per100}/100 g, ${JSON.stringify(f.units)}`)};
+  document.getElementById("app").innerHTML=VARIANTS[variant][1]()+`<details id="state"><summary class="mute">State</summary><pre>${JSON.stringify(st,null,1)}</pre></details>`;
+  document.getElementById("sw").innerHTML=`<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>`;
+  scrollTo(0,y); const sh2=document.querySelector(".sheet"); if(sh2)sh2.scrollTop=sy;
+}
+addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,select,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });
+render();
+</script>
+</body>
+</html>
