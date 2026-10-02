@@ -11,13 +11,16 @@
   time), or spread over the rest of the week if asked. It never touches Set times or takes a Planned time below its
   range. Nothing changes until approved. How are the options and their effect on the day and week shown? What does
   accepting look like?
-  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+  RESOLVED (2026-10-01): layout D won: B's option cards, with "Talk it through with the Agent" as one more card.
+  Four layouts, switchable via ?variant=A|B|C|D, the floating bar, or the ← → keys:
     A: Chat. ⚖ opens a chat sheet. The Agent says what happened and proposes the smallest fix, with a before/after
        bar and the changes listed; chips and typing steer it ("keep the snack", "spread it over the week").
        Every Agent turn is one AI call.
     B: Option cards. ⚖ opens a sheet of up to three options, worked out by rules on the phone (no AI), each with its
        changes and where the day lands. A Today / Rest of the week switch. Typing at the bottom asks the Agent
        (one AI call) for anything the cards don't cover.
+    D: B's option cards, plus a last card, "Talk it through with the Agent", that opens A's chat (with ‹ Options to
+       go back). Its chips start the chat with a request ("Keep the snack", "Take it from Friday").
     C: Preview on Today. ⚖ turns Today into a preview: changed rows show old → new, the counter shows where the day
        would land, and a bar at the bottom flips between options (‹ ›), adds the rest of the week, and approves.
        No AI unless you type.
@@ -165,13 +168,15 @@ function chatSend(t){ if(!t.trim())return; ui.chat.push({who:"me",html:esc(t)});
   if(/leave|no\b|not now|cancel/.test(s)){ S.ai++; say("OK, nothing changed.",[]); }
   else if(/keep the snack|keep snack/.test(s)){ ui.keep=[5]; agentPropose(ui.keep,false); }
   else if(/instead|another/.test(s)){ S.ai++; const o=todayOptions(ui.keep), alt=o[1]||o[0]; ui.chatOpt={changes:alt.changes,label:"Rebalanced today"}; say(`Instead:<ul>${alt.changes.map(c=>`<li>${chgText(c)}</li>`).join("")}</ul>Today lands at <b class="${sCls(alt.total)}">${n(alt.total)}</b>.${dayBar(alt.total)}`,["Approve","Spread it over the week","Leave it"]); }
+  else if(/friday|fri/.test(s)){ S.ai++; const cs=combos(5).filter(o=>o.changes.length).sort((a,b)=>a.changes.length-b.changes.length||a.cut-b.cut), need=Math.max(over(),0), pick=cs.find(o=>o.cut>=need)||cs.sort((a,b)=>b.cut-a.cut)[0];
+    ui.chatOpt={changes:pick.changes,label:"Took it from Friday"}; say(`${need?`Leaving today at ${n(dayTot(TODAY))} (it counts as over). `:""}On Friday: ${pick.changes.map(chgText).join("; ")}. Friday lands at <b class="${sCls(pick.total)}">${n(pick.total)}</b>, ${STATUS[status(pick.total)]}.${pick.cut<need?` That covers ${n(pick.cut)} of the ${n(need)}.`:""}${weekBar(pick.changes)}`,["Approve","Just today","Leave it"]); }
   else if(/week|spread|trim/.test(s)) agentPropose(ui.keep,true);
   else if(/just today/.test(s)) agentPropose(ui.keep,false);
   else { S.ai++; say(`I can shrink Planned Portions (staying in their ranges) or drop an If room time, today or across the week. I can't change the Work lunch or meals you've logged. Try "keep the snack" or "spread it over the week".`,["Spread it over the week","Leave it"]); }
   render(); }
 function openRebalance(){ ui.keep=[]; ui.optI=0; ui.scope="today";
   if(variant==="A"){ ui.chat=[]; agentPropose([],false); ui.sheet={k:"chat"}; }
-  else if(variant==="B"){ ui.sheet={k:"cards"}; }
+  else if(variant==="B"||variant==="D"){ ui.sheet={k:"cards"}; }
   else { ui.preview=true; }
   render(); }
 
@@ -206,7 +211,7 @@ const box=()=>`<div class="boxbar"><input class="inp" placeholder="Log something
 
 // ---------- A: chat ----------
 function variantA(){ return todayPage()+box(); }
-function chatSheet(){ return `<div class="row"><b class="sp" style="font-size:17px">⚖ Rebalance</b><button class="btn ghost" onclick="ui.sheet=null;render()">Close</button></div>
+function chatSheet(){ return `<div class="row">${ui.sheet.back?`<button class="btn ghost" onclick="ui.sheet={k:'cards'};render()">‹ Options</button>`:""}<b class="sp" style="font-size:17px">⚖ Rebalance</b><button class="btn ghost" onclick="ui.sheet=null;render()">Close</button></div>
   <div class="xs mute">Agent · ${S.ai} AI call${S.ai===1?"":"s"} so far · nothing changes until you approve</div>
   ${ui.chat.map(m=>`<div class="msg ${m.who}">${m.html}</div>${m.chips&&m.chips.length?`<div>${m.chips.map(c=>`<span class="chip" onclick="chatSend('${c.replace(/'/g,"\\'")}')">${c}</span>`).join("")}</div>`:""}`).join("")}
   <div class="row" style="margin-top:10px"><input class="inp" id="ci" placeholder="Tell it what you want…" onkeydown="if(event.key==='Enter'){chatSend(this.value)}"></div>`; }
@@ -226,8 +231,14 @@ function cardsSheet(){ const ov=over(); let b=`<div class="row"><b class="sp" st
       <ul class="small" style="margin:4px 0;padding-left:18px">${t?t.changes.map(c=>`<li><b>Today</b>: ${chgText(c)}</li>`).join(""):""}${w.days.map(x=>x.changes.map(c=>`<li><b>${DAYS[x.d]}</b>: ${chgText(c)}</li>`).join("")).join("")}</ul>
       ${weekBar(all)}<div class="xs mute" style="margin-top:6px">${w.notes.join(" ")}${w.left>0?` ${n(w.left)} can't be placed without going below a range.`:""}</div>
       <button class="btn pri" style="width:100%;margin-top:8px" onclick='apply(${JSON.stringify(all)},"Rebalanced the week")'>Use this</button></div>`; }
-  b+=`<div class="xs mute" style="margin-top:12px">Want something else? Ask the Agent (1 AI call):</div><input class="inp" placeholder="“keep the snack”, “take it from Friday”…" onkeydown="if(event.key==='Enter'){ui.chat=[];ui.sheet={k:'chat'};chatSend(this.value)}">`;
+  if(variant==="D") b+=`<div class="opt" style="border-style:dashed"><div class="row"><b class="sp">💬 Talk it through with the Agent</b><span class="xs mute">AI · 1 call a reply</span></div>
+    <div class="small mute" style="margin:3px 0 6px">For anything the cards don't cover: keep something, take it from a certain day, a different swap.</div>
+    <div>${["Keep the snack","Take it from Friday","Spread it over the week"].map(c=>`<span class="chip" onclick="startChat('${c}')">${c}</span>`).join("")}</div>
+    <input class="inp" style="margin-top:8px" placeholder="Or type what you want…" onkeydown="if(event.key==='Enter')startChat(this.value)">
+    <button class="btn" style="width:100%;margin-top:8px" onclick="startChat('')">Open the chat</button></div>`;
+  else b+=`<div class="xs mute" style="margin-top:12px">Want something else? Ask the Agent (1 AI call):</div><input class="inp" placeholder="“keep the snack”, “take it from Friday”…" onkeydown="if(event.key==='Enter'){ui.chat=[];ui.sheet={k:'chat'};chatSend(this.value)}">`;
   return b; }
+function startChat(t){ ui.chat=[]; ui.keep=[]; ui.sheet={k:"chat",back:true}; if(t.trim()) chatSend(t); else { agentPropose([],false); render(); } }
 
 // ---------- C: preview on Today ----------
 function cOptions(){ const o=todayOptions([]).map(x=>({changes:x.changes,total:x.total,label:x.changes.map(chgText).join("; ")}));
@@ -244,7 +255,7 @@ function variantC(){ if(!ui.preview) return todayPage()+box();
 
 // ---------- switcher ----------
 function sheetHTML(){ if(!ui.sheet)return ""; const b=ui.sheet.k==="chat"?chatSheet():cardsSheet(); return `<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet">${b}</div>`; }
-const VARIANTS={A:["Chat",variantA],B:["Option cards",variantB],C:["Preview on Today",variantC]}, KEYS=Object.keys(VARIANTS);
+const VARIANTS={A:["Chat",variantA],B:["Option cards",variantB],C:["Preview on Today",variantC],D:["Cards + a chat card",variantB]}, KEYS=Object.keys(VARIANTS);
 const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
 function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; ui.preview=false; render(); scrollTo(0,0); }
 document.addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });

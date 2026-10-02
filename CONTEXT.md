@@ -52,7 +52,7 @@ What to buy for an approved Meal Plan, one line per food in one shopping measure
 _Avoid_: grocery list
 
 **Rebalance**:
-A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Set Meal Times or takes a Planned one below its range. Nothing changes until the Member approves.
+A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Set Meal Times or takes a Planned one below its range. Its options are worked out by these rules without AI; the Agent joins only if the Member opens the chat. Nothing changes until the Member approves.
 _Avoid_: adjust, correct, fix
 
 **Week view**:
