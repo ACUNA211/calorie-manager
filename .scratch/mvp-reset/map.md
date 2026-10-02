@@ -37,15 +37,16 @@ A calorie tracker that adapts: when a meal goes over, it recommends lighter opti
 
 - [Which database could supply packaged and branded foods?](issues/01-packaged-food-databases.md): USDA FoodData Central Branded Foods through the existing API (CC0, free, has GTINs). Open Food Facts isn't needed. Generic matches are fine per gram, not per piece. The Food Library gets a source, GTIN, brand, per-100 g calories and serving sizes now.
 - [Which of the old map's decisions carry over?](issues/02-carry-over-old-decisions.md): Keep the PWA, the Sunday–Saturday week and a trimmed stack (Next.js + Supabase + Vercel; no cron runner, push or offline). Sign-in is username + password via Supabase Auth, accounts made by hand, no public sign-up. One person only, English only, no Preferences or safety rails. Logging uses a local parser with AI only for unmatched parts, and Undo toasts instead of an Activity Log. Agent files keep their structure without notes or jobs. Everything else is dropped; the old phases moved to the End goal.
+- [What does setting up Meal Times look like?](issues/03-meal-times-settings.md): A week grid (rows are Meal Times, columns are weekdays; tap a cell to toggle a day, a name to edit) with day totals against the aim and target under each column, and Target and band in its toolbar. Kinds are now **Set** (one number), **Planned** and **If room**. An overlap on the same day asks whether the new one replaces the other there.
 
 Settled while charting (2026-10-01), before any ticket:
 - **Recipe** replaces Dish: a name and ingredients with amounts, with calories shared out by cooked weight ("makes N servings" as the fallback). No steps, prep time, tools or ratings in the MVP. Entered by hand, with ingredients from USDA FoodData Central and branded items typed in once from the label.
-- **Meal Times** replace breakfast/lunch/dinner/snack: a name, a time, weekdays and a calorie range, of three kinds (Fixed, Open required, Open optional). The Agent fills Fixed first, then Open required, then Open optional with anything while calories are left.
+- **Meal Times** replace breakfast/lunch/dinner/snack: a name, a time, weekdays and a calorie range, of three kinds (Set, Planned, If room). Set calories are held first; the Agent fills Planned times, then If room times while calories are left.
 - **Calorie Target** stays one ceiling (what "days under" counts). Planning aims for a **planning band** under it (90–100% by default, editable). Ranges are guides.
 - **Cook:** one batch of a Recipe feeds several Meal Times and is counted once on the shopping list.
 - **Planning** is a chat on the Plan page, fresh each week. The Agent drafts, you edit on a grid, and Approve builds the shopping list. It can't invent Recipes.
-- **Rebalance** is a command. It changes the rest of today by default, or the rest of the week if asked, using only Cooks already planned. It never touches Fixed times or takes Open required below its range. Nothing changes until approved.
-- **Logging:** one tap for a planned or Fixed meal; otherwise search Recipes and the Food Library; a single AI estimate only when nothing matches.
+- **Rebalance** is a command. It changes the rest of today by default, or the rest of the week if asked, using only Cooks already planned. It never touches Set times or takes a Planned time below its range. Nothing changes until approved.
+- **Logging:** one tap for a planned or Set meal; otherwise search Recipes and the Food Library; a single AI estimate only when nothing matches.
 - **Shopping list:** the "have it" pass is the Pantry check; then shop. No Pantry in the app.
 - **No general chat:** Plan and Rebalance are the only conversations.
 

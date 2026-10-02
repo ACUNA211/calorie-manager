@@ -17,8 +17,8 @@ A named meal made of ingredients with amounts. Its calories come from its ingred
 _Avoid_: dish
 
 **Meal Time**:
-A named time the Member eats ("Breakfast 7:30", "Work lunch 12:00"), set for the weekdays it applies to, with a calorie range. It is one of three kinds: **Fixed** (the meal is already decided, such as a work lunch, so its calories are set aside and the plan works around them), **Open required** (the plan must fill it), or **Open optional** (the plan may fill it, such as a snack). The name carries no meaning in the app.
-_Avoid_: slot, breakfast/lunch/dinner as fixed categories, Eating Out
+A named time the Member eats ("Breakfast 7:30", "Work lunch 12:00"), set for the weekdays it applies to, with a calorie range. It is one of three kinds: **Set** (the meal is already decided, such as a work lunch, so its calories, one number, are set aside and the plan works around them), **Planned** (the Agent must fill it, inside its range), or **If room** (the Agent fills it only while calories are left, and Rebalance may drop it). The name carries no meaning in the app.
+_Avoid_: slot, breakfast/lunch/dinner as fixed categories, Eating Out, Fixed / Open required / Open optional
 
 **Cook**:
 One batch of a Recipe made on a given day. Its Portions are placed at several Meal Times (one Sunday chili feeds dinner plus two lunches), and the Shopping list counts its ingredients once.
@@ -52,7 +52,7 @@ What to buy for an approved Meal Plan, one line per food. It starts with a "have
 _Avoid_: grocery list
 
 **Rebalance**:
-A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Fixed Meal Times or takes an Open required one below its range. Nothing changes until the Member approves.
+A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Set Meal Times or takes a Planned one below its range. Nothing changes until the Member approves.
 _Avoid_: adjust, correct, fix
 
 **Week view**:
