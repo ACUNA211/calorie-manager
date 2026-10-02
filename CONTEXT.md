@@ -40,7 +40,7 @@ The range under the Calorie Target that the Agent aims each planned day to land 
 _Avoid_: target range
 
 **Calorie Log**:
-The Member's record of what they actually ate and its calories, each entry at a Meal Time or another time. It may differ from the Meal Plan; a planned meal left unlogged on a past day counts as skipped.
+The Member's record of what they actually ate and its calories, each entry at a Meal Time or another time. It may differ from the Meal Plan; a planned meal left unlogged on a past day shows as "not logged".
 _Avoid_: diary, journal, tracker
 
 **Food Library**:

@@ -19,5 +19,5 @@ Rework the old [How does food get into the Calorie Log?](../../mvp/issues/20-add
 - **The box** at the bottom logs anything else. It searches Recipes and the Food Library locally (synonyms, small typos, plurals, amounts like "150g", "4 oz", "2 eggs", "1.5 servings") and splits text on "and", "with" and commas. Matches show as you type; a hint says whether Enter needs AI. A part nothing matches offers **Estimate with AI (1 call)** (marked est.), **Type calories** or **Drop**.
 - **Confirm card for the box:** each item with its amount and unit (servings or grams for a weighed Recipe, the food's serving sizes or grams), the Meal Time it goes to (from the clock, changeable) or **Other time…** with a time, then Log. An Undo toast follows every log.
 - **Fixing a log:** tap anything logged to change its amount or Meal Time, or delete it, with Undo.
-- **Past days:** show where the day ended; a planned meal that wasn't logged says "not logged" and can be caught up, otherwise it counts as skipped. The box logs to that day.
+- **Past days:** show where the day ended; a planned meal that wasn't logged says "not logged" and can be caught up; until then its calories aren't counted (how the Week view treats that day is #09's question). The box logs to that day.
 - **Future days:** the plan and where it lands, read-only, with a pointer to the Plan page. No logging ahead.
