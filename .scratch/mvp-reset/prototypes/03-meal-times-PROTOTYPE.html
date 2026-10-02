@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Meal Times (#03)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp-reset/issues/03-meal-times-settings.md
+  Question: what does setting up Meal Times look like? Each has a name, a time, weekdays, a calorie range and a kind
+  (Fixed / Open required / Open optional). While editing one, see the other Meal Times on those days and each day's
+  totals against the Calorie Target and planning band. Warn when Fixed + Open required minimums already go over the target.
+  How does a weekday-specific Meal Time sit alongside an everyday one? Where are the Target and band edited?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: List + sheet. Target and band in a card at the top of the list. Tap a Meal Time to edit it in a bottom sheet
+       that previews every day it applies to.
+    B: Week grid. One row per Meal Time, one column per weekday. Tap a cell to switch that day on or off; tap a name
+       to edit the rest below the grid. Day totals sit under each column. Target and band in the toolbar.
+    C: Day budget. Pick a weekday and see its budget: the Target, minus Fixed, minus Open required minimums, then what's
+       left for Optional. Meal Times are edited in place. Target and band at the bottom of the page.
+  Shared in all three: the day bar (Fixed solid, required range, optional hatched, the band shaded green, the Target as a
+  red line), the over-target warning, and the clash prompt when a Meal Time overlaps another on the same day and time
+  (try adding Tuesday to "Weekend lunch", or changing Work lunch's days).
+  Scenario: Calorie Target 2,000, band 90–100%. Tuesday has a Fixed work lunch (900) that replaces the usual Lunch.
+  Saturday's numbers are deliberately tight: try raising Dinner's minimum to see the warning.
+  All state is in memory; reload resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--goodbg:#e3f1e8;--bad:#c0392b;--badbg:#fbe5e1;--warn:#a0561a;--warnbg:#fdebd8;--accent:#3056d3;--soft:#eef2ff;--fixed:#8a5cc2;--fixedbg:#efe7f8;--req:#3056d3;--reqbg:#dfe6fb;--opt:#7b7a74;--optbg:#ecebe6}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding:0 0 120px}
+  button{font:inherit;cursor:pointer} input,select{font:inherit}
+  .row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px} .b{font-weight:600}
+  header{padding:18px 16px 8px} header h1{margin:0;font-size:22px} header .sub{color:var(--mute);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 16px;padding:12px 14px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{border:none;background:none;color:var(--accent);padding:6px 4px}
+  .btn.danger{color:var(--bad)}
+  .chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:600}
+  .k-fixed{background:var(--fixedbg);color:var(--fixed)} .k-req{background:var(--reqbg);color:var(--req)} .k-opt{background:var(--optbg);color:var(--opt)}
+  .warnbox{background:var(--badbg);color:var(--bad);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .infobox{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .okbox{background:var(--goodbg);color:var(--good);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px}
+  input.t{border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;background:#fff}
+  input.n{width:76px} .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{flex:1;border:none;background:#fff;padding:7px 4px;font-size:13px;border-right:1px solid var(--line)} .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--soft);color:var(--accent);font-weight:600}
+  .days{display:flex;gap:4px} .days button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 0;font-size:12.5px}
+  .days button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* day bar */
+  .bar{position:relative;height:16px;background:#f0efea;border-radius:5px;overflow:hidden;margin:4px 0 2px}
+  .bar .seg2{position:absolute;top:0;bottom:0}
+  .bar .band{position:absolute;top:0;bottom:0;background:rgba(47,125,79,.18);border-left:1px dashed var(--good)}
+  .bar .tgt{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad)}
+  .s-fixed{background:var(--fixed)} .s-reqmin{background:var(--req)} .s-reqflex{background:#9fb2ee}
+  .s-opt{background:repeating-linear-gradient(45deg,#c9c8c1 0 4px,#e6e5df 4px 8px)}
+  .s-edit{outline:2px solid #f2b705;outline-offset:-2px;z-index:2}
+  /* sheet */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20}
+  .sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:88vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:21;padding:14px 16px 90px}
+  /* list A */
+  .mt{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)} .mt:last-child{border-bottom:none}
+  .mt .tm{width:46px;font-variant-numeric:tabular-nums;font-weight:600}
+  /* grid B */
+  .grid{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+  .grid th{font-weight:600;color:var(--mute);padding:4px 0}
+  .grid td{border-top:1px solid var(--line);padding:3px 1px;text-align:center;height:38px}
+  .grid td.nm{text-align:left;padding-left:2px;width:92px;cursor:pointer}
+  .grid td.nm.sel{background:#fff7d6}
+  .cell{display:block;border-radius:6px;padding:4px 0;font-variant-numeric:tabular-nums;cursor:pointer;border:1px dashed transparent;line-height:1.15}
+  .cell.off{color:#c4c3bc;border-color:#e2e1db}
+  .vbar{position:relative;height:70px;width:18px;margin:0 auto;background:#f0efea;border-radius:4px;overflow:hidden}
+  .vbar>div{position:absolute;left:0;right:0}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .d-ok{background:var(--good)} .d-bad{background:var(--bad)} .d-low{background:#e0a24a}
+  /* C */
+  .tabsd{display:flex;gap:4px;padding:6px 16px} .tabsd button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 0 4px;font-size:12.5px}
+  .tabsd button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ledger td{padding:3px 0;font-variant-numeric:tabular-nums} .ledger td.r{text-align:right}
+  .tl{border-left:3px solid var(--line);margin-left:22px;padding-left:12px}
+  .tlc{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+  .tlc:before{content:"";position:absolute;left:-20px;top:16px;width:11px;height:11px;border-radius:50%;background:var(--line)}
+  .tlc.fixed:before{background:var(--fixed)} .tlc.req:before{background:var(--req)} .tlc.opt:before{background:#c9c8c1}
+  /* switcher + state */
+  #sw{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:none;border-radius:999px;width:30px;height:30px}
+  #state{margin:20px 16px;font-size:11px} #state pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;max-height:260px;overflow:auto}
+  .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:10px;z-index:60;font-size:13px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+<script>
+// ---------- model ----------
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const KIND={fixed:"Fixed",req:"Required",opt:"Optional"};
+let S={
+  target:2000, bandLo:90, bandHi:100,
+  mts:[
+    {id:1,name:"Breakfast",time:"07:30",days:[0,1,2,3,4,5,6],kind:"req",min:350,max:450},
+    {id:2,name:"Lunch",time:"12:00",days:[1,3,4,5],kind:"req",min:500,max:650},
+    {id:3,name:"Work lunch",time:"12:00",days:[2],kind:"fixed",min:900,max:900},
+    {id:4,name:"Weekend lunch",time:"12:30",days:[0,6],kind:"req",min:450,max:650},
+    {id:5,name:"Snack",time:"15:30",days:[0,1,2,3,4,5,6],kind:"opt",min:100,max:250},
+    {id:6,name:"Dinner",time:"18:30",days:[0,1,2,3,4,5,6],kind:"req",min:550,max:800},
+    {id:7,name:"Dessert",time:"20:30",days:[5,6],kind:"opt",min:150,max:300},
+    {id:8,name:"Sat brunch out",time:"10:30",days:[6],kind:"fixed",min:600,max:600},
+  ]};
+let nextId=9;
+const ui={edit:null,draft:null,clash:null,bSel:null,cDay:2,cOpen:null,tgtOpen:false};
+const sortT=a=>[...a].sort((x,y)=>x.time.localeCompare(y.time));
+const fmtDays=d=>{d=[...d].sort();if(d.length===7)return"Every day";if(d.join()==="1,2,3,4,5")return"Mon–Fri";if(d.join()==="0,6")return"Sat & Sun";if(!d.length)return"No days";return d.map(i=>DAYS[i]).join(", ")};
+const cal=m=>m.kind==="fixed"?`${m.min}`:`${m.min}–${m.max}`;
+const n=x=>x.toLocaleString("en-US");
+const band=()=>[Math.round(S.target*S.bandLo/100),Math.round(S.target*S.bandHi/100)];
+// the list as it would be if the current draft were saved
+function effective(){ if(!ui.draft) return S.mts; const others=S.mts.filter(m=>m.id!==ui.draft.id); return [...others,ui.draft]; }
+function onDay(d,mts=effective()){ return sortT(mts.filter(m=>m.days.includes(d))); }
+function totals(d,mts=effective()){
+  const l=onDay(d,mts); let fixed=0,reqMin=0,reqMax=0,optMax=0;
+  l.forEach(m=>{ if(m.kind==="fixed")fixed+=m.min; else if(m.kind==="req"){reqMin+=m.min;reqMax+=m.max;} else optMax+=m.max; });
+  const minT=fixed+reqMin, maxT=fixed+reqMax+optMax, [lo]=band();
+  const status = minT>S.target?"bad": maxT<lo?"low":"ok";
+  return {fixed,reqMin,reqMax,optMax,minT,maxT,status};
+}
+function clashesOf(m){ // same day, within 45 minutes
+  const mins=t=>+t.slice(0,2)*60+ +t.slice(3);
+  return S.mts.filter(o=>o.id!==m.id && Math.abs(mins(o.time)-mins(m.time))<=45 && o.days.some(d=>m.days.includes(d)))
+    .map(o=>({o,days:o.days.filter(d=>m.days.includes(d))}));
+}
+function statusText(t,d){
+  const [lo,hi]=band();
+  if(t.status==="bad") return `<div class="warnbox"><b>${DAYS[d]}: over before planning.</b> Fixed + required minimums are ${n(t.minT)}, over the ${n(S.target)} target by ${n(t.minT-S.target)}. Lower a minimum or make something optional.</div>`;
+  if(t.status==="low") return `<div class="infobox"><b>${DAYS[d]}</b> tops out at ${n(t.maxT)}, under the ${n(lo)}–${n(hi)} aim. Raise a maximum or add an optional time.</div>`;
+  return "";
+}
+// ---------- shared widgets ----------
+function dayBar(d,editId){
+  const t=totals(d), [lo,hi]=band(), scale=Math.max(S.target*1.2,t.maxT)/100;
+  const l=onDay(d); let x=0, out="";
+  const seg=(w,cls,title)=>{ if(w<=0)return""; const s=`<div class="seg2 ${cls}" style="left:${x/scale}%;width:${w/scale}%" title="${title}"></div>`; x+=w; return s; };
+  l.filter(m=>m.kind==="fixed").forEach(m=>out+=seg(m.min,"s-fixed"+(m.id===editId?" s-edit":""),m.name));
+  l.filter(m=>m.kind==="req").forEach(m=>out+=seg(m.min,"s-reqmin"+(m.id===editId?" s-edit":""),m.name+" min"));
+  l.filter(m=>m.kind==="req").forEach(m=>out+=seg(m.max-m.min,"s-reqflex"+(m.id===editId?" s-edit":""),m.name+" flex"));
+  l.filter(m=>m.kind==="opt").forEach(m=>out+=seg(m.max,"s-opt"+(m.id===editId?" s-edit":""),m.name));
+  return `<div class="bar"><div class="band" style="left:${lo/scale}%;width:${(hi-lo)/scale}%"></div>${out}<div class="tgt" style="left:${S.target/scale}%"></div></div>`;
+}
+function legend(){ return `<div class="row wrap xs mute" style="gap:10px;margin-top:4px"><span><span class="dot" style="background:var(--fixed);border-radius:2px"></span> Fixed</span><span><span class="dot" style="background:var(--req);border-radius:2px"></span> Required min</span><span><span class="dot" style="background:#9fb2ee;border-radius:2px"></span> up to max</span><span><span class="dot s-opt" style="border-radius:2px"></span> Optional</span><span><span class="dot" style="background:rgba(47,125,79,.35);border-radius:2px"></span> Aim</span><span style="color:var(--bad)">┃ Target</span></div>`; }
+function kindChip(k){ return `<span class="chip k-${k}">${KIND[k]}</span>`; }
+function fields(dr){
+  return `
+  <label class="f">Name</label><input class="t" value="${dr.name}" oninput="ui.draft.name=this.value">
+  <div class="row" style="gap:12px">
+    <div><label class="f">Time</label><input class="t" type="time" value="${dr.time}" onchange="ui.draft.time=this.value;render()" style="width:120px"></div>
+    <div class="sp"><label class="f">Kind</label><div class="seg">${Object.keys(KIND).map(k=>`<button class="${dr.kind===k?"on":""}" onclick="setKind('${k}')">${KIND[k]}</button>`).join("")}</div></div>
+  </div>
+  <div class="xs mute" style="margin-top:4px">${dr.kind==="fixed"?"Already decided (a work lunch, eating out). Its calories are set aside and the Agent plans around it.":dr.kind==="req"?"The Agent must fill it, inside this range.":"The Agent fills it only while calories are left. Rebalance may drop it."}</div>
+  <label class="f">Days</label><div class="days">${DAYS.map((d,i)=>`<button class="${dr.days.includes(i)?"on":""}" onclick="toggleDraftDay(${i})">${d[0]}${d[1]}</button>`).join("")}</div>
+  <div class="row xs" style="margin-top:4px"><button class="btn ghost xs" onclick="ui.draft.days=[0,1,2,3,4,5,6];render()">Every day</button><button class="btn ghost xs" onclick="ui.draft.days=[1,2,3,4,5];render()">Mon–Fri</button><button class="btn ghost xs" onclick="ui.draft.days=[0,6];render()">Weekend</button></div>
+  <label class="f">${dr.kind==="fixed"?"Calories (set aside)":"Calorie range"}</label>
+  <div class="row">${dr.kind==="fixed"?`<input class="t n" type="number" step="50" value="${dr.min}" onchange="ui.draft.min=ui.draft.max=+this.value;render()"> cal`:
+    `<input class="t n" type="number" step="50" value="${dr.min}" onchange="ui.draft.min=+this.value;if(ui.draft.max<ui.draft.min)ui.draft.max=ui.draft.min;render()"> to <input class="t n" type="number" step="50" value="${dr.max}" onchange="ui.draft.max=+this.value;render()"> cal`}</div>
+  ${clashBox(dr)}`;
+}
+function clashBox(dr){
+  const c=clashesOf(dr); if(!c.length) return "";
+  return c.map(({o,days})=>`<div class="infobox"><b>${o.name}</b> (${o.time}) is also on ${days.map(d=>DAYS[d]).join(", ")}. Is this one instead of it on ${days.length>1?"those days":"that day"}?
+    <div class="row" style="margin-top:6px"><button class="btn small" onclick="replaceOn(${o.id})">Yes, take ${days.map(d=>DAYS[d]).join(", ")} off ${o.name}</button><button class="btn ghost small" onclick="toast('Kept both: two meals near the same time')">Keep both</button></div></div>`).join("");
+}
+function targetFields(){
+  const [lo,hi]=band();
+  return `<div class="row wrap" style="gap:12px">
+    <div><label class="f">Calorie Target (daily ceiling)</label><div class="row"><input class="t n" type="number" step="50" value="${S.target}" onchange="S.target=+this.value;render()"> cal</div></div>
+    <div><label class="f">Aim (planning band)</label><div class="row"><input class="t" style="width:58px" type="number" value="${S.bandLo}" onchange="S.bandLo=+this.value;render()">–<input class="t" style="width:62px" type="number" value="${S.bandHi}" onchange="S.bandHi=+this.value;render()"> %</div></div>
+  </div><div class="xs mute" style="margin-top:6px">The Agent plans each day to ${n(lo)}–${n(hi)}. A day counts as under when it's under ${n(S.target)}.</div>`;
+}
+// ---------- actions ----------
+function startEdit(id){ const m=S.mts.find(x=>x.id===id); ui.draft=JSON.parse(JSON.stringify(m)); ui.edit=id; render(); }
+function startNew(day){ ui.draft={id:nextId++,name:"New meal time",time:"16:00",days:day==null?[0,1,2,3,4,5,6]:[day],kind:"opt",min:100,max:200,isNew:true}; ui.edit=ui.draft.id; render(); }
+function setKind(k){ ui.draft.kind=k; if(k==="fixed")ui.draft.max=ui.draft.min; render(); }
+function toggleDraftDay(i){ const d=ui.draft.days; ui.draft.days=d.includes(i)?d.filter(x=>x!==i):[...d,i]; render(); }
+function replaceOn(oid){ const o=S.mts.find(m=>m.id===oid); o.days=o.days.filter(d=>!ui.draft.days.includes(d)); toast(`${o.name} is now ${fmtDays(o.days)}`); render(); }
+function save(){ const d=ui.draft; delete d.isNew; const i=S.mts.findIndex(m=>m.id===d.id); if(i<0)S.mts.push(d); else S.mts[i]=d; ui.draft=null; ui.edit=null; ui.cOpen=null; render(); }
+function cancel(){ ui.draft=null; ui.edit=null; ui.cOpen=null; render(); }
+function del(){ S.mts=S.mts.filter(m=>m.id!==ui.draft.id); toast(`Deleted ${ui.draft.name}`); ui.draft=null; ui.edit=null; ui.cOpen=null; render(); }
+function toggleCell(id,d){ // B: quick day toggle, applied straight away
+  const m=S.mts.find(x=>x.id===id); m.days=m.days.includes(d)?m.days.filter(x=>x!==d):[...m.days,d];
+  if(ui.draft&&ui.draft.id===id) ui.draft.days=[...m.days];
+  const c=clashesOf(m).filter(x=>x.days.includes(d));
+  if(m.days.includes(d)&&c.length){ ui.clash={id,d,other:c[0].o.id}; } render();
+}
+function toast(t){ const e=document.createElement("div"); e.className="toast"; e.textContent=t; document.body.appendChild(e); setTimeout(()=>e.remove(),2200); }
+function editorButtons(){ return `<div class="row" style="margin-top:14px"><button class="btn pri" onclick="save()">Save</button><button class="btn" onclick="cancel()">Cancel</button><span class="sp"></span>${ui.draft.isNew?"":`<button class="btn ghost danger" onclick="del()">Delete</button>`}</div>`; }
+
+// ---------- Variant A: list + sheet ----------
+function VariantA(){
+  const [lo,hi]=band();
+  const bad=[0,1,2,3,4,5,6].filter(d=>totals(d,S.mts).status==="bad");
+  let h=`<header><h1>Meal Times</h1><div class="sub">Settings → Meal Times</div></header>
+  <div class="card">
+    <div class="row"><div><div class="b">Calorie Target ${n(S.target)}</div><div class="small mute">Aim ${n(lo)}–${n(hi)} (${S.bandLo}–${S.bandHi}%)</div></div><span class="sp"></span><button class="btn ghost" onclick="ui.tgtOpen=!ui.tgtOpen;render()">${ui.tgtOpen?"Done":"Edit"}</button></div>
+    ${ui.tgtOpen?targetFields():""}
+  </div>
+  ${bad.length?`<div class="card" style="border-color:var(--bad)"><div class="warnbox" style="margin:0"><b>Over before planning on ${bad.map(d=>DAYS[d]).join(", ")}.</b> Fixed + required minimums go over the target.</div></div>`:""}
+  <div class="card">`;
+  sortT(S.mts).forEach(m=>{
+    h+=`<div class="mt" onclick="startEdit(${m.id})" style="cursor:pointer"><div class="tm">${m.time}</div><div class="sp"><div class="b">${m.name}</div><div class="small mute">${fmtDays(m.days)}</div></div><div style="text-align:right">${kindChip(m.kind)}<div class="small" style="font-variant-numeric:tabular-nums">${cal(m)}</div></div></div>`;
+  });
+  h+=`<button class="btn ghost" onclick="startNew()" style="margin-top:6px">+ Add Meal Time</button></div>
+  <div class="card"><div class="b small">Week at a glance</div>${[0,1,2,3,4,5,6].map(d=>{const t=totals(d,S.mts);return `<div class="row small" style="margin-top:4px"><span style="width:30px">${DAYS[d]}</span><div class="sp">${dayBarFor(d,S.mts)}</div><span class="xs mute" style="width:78px;text-align:right">${n(t.minT)}–${n(t.maxT)}</span></div>`}).join("")}${legend()}</div>`;
+  if(ui.draft){
+    const dr=ui.draft;
+    h+=`<div class="scrim" onclick="cancel()"></div><div class="sheet"><div class="row"><b style="font-size:17px">${dr.isNew?"New Meal Time":"Edit "+dr.name}</b><span class="sp"></span><button class="btn ghost" onclick="cancel()">✕</button></div>
+      ${fields(dr)}
+      <div class="b small" style="margin-top:16px">On ${dr.days.length===7?"every day":"these days"}</div>
+      ${dr.days.length?sortDays(dr.days).map(d=>{const t=totals(d);return `<div class="card" style="margin:8px 0;padding:10px 12px"><div class="row small"><b>${DAYS[d]}</b><span class="sp"></span><span class="mute">${n(t.minT)}–${n(t.maxT)} of ${n(S.target)}</span></div>${dayBar(d,dr.id)}
+        <div class="xs mute">${onDay(d).map(m=>m.id===dr.id?`<b style="color:var(--ink);background:#fff3c4;padding:0 3px;border-radius:3px">${m.time} ${m.name} ${cal(m)}</b>`:`${m.time} ${m.name} ${cal(m)}`).join(" · ")}</div>${statusText(t,d)}</div>`}).join("")+legend():`<div class="mute small">Pick at least one day.</div>`}
+      ${editorButtons()}</div>`;
+  }
+  return h;
+}
+function dayBarFor(d,mts){ const keep=ui.draft; ui.draft=null; const s=dayBar(d,null); ui.draft=keep; return s; }
+function sortDays(a){ return [...a].sort((x,y)=>x-y); }
+
+// ---------- Variant B: week grid ----------
+function VariantB(){
+  const [lo,hi]=band(); const rows=sortT(S.mts);
+  let h=`<header><h1>Meal Times</h1><div class="sub">Tap a cell to switch a day on or off. Tap a name to edit it.</div></header>
+  <div class="card" style="padding:8px 12px"><div class="row small wrap" style="gap:6px">Target <input class="t n" style="width:70px;padding:4px 6px" type="number" step="50" value="${S.target}" onchange="S.target=+this.value;render()">
+     Aim <input class="t" style="width:46px;padding:4px 6px" type="number" value="${S.bandLo}" onchange="S.bandLo=+this.value;render()">–<input class="t" style="width:52px;padding:4px 6px" type="number" value="${S.bandHi}" onchange="S.bandHi=+this.value;render()">% <span class="mute xs">= ${n(lo)}–${n(hi)}</span></div></div>
+  <div class="card" style="padding:8px 6px"><table class="grid"><tr><th style="width:92px"></th>${DAYS.map(d=>`<th>${d[0]}${d[1]}</th>`).join("")}</tr>`;
+  rows.forEach(m=>{
+    h+=`<tr><td class="nm ${ui.bSel===m.id?"sel":""}" onclick="ui.bSel=${m.id};startEdit(${m.id})"><div class="b" style="font-size:12px;line-height:1.1">${m.name}</div><div class="xs mute">${m.time}</div></td>${DAYS.map((_,d)=>{const on=m.days.includes(d);
+      return `<td><span class="cell ${on?"k-"+m.kind:"off"}" onclick="toggleCell(${m.id},${d})">${on?(m.kind==="fixed"?m.min:`${m.min}<br><span class="xs">–${m.max}</span>`):"+"}</span></td>`}).join("")}</tr>`;
+  });
+  h+=`<tr><td class="nm"><button class="btn ghost xs" onclick="startNew()">+ Add</button></td>${DAYS.map(()=>"<td></td>").join("")}</tr>`;
+  // totals
+  h+=`<tr><td class="nm xs mute">Day range</td>${DAYS.map((_,d)=>{const t=totals(d);return `<td class="xs" style="line-height:1.1;color:${t.status==="bad"?"var(--bad)":t.status==="low"?"var(--warn)":"var(--ink)"}">${(t.minT/1000).toFixed(1)}k<br>${(t.maxT/1000).toFixed(1)}k</td>`}).join("")}</tr>`;
+  h+=`<tr><td class="nm xs mute">vs aim</td>${DAYS.map((_,d)=>`<td>${vbar(d)}</td>`).join("")}</tr></table>
+  <div class="xs mute" style="padding:4px">Each column bar: solid = Fixed + required minimums, light = up to every maximum, green = aim, red line = target.</div></div>`;
+  if(ui.clash){ const m=S.mts.find(x=>x.id===ui.clash.id), o=S.mts.find(x=>x.id===ui.clash.other), d=ui.clash.d;
+    h+=`<div class="card" style="border-color:var(--warn)"><div class="small"><b>${m.name}</b> and <b>${o.name}</b> are both on ${DAYS[d]} around ${m.time}.</div><div class="row" style="margin-top:6px"><button class="btn small" onclick="const o=S.mts.find(x=>x.id===${o.id});o.days=o.days.filter(x=>x!==${d});ui.clash=null;render()">Take ${DAYS[d]} off ${o.name}</button><button class="btn ghost small" onclick="ui.clash=null;render()">Keep both</button></div></div>`; }
+  const warn=[0,1,2,3,4,5,6].map(d=>statusText(totals(d),d)).join("");
+  if(warn) h+=`<div class="card">${warn}</div>`;
+  if(ui.draft){
+    h+=`<div class="card" style="border:2px solid #f2b705"><div class="row"><b>${ui.draft.isNew?"New Meal Time":"Edit "+ui.draft.name}</b><span class="sp"></span><button class="btn ghost" onclick="cancel()">✕</button></div>${fields(ui.draft)}<div class="xs mute" style="margin-top:8px">The grid above already shows this edit.</div>${editorButtons()}</div>`;
+  }
+  return h;
+}
+function vbar(d){
+  const t=totals(d),[lo,hi]=band(),top=Math.max(S.target*1.2,t.maxT),p=v=>v/top*100;
+  return `<div class="vbar"><div style="bottom:${p(lo)}%;height:${p(hi-lo)}%;background:rgba(47,125,79,.25)"></div><div style="bottom:0;height:${p(t.maxT)}%;background:#c8d3f5"></div><div style="bottom:0;height:${p(t.minT)}%;background:${t.status==="bad"?"var(--bad)":"var(--req)"}"></div><div style="bottom:${p(S.target)}%;height:2px;background:var(--bad)"></div></div>`;
+}
+
+// ---------- Variant C: day budget ----------
+function VariantC(){
+  const d=ui.cDay, t=totals(d), [lo,hi]=band(), l=onDay(d);
+  if(ui.draft&&!ui.draft.isNew&&!l.includes(ui.draft)) l.push(ui.draft); // keep the open editor even if its day was switched off
+  let h=`<header><h1>Meal Times</h1><div class="sub">Pick a day to see its budget.</div></header>
+  <div class="tabsd">${DAYS.map((x,i)=>{const s=totals(i).status;return `<button class="${i===d?"on":""}" onclick="ui.cDay=${i};cancel()">${x}<br><span class="dot d-${s}"></span></button>`}).join("")}</div>
+  <div class="card"><div class="b">${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d]}'s budget</div>
+    <table class="ledger" style="width:100%;font-size:14px;margin-top:6px">
+      <tr><td>Calorie Target</td><td class="r b">${n(S.target)}</td></tr>
+      <tr><td class="mute">− Fixed (set aside)</td><td class="r" style="color:var(--fixed)">−${n(t.fixed)}</td></tr>
+      <tr><td class="mute">− Required, at their minimums</td><td class="r" style="color:var(--req)">−${n(t.reqMin)}</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td class="b">Left before optional</td><td class="r b" style="color:${S.target-t.minT<0?"var(--bad)":"var(--good)"}">${n(S.target-t.minT)}</td></tr>
+      <tr><td class="xs mute" colspan="2">Required can grow by up to ${n(t.reqMax-t.reqMin)}, optional can use up to ${n(t.optMax)}. Aim ${n(lo)}–${n(hi)}.</td></tr>
+    </table>${dayBar(d,ui.cOpen)}${legend()}${statusText(t,d)||`<div class="okbox">This day can land in the aim.</div>`}</div>
+  <div class="tl">`;
+  l.forEach(m=>{
+    const open=ui.cOpen===m.id;
+    h+=`<div class="tlc ${m.kind}">${open?`${fields(ui.draft)}${editorButtons()}`:
+      `<div class="row" onclick="ui.cOpen=${m.id};startEdit(${m.id})" style="cursor:pointer"><b style="width:46px">${m.time}</b><div class="sp"><div class="b">${m.name}</div><div class="xs mute">${fmtDays(m.days)}${m.days.length<7?" only":""}</div></div><div style="text-align:right">${kindChip(m.kind)}<div class="small">${cal(m)}</div></div></div>`}</div>`;
+  });
+  if(ui.draft&&ui.draft.isNew){ h+=`<div class="tlc ${ui.draft.kind}">${fields(ui.draft)}${editorButtons()}</div>`; }
+  else h+=`<button class="btn ghost" onclick="startNew(${d});ui.cOpen=ui.draft.id;render()">+ Add a Meal Time on ${DAYS[d]}</button>`;
+  h+=`</div><div class="card" style="margin-top:20px"><div class="b">Daily target</div>${targetFields()}</div>`;
+  return h;
+}
+
+// ---------- shell + switcher ----------
+const VARIANTS={A:["List + sheet",VariantA],B:["Week grid",VariantB],C:["Day budget",VariantC]}; const KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.draft=null;ui.edit=null;ui.cOpen=null;ui.clash=null; render(); scrollTo(0,0); }
+function render(){
+  const y=scrollY, sh=document.querySelector(".sheet"), sy=sh?sh.scrollTop:0;
+  document.getElementById("app").innerHTML=VARIANTS[variant][1]()+`<details id="state"><summary class="mute">State</summary><pre>${JSON.stringify({target:S.target,band:`${S.bandLo}-${S.bandHi}%`,draft:ui.draft,mealTimes:sortT(S.mts).map(m=>`${m.time} ${m.name} [${KIND[m.kind]}] ${fmtDays(m.days)} ${cal(m)}`),days:DAYS.map((x,d)=>{const t=totals(d);return `${x}: ${t.minT}-${t.maxT} ${t.status}`})},null,1)}</pre></details>`;
+  document.getElementById("sw").innerHTML=`<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>`;
+  scrollTo(0,y); const sh2=document.querySelector(".sheet"); if(sh2)sh2.scrollTop=sy;
+}
+addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });
+render();
+</script>
+</body>
+</html>
