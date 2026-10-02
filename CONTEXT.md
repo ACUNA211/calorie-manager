@@ -13,7 +13,7 @@ The built-in AI that drafts the Meal Plan in a planning chat and proposes Rebala
 _Avoid_: bot, assistant, chatbot
 
 **Recipe**:
-A named meal made of ingredients with amounts. Its calories come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback), so a Portion's calories follow how much of it is eaten. Entered by hand; cooking steps are a later phase.
+A named meal made of ingredients with amounts. Its calories come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback), so a Portion's calories follow how much of it is eaten. It can be starred and tagged with the Meal Times it suits (a hint the Agent prefers, not a rule), and copied as a variation that names its original but never changes with it. Entered by hand; cooking steps are a later phase.
 _Avoid_: dish
 
 **Meal Time**:

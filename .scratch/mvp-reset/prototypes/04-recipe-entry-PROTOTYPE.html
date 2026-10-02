@@ -11,6 +11,7 @@
   and "makes N servings" as the fallback. Calories per gram and per serving shown as it's built. How is the Recipe list
   browsed and searched? Can a Recipe be copied and changed? Is anything else needed for planning (Meal Time tags, a star)?
   Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+  RESOLVED (2026-10-01): D (A's list + C's editor). Meal Time tags are a hint, copying makes a linked variation.
     A: List + form. A plain searchable list; the editor is a form with one row per ingredient (amount + unit picker),
        a search sheet to add one, and a sticky totals bar. Copy = "Duplicate". Star only, no tags.
     B: Type it in. Cards grouped by the Meal Times a Recipe suits. The editor is one line you type ingredients into
@@ -19,7 +20,8 @@
     C: Recipe facts. A sortable table (cal/serving, cal/g) with filters. The editor is a table with each ingredient's
        share of the calories, a facts panel like a Nutrition Facts label, and a "weigh the pot" helper (full pot minus
        empty pot). Copy = "Make a variation", kept under the original. Star + Meal Time tags.
-  Shared in all three: the Food Library search sheet (USDA foods + label foods), the "type it in from the label" form
+    D: A's list with C's editor (the combination picked on 2026-10-01). Default when no ?variant is given.
+  Shared in all of them: the Food Library search sheet (USDA foods + label foods), the "type it in from the label" form
   (brand, serving size in g, calories per serving → stored per 100 g), and the weighed / servings yield.
   Try: open Turkey chili, change the cooked weight, add "Mission Carb Balance tortilla" (not in the library: type it
   from the label), copy a Recipe, then search the list.
@@ -211,7 +213,7 @@ function VariantA(){
   return `<header><h1>Recipes</h1><div class="sub">${RECIPES.length} recipes</div></header>
   <div style="margin:0 16px"><input class="search" id="rq" placeholder="Search recipes or ingredients" value="${ui.q}" oninput="ui.q=this.value;render();refocus('rq')"></div>
   <div class="row" style="margin:8px 16px 0"><button class="chip ${ui.star?"on":""}" onclick="ui.star=!ui.star;render()">★ Starred</button><span class="sp"></span><button class="btn pri small" onclick="newRecipe()">+ New Recipe</button></div>
-  <div class="card" style="padding:2px 14px">${list.map(r=>{const t=totals(r);return `<div class="rl" onclick="openRecipe(${r.id})"><span class="star ${r.star?"on":""}" style="font-size:16px">★</span><div class="sp"><div class="b">${r.name}</div><div class="xs mute">${r.ings.length} ingredients · ${t.weighed?`${n(r.cooked)} g cooked`:`makes ${r.servings}`}</div></div><div style="text-align:right" class="num"><div class="b">${n(t.perServ)}</div><div class="xs mute">cal / serving</div></div></div>`}).join("")||`<div class="small mute" style="padding:12px 0">No recipes match.</div>`}</div>`;
+  <div class="card" style="padding:2px 14px">${list.map(r=>{const t=totals(r);return `<div class="rl" onclick="openRecipe(${r.id})"><span class="star ${r.star?"on":""}" style="font-size:16px">★</span><div class="sp"><div class="b">${r.name}</div><div class="xs mute">${r.parent&&RECIPES.find(p=>p.id===r.parent)?`Variation of ${RECIPES.find(p=>p.id===r.parent).name} · `:""}${r.ings.length} ingredients · ${t.weighed?`${n(r.cooked)} g cooked`:`makes ${r.servings}`}</div></div><div style="text-align:right" class="num"><div class="b">${n(t.perServ)}</div><div class="xs mute">cal / serving</div></div></div>`}).join("")||`<div class="small mute" style="padding:12px 0">No recipes match.</div>`}</div>`;
 }
 function EditorA(){
   const d=ui.draft,t=totals(d);
@@ -317,9 +319,12 @@ function EditorC(){
   ${foodSheet()}`;
 }
 
+// ---------- Variant D: A's list + C's editor ----------
+function VariantD(){ return ui.draft?EditorC():VariantA(); }
+
 // ---------- shell + switcher ----------
-const VARIANTS={A:["List + form",VariantA],B:["Type it in",VariantB],C:["Recipe facts",VariantC]}; const KEYS=Object.keys(VARIANTS);
-const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+const VARIANTS={A:["List + form",VariantA],B:["Type it in",VariantB],C:["Recipe facts",VariantC],D:["A list + C facts",VariantD]}; const KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"D"; if(!VARIANTS[variant])variant="A";
 function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; ui.label=null; ui.q=""; ui.typed=""; render(); scrollTo(0,0); }
 function render(){
   const y=scrollY, sh=document.querySelector(".sheet"), sy=sh?sh.scrollTop:0;
