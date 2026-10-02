@@ -1,122 +1,76 @@
 # Calorie Manager
 
-A household calorie tracker that plans the week from Recipes, with an AI agent that drafts plans and Rebalances them, and later adapts to the food at home.
+A one-person calorie tracker that plans the week from Recipes, with an AI agent that drafts plans and Rebalances them, and later adapts to the food at home.
 
 ## Language
 
-**Household**:
-The group of people who share one home, one Pantry, and one app. Today: two Members. The MVP starts with one active Member; the second joins in phase 3.
-_Avoid_: family, account, team
-
 **Member**:
-One person in a Household, with their own calorie target and Calorie Log.
-_Avoid_: user, profile
-
-**Pantry**:
-The food the Household currently has at home. Members manage it directly in the app, not only through the Agent.
-_Avoid_: inventory, fridge, stock
+The one person using the app: their own account (a username and password), Calorie Target and Calorie Log. The MVP has exactly one; accounts are created by hand in the back end.
+_Avoid_: user, profile, household
 
 **Agent**:
-The built-in AI that reflects on what Members did and recommends what to do next. Members can chat with it, but it supports the app rather than being the main way to use it.
+The built-in AI that drafts the Meal Plan in a planning chat and proposes Rebalances. What the Member asks it for happens straight away; what it suggests waits for a yes. Logging and Recipes work without it.
 _Avoid_: bot, assistant, chatbot
 
-**Meal Plan**:
-The Household's single plan for the week. Shared meals appear once, with a separate Portion for each Member.
-_Avoid_: plan (alone), menu, schedule
-
-**Portion**:
-How much of a planned meal one Member eats, and so how many calories it gives them.
-
-**Missing Ingredient**:
-Something a Meal Plan needs that isn't in the Pantry.
-
-**Grocery List**:
-The Household's live list of things to buy. Members add to it at any time, and approving a Meal Plan merges in its Missing Ingredients plus anything the Agent recommends.
-_Avoid_: shopping list
-
-**Preferences**:
-A Member's dislikes, allergies, and diet (for example vegetarian). Meal Plans and Agent recommendations respect them. Allergies are always **hard**. Diets and dislikes are each **hard** or **soft**. A **hard** Preference never appears in that Member's Portion. A **soft** dislike may be blended in where it can't be noticed, and the Agent says so openly.
-_Avoid_: settings, profile
-
-**Calorie Target**:
-The daily calorie ceiling a Member aims to stay under to keep a deficit; a day counts as "under" against it. Typed in by hand in the MVP, then calculated from body stats and workouts in a later phase.
-_Avoid_: goal, plan, budget
-
-**Planning band**:
-The range under the Calorie Target that the Meal Plan aims to land in (90–100% of it by default, editable). Meal Time ranges and the band are guides; the Target is the line.
-_Avoid_: target range
-
-**Calorie Log**:
-One Member's record of what they actually ate and its calories. It may differ from the Meal Plan.
-_Avoid_: diary, journal, tracker
-
-**Food Library**:
-The foods the app already knows calories for. A Member can search it, and the Agent can look up or estimate foods that aren't in it yet.
-_Avoid_: food list, database
-
-**Rebalance**:
-The Agent proposing changes to a Member's remaining meals for the day when the day forecast (calories logged so far plus the rest of today's plan) goes over their Calorie Target, so they can still land under it. It is only a proposal until the Member picks an option.
-_Avoid_: adjust, correct, fix
+**Recipe**:
+A named meal made of ingredients with amounts. Its calories come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback), so a Portion's calories follow how much of it is eaten. Entered by hand; cooking steps are a later phase.
+_Avoid_: dish
 
 **Meal Time**:
-A named time a Member eats ("Breakfast 7:30", "Work lunch 12:00"), set in Settings for the weekdays it applies to, with a calorie range. It is one of three kinds: **Fixed** (the meal is already decided, such as a work lunch, so its calories are set aside and the plan works around them), **Open required** (the plan must fill it), or **Open optional** (the plan may fill it, such as a snack). The name carries no meaning in the app.
+A named time the Member eats ("Breakfast 7:30", "Work lunch 12:00"), set for the weekdays it applies to, with a calorie range. It is one of three kinds: **Fixed** (the meal is already decided, such as a work lunch, so its calories are set aside and the plan works around them), **Open required** (the plan must fill it), or **Open optional** (the plan may fill it, such as a snack). The name carries no meaning in the app.
 _Avoid_: slot, breakfast/lunch/dinner as fixed categories, Eating Out
 
 **Cook**:
-One batch of a Recipe made on a given day. Its Portions are placed at several Meal Times (one Sunday chili feeds dinner plus two lunches), and the shopping list counts its ingredients once.
+One batch of a Recipe made on a given day. Its Portions are placed at several Meal Times (one Sunday chili feeds dinner plus two lunches), and the Shopping list counts its ingredients once.
 _Avoid_: batch, meal prep (as a noun)
 
-**Busy Day**:
-A tagged day when every meal must be quick: leftovers, eating out, or pre-cooked food.
+**Portion**:
+How much of a Cook is eaten at one Meal Time, and so how many calories it gives.
 
-**Prep Session**:
-Weekend cooking planned ahead for later meals (for example Sunday cookies for the week's snacks). Its time counts on the weekend, not on the day the food is eaten.
+**Meal Plan**:
+The Member's plan for one week, Sunday to Saturday: Cooks and their Portions placed at Meal Times. Drafted by the Agent in the planning chat, edited on the grid, and approved.
+_Avoid_: plan (alone), menu, schedule
 
-**Favorites**:
-Recipes and ingredients a Member likes, used by the Agent when planning. Starred by the Member, or added after the Agent asks.
-_Avoid_: likes, saved
+**Calorie Target**:
+The daily calorie ceiling the Member aims to stay under; a day counts as "under" against it. Typed in by hand and the same every day.
+_Avoid_: goal, plan, budget
 
-**Recipe**:
-A named meal made of ingredients with amounts. Its calories come from its ingredients and are shared out by the weight of the cooked result, so a Portion's calories follow how much of it a Member eats. Cooking steps are a future phase.
-_Avoid_: dish
+**Planning band**:
+The range under the Calorie Target that the Agent aims each planned day to land in (90–100% of it by default, editable), so a day is neither planned right at the limit nor far below it. Meal Time ranges and the band are guides; the Target is the line.
+_Avoid_: target range
 
-**Kitchen Tools**:
-The cooking equipment the Household owns (oven, air fryer, blender…). A Recipe that needs a missing tool is never put in the Meal Plan, though the Agent may mention it.
-_Avoid_: equipment, appliances
+**Calorie Log**:
+The Member's record of what they actually ate and its calories. It may differ from the Meal Plan.
+_Avoid_: diary, journal, tracker
 
-**Schedule**:
-An editable, per-Member setting for when the Agent acts on its own (weekly reflection and planning, recaps, meal-slot check-ins). Changed in the app or through chat.
-_Avoid_: cron, timer
+**Food Library**:
+The foods the app knows calories for, from USDA FoodData Central (including its Branded Foods) or typed in once from a label. Each food has calories per 100 g and its serving sizes in grams.
+_Avoid_: food list, database
 
-**Recap**:
-A dashboard of how a Member did over a period (daily, weekly, monthly or a custom range), with the Agent's quick recommendations. The weekly Recap is the reflection that leads into planning.
-_Avoid_: report, summary
+**Shopping list**:
+What to buy for an approved Meal Plan, one line per food. It starts with a "have it" pass, where the Member ticks what's already at home, then is ticked off while shopping.
+_Avoid_: grocery list
 
-**Stats**:
-The full breakdown behind a Recap: each day's meals against the Meal Plan, a month calendar, and weekly tables. Opened from the Recap or the ☰ menu.
-_Avoid_: analytics, history
+**Rebalance**:
+A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Fixed Meal Times or takes an Open required one below its range. Nothing changes until the Member approves.
+_Avoid_: adjust, correct, fix
 
-**Check-in**:
-A question the Agent raises on its own (leftovers, a skipped meal, an unbought ingredient), shown in chat and counted on the Chat tab's badge.
-_Avoid_: nudge, reminder
+**Week view**:
+The one stats page: each day of the week against the Calorie Target and planning band, the count of days under, and the week's average.
+_Avoid_: stats, recap, analytics
 
-**Activity Log**:
-The list of every change the Agent made, each with an undo.
-_Avoid_: history, audit
-
-**Agent notes**:
-A short list (at most 15 lines) of habits the Agent remembers about one Member, such as "hates Sunday meal prep". Saved only after the Member says yes, and visible and editable in Settings.
-_Avoid_: memory, profile
+**Pantry** _(later phase, not in the MVP)_:
+The food at home, tracked in the app so the Agent can adapt suggestions to it. In the MVP the Shopping list's "have it" pass stands in for it.
+_Avoid_: inventory, fridge, stock
 
 ## Relationships
 
-- A **Household** has one or more **Members**, exactly one **Pantry**, and one **Meal Plan** per week
-- A planned meal has one **Portion** per **Member** eating it
-- Each **Member** has one **Calorie Target**, one **Calorie Log**, and their own **Preferences**
-- A **Grocery List** is built from the upcoming **Meal Plan**'s **Missing Ingredients**
-- A **Rebalance** changes the rest of today's **Meal Plan** for one **Member**, using what's left under their **Calorie Target**
+- A **Member** has one **Calorie Target**, one **Calorie Log**, a set of **Meal Times**, and one **Meal Plan** per week
+- A **Meal Plan** holds **Cooks**; each **Cook** is one **Recipe** made once, with **Portions** placed at **Meal Times**
+- Approving a **Meal Plan** builds its **Shopping list**
+- A **Rebalance** changes **Portions** in the current **Meal Plan**, using what's left under the **Calorie Target**
 
 ## Flagged ambiguities
 
-- "Restriction" (said by the Member) means a **hard** dislike; "Dislike" means a **soft** one.
 - "Plan" was used for both the weekly meal plan and a calorie goal. Resolved: **Meal Plan** and **Calorie Target**.
+- "The band" means the **Planning band**; on screen it can read "Aim: 1,800–2,000".
