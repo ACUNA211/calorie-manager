@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Plan page (#05)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp-reset/issues/05-plan-page.md
+  Question: what does planning the week look like? A planning chat next to a Sunday-to-Saturday grid of Meal Times.
+  The Agent drafts from Recipes, Meal Times, the Calorie Target and band, use-up notes and how last week went: Set times
+  first, then Planned, then If room while calories remain. How is a Cook shown, and how are its Portions moved, resized
+  or removed? How are day totals against the band shown? What does Approve do? What does changing an approved plan look
+  like? How do Recipe stars and Meal Time tags (#04) show up?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: Chat thread. The page is the chat. The draft arrives as a message holding a live mini grid; later changes come
+       back as messages with what changed and Undo. Approve sits by the input.
+    B: Grid + chat drawer. The week grid fills the page (rows are Meal Times, columns weekdays, like #03), each Cook in
+       its own colour, day totals and bars under each column, and a Cooks legend. The chat is a drawer at the bottom.
+    C: Cooks board. Tabs for Days, Cooks and Chat under a week strip that is always visible. Days lists each day's meals
+       with a bar; Cooks shows each batch with its Portions as chips; Chat is the chat.
+  Shared in all three: the scripted Agent, the Portion sheet (resize in servings, move, swap, remove), the fill / swap
+  picker (Cooks with servings spare first, then Recipes tagged for that Meal Time, starred first, then the rest), the
+  Cook sheet (cook day, servings made, spare), Approve (builds the shopping list), and the "changed since approval" bar.
+  The Agent is scripted. Things to try in the chat: "use the spinach by Monday", "no salmon this week", "can you add
+  lasagna?" (it can't invent Recipes), "draft it", "yes" to its Thursday suggestion, "make Friday lighter".
+  Scenario: Fri Oct 2, planning Oct 4–10. Target 2,000, aim 90–100% (1,800–2,000). Meal Times and Recipes from #03 / #04.
+  All state is in memory; reload resets it.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--goodbg:#e3f1e8;--bad:#c0392b;--badbg:#fbe5e1;--warn:#a0561a;--warnbg:#fdebd8;--accent:#3056d3;--soft:#eef2ff;--set:#8a5cc2;--setbg:#efe7f8;--star:#e0a000;--chg:#e08a1e}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding:0 0 150px}
+  button{font:inherit;cursor:pointer} input,select{font:inherit}
+  .row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px} .b{font-weight:600} .num{font-variant-numeric:tabular-nums}
+  header{padding:16px 16px 6px} header h1{margin:0;font-size:21px} header .sub{color:var(--mute);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 16px;padding:12px 14px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff} .btn.good{background:var(--good);border-color:var(--good);color:#fff}
+  .btn.ghost{border:none;background:none;color:var(--accent);padding:6px 4px} .btn.sm{padding:5px 9px;font-size:13px}
+  .btn.danger{color:var(--bad)} .btn:disabled{opacity:.45;cursor:default}
+  .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700}
+  .p-draft{background:#fff3c4;color:#8a6a00} .p-appr{background:var(--goodbg);color:var(--good)} .p-empty{background:#ecebe6;color:var(--mute)}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12.5px;border:1px solid var(--line);background:#fff;margin:3px 3px 0 0;cursor:pointer}
+  .chip.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .infobox{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .okbox{background:var(--goodbg);color:var(--good);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .badbox{background:var(--badbg);color:var(--bad);border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px}
+  .chgbar{background:#fff4e5;border:1px solid #f3c58a;border-radius:12px;margin:10px 16px;padding:9px 12px;font-size:13px}
+  .star{color:var(--star)}
+  /* chat */
+  .msg{max-width:88%;padding:9px 12px;border-radius:14px;margin:6px 0;font-size:14px;line-height:1.4}
+  .msg.agent{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.me{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+  .msg ul{margin:4px 0;padding-left:18px} .msg li{margin:2px 0}
+  .msg .diff{font-size:12.5px;color:var(--mute);margin-top:4px}
+  .inbar{display:flex;gap:6px} .inbar input{flex:1;border:1px solid var(--line);border-radius:999px;padding:9px 14px;background:#fff}
+  /* grid */
+  .grid{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+  .grid th{font-weight:600;color:var(--mute);padding:3px 0;font-size:11.5px}
+  .grid td{border-top:1px solid var(--line);padding:2px 1px;text-align:center;vertical-align:middle}
+  .grid td.nm{text-align:left;padding-left:2px;font-size:11px;line-height:1.1}
+  .cell{display:block;border-radius:6px;padding:3px 1px;line-height:1.1;cursor:pointer;min-height:30px;border-left:3px solid transparent;overflow:hidden}
+  .cell .rn{font-weight:600;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell.set{background:var(--setbg);color:var(--set);cursor:default}
+  .cell.empty{border:1px dashed var(--bad);color:var(--bad)} .cell.room{border:1px dashed #d2d0c9;color:#b5b3ab} .cell.none{color:#d2d0c9;cursor:default}
+  .cell.fade{opacity:.22} .cell.chg{box-shadow:inset 0 0 0 2px var(--chg)}
+  .vbar{position:relative;height:56px;width:16px;margin:0 auto;background:#f0efea;border-radius:4px;overflow:hidden}
+  .vbar>div{position:absolute;left:0;right:0}
+  .hbar{position:relative;height:12px;background:#f0efea;border-radius:4px;overflow:hidden;margin:4px 0}
+  .hbar>div{position:absolute;top:0;bottom:0}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .s-ok{color:var(--good)} .s-low{color:var(--warn)} .s-over{color:var(--bad)}
+  /* sheet */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30}
+  .sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:86vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:31;padding:14px 16px 80px}
+  .opt{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer} .opt:last-child{border-bottom:none}
+  .sizes{display:flex;gap:4px} .sizes button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font-size:13px}
+  .sizes button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .grp{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
+  /* B drawer */
+  .drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:56px;width:calc(100% - 16px);max-width:404px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:20;padding:8px 10px}
+  .drawer .log{max-height:46vh;overflow:auto;padding:0 2px}
+  /* C */
+  .tabs{display:flex;margin:6px 16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .tabs button{flex:1;border:none;background:#fff;padding:8px 0;font-size:14px;border-right:1px solid var(--line)} .tabs button:last-child{border-right:none}
+  .tabs button.on{background:var(--ink);color:#fff;font-weight:600}
+  .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:0 16px;text-align:center}
+  .strip>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px 0 3px;font-size:11px;cursor:pointer}
+  .ml{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer} .ml:last-child{border-bottom:none}
+  .ml .tm{width:40px;font-size:12px;color:var(--mute)}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
+  .pchip{display:inline-block;border-radius:8px;padding:3px 8px;font-size:12px;margin:3px 3px 0 0;cursor:pointer;border:1px solid}
+  /* switcher + state */
+  #sw{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:none;border-radius:999px;width:30px;height:30px}
+  #state{margin:20px 16px;font-size:11px} #state pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;max-height:260px;overflow:auto}
+  .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:10px;z-index:60;font-size:13px;max-width:380px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+<script>
+// ---------- model ----------
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], DATES=[4,5,6,7,8,9,10];
+const DAYL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const TARGET=2000, LO=1800, HI=2000;
+const MTS=[ // from #03
+  {id:1,name:"Breakfast",short:"Bkfst",time:"07:30",days:[0,1,2,3,4,5,6],kind:"planned",min:350,max:450},
+  {id:8,name:"Sat brunch out",short:"Brunch",time:"10:30",days:[6],kind:"set",min:600,max:600},
+  {id:2,name:"Lunch",short:"Lunch",time:"12:00",days:[1,3,4,5],kind:"planned",min:500,max:650},
+  {id:3,name:"Work lunch",short:"Work lunch",time:"12:00",days:[2],kind:"set",min:900,max:900},
+  {id:4,name:"Weekend lunch",short:"Wknd lunch",time:"12:30",days:[0,6],kind:"planned",min:450,max:650},
+  {id:5,name:"Snack",short:"Snack",time:"15:30",days:[0,1,2,3,4,5,6],kind:"ifroom",min:100,max:250},
+  {id:6,name:"Dinner",short:"Dinner",time:"18:30",days:[0,1,2,3,4,5,6],kind:"planned",min:550,max:800},
+  {id:7,name:"Dessert",short:"Dessert",time:"20:30",days:[5,6],kind:"ifroom",min:150,max:300},
+];
+const KIND={set:"Set",planned:"Planned",ifroom:"If room"};
+// Recipes (#04): calories per serving, servings per batch, grams per serving when weighed, ingredients per batch.
+const RECIPES=[
+  {id:1,name:"Turkey chili",star:true,tags:["Lunch","Weekend lunch","Dinner"],per:438,serv:6,g:433,ings:[["Ground turkey",2,"lb"],["Kidney beans",2,"can"],["Onion",2,""],["Diced tomatoes",2,"can"],["Olive oil",2,"tbsp"],["Chili seasoning",1,"packet"]]},
+  {id:2,name:"Overnight oats",star:true,tags:["Breakfast"],per:355,serv:1,ings:[["Rolled oats",.5,"cup"],["Milk 2%",.75,"cup"],["Chia seeds",1,"tbsp"],["Banana",.5,""]]},
+  {id:3,name:"Chicken rice bowl",star:false,tags:["Lunch","Dinner"],per:511,serv:4,g:412,ings:[["Chicken breast",1.5,"lb"],["White rice",1.5,"cup"],["Broccoli",3,"cup"],["Olive oil",1,"tbsp"]]},
+  {id:4,name:"Yogurt + PB bowl",star:false,tags:["Snack","Dessert"],per:248,serv:1,ings:[["Greek yogurt",170,"g"],["Peanut butter",1,"tbsp"],["Banana",.5,""]]},
+  {id:5,name:"Sheet-pan salmon + sweet potato",star:false,tags:["Dinner"],per:556,serv:2,ings:[["Salmon fillet",2,""],["Sweet potato",2,""],["Broccoli",2,"cup"],["Olive oil",1,"tbsp"]]},
+  {id:6,name:"Spinach egg scramble",star:false,tags:["Breakfast"],per:341,serv:1,ings:[["Eggs",3,""],["Spinach",2,"cup"],["Cheddar",1,"slice"]]},
+  {id:7,name:"Chicken fajitas",star:false,tags:["Dinner"],per:540,serv:4,ings:[["Chicken breast",1.5,"lb"],["Bell pepper",3,""],["Onion",1,""],["Flour tortillas",8,""],["Olive oil",1,"tbsp"]]},
+  {id:8,name:"Lentil soup",star:false,tags:["Lunch","Weekend lunch","Dinner"],per:360,serv:6,g:380,ings:[["Dry lentils",2,"cup"],["Carrot",3,""],["Onion",1,""],["Vegetable broth",2,"carton"],["Diced tomatoes",1,"can"]]},
+  {id:9,name:"Apple + peanut butter",star:false,tags:["Snack"],per:190,serv:1,ings:[["Apple",1,""],["Peanut butter",1,"tbsp"]]},
+  {id:10,name:"Dark chocolate + berries",star:true,tags:["Dessert"],per:180,serv:1,ings:[["Dark chocolate",20,"g"],["Berries",.5,"cup"]]},
+  {id:11,name:"Tuna salad wrap",star:false,tags:[],per:430,serv:1,ings:[["Tuna",1,"can"],["Flour tortillas",1,""],["Mayo",1,"tbsp"]]},
+];
+const R=id=>RECIPES.find(r=>r.id===id), MT=id=>MTS.find(m=>m.id===id);
+const PAL=["#3056d3","#2f7d4f","#c0392b","#1f8a9e","#d35d9a","#a0561a","#5a6b2f","#7b4fc4"];
+let S={status:"empty",cooks:[],notes:[],chat:[],approvedList:null,pending:null,hist:[]}, nextCook=1;
+const ui={sheet:null,hl:null,drawer:true,tab:"chat",cDay:null,typed:""};
+
+// ---------- helpers ----------
+const n=x=>Math.round(x).toLocaleString("en-US");
+const frac=x=>{const w=Math.floor(x+1e-9),f=Math.round((x-w)*4);return (w||f?"":"0")+(w?w:"")+["","¼","½","¾"][f];};
+const cal=(c,p)=>p.size*R(c.rid).per;
+function portionsAt(d,mt){ const out=[]; S.cooks.forEach(c=>c.portions.forEach((p,i)=>{if(p.d===d&&p.mt===mt)out.push({c,p,i});})); return out; }
+function dayTot(d){ let t=0; MTS.forEach(m=>{ if(!m.days.includes(d))return; if(m.kind==="set")t+=m.min; else portionsAt(d,m.id).forEach(o=>t+=cal(o.c,o.p)); }); return t; }
+const status=t=>t>TARGET?"over":t<LO?"low":"ok";
+const STATUS={ok:"in the aim",low:"under the aim",over:"over the target"};
+const placed=c=>c.portions.reduce((s,p)=>s+p.size,0);
+function cookColor(c){ if(c.portions.length<2) return "#9a988f"; const multi=S.cooks.filter(x=>x.portions.length>1); return PAL[multi.indexOf(c)%PAL.length]; }
+const onDay=d=>MTS.filter(m=>m.days.includes(d)).sort((a,b)=>a.time.localeCompare(b.time));
+const suits=(r,m)=>r.tags.includes(m.name);
+function cellState(d,m){ if(m.kind==="set")return "set"; const ps=portionsAt(d,m.id); if(ps.length){const s=ps.reduce((a,o)=>a+cal(o.c,o.p),0); return s<m.min?"below":s>m.max?"above":"ok";} return m.kind==="planned"?"empty":"room"; }
+const inAim=()=>DAYS.filter((_,d)=>status(dayTot(d))==="ok").length;
+const clone=o=>JSON.parse(JSON.stringify(o));
+function snap(){ S.hist.push(clone({cooks:S.cooks,pending:S.pending})); }
+function undo(){ const h=S.hist.pop(); if(!h){toast("Nothing to undo");return;} S.cooks=h.cooks; S.pending=h.pending; ui.sheet=null; toast("Undone"); render(); }
+function toast(t){ const e=document.createElement("div"); e.className="toast"; e.textContent=t; document.body.appendChild(e); setTimeout(()=>e.remove(),2600); }
+function addCook(rid,day,made,portions){ const c={id:nextCook++,rid,day,made:made??R(rid).serv,portions}; S.cooks.push(c); return c; }
+function prune(){ S.cooks=S.cooks.filter(c=>c.portions.length); }
+
+// ---------- shopping list ----------
+function shopping(){ const m={}; S.cooks.forEach(c=>{const r=R(c.rid),k=c.made/r.serv; r.ings.forEach(([f,q,u])=>{const key=f+"|"+u; m[key]=(m[key]||0)+q*k;});}); return m; }
+const fmtQ=(key,q)=>{const [f,u]=key.split("|"); const qq=u==="g"?n(q):frac(Math.round(q*4)/4); return `${f}: ${qq}${u?" "+u:""}`;};
+function shopDiff(){ if(!S.approvedList)return null; const a=S.approvedList,b=shopping(); const add=[],rm=[],chg=[];
+  Object.keys(b).forEach(k=>{ if(!(k in a))add.push(k); else if(Math.abs(a[k]-b[k])>.01)chg.push(k); }); Object.keys(a).forEach(k=>{ if(!(k in b))rm.push(k); });
+  return {add,rm,chg,n:add.length+rm.length+chg.length}; }
+
+// ---------- the scripted Agent ----------
+function draft(){
+  snap(); S.cooks=[]; nextCook=1;
+  const spinach=S.notes.some(x=>/spinach/i.test(x)), noSalmon=S.notes.some(x=>/salmon/i.test(x));
+  addCook(1,0,6,[{d:0,mt:6,size:1.75},{d:1,mt:2,size:1.5},{d:3,mt:2,size:1.5},{d:4,mt:2,size:1.25}]); // chili Sun
+  addCook(8,0,6,[{d:0,mt:4,size:1.5},{d:6,mt:4,size:1.25}]); // lentil soup Sun
+  if(spinach){ addCook(6,0,1,[{d:0,mt:1,size:1}]); addCook(6,1,1,[{d:1,mt:1,size:1}]); addCook(2,0,2,[{d:2,mt:1,size:1},{d:3,mt:1,size:1}]); }
+  else addCook(2,0,4,[{d:0,mt:1,size:1},{d:1,mt:1,size:1},{d:2,mt:1,size:1},{d:3,mt:1,size:1}]);
+  addCook(2,3,3,[{d:4,mt:1,size:1},{d:5,mt:1,size:1},{d:6,mt:1,size:1}]);
+  addCook(3,1,4,[{d:1,mt:6,size:1.25},{d:2,mt:6,size:1.25},{d:5,mt:2,size:1.25}]);
+  if(noSalmon) addCook(7,3,4,[{d:3,mt:6,size:1},{d:4,mt:6,size:1}]); else addCook(5,3,2,[{d:3,mt:6,size:1},{d:4,mt:6,size:1}]);
+  addCook(7,5,4,[{d:5,mt:6,size:1},{d:6,mt:6,size:1}]);
+  addCook(9,0,1,[{d:0,mt:5,size:1}]); addCook(4,1,1,[{d:1,mt:5,size:1}]); addCook(4,3,1,[{d:3,mt:5,size:1}]);
+  addCook(9,4,1,[{d:4,mt:5,size:1}]); addCook(9,5,1,[{d:5,mt:5,size:1}]); addCook(10,5,1,[{d:5,mt:7,size:1}]);
+  S.status="draft";
+  const batches=S.cooks.filter(c=>c.portions.length>1).map(c=>`${R(c.rid).star?"★ ":""}${R(c.rid).name} ${DAYS[c.day]} (${c.portions.length} meals)`);
+  const low=DAYS.map((_,d)=>d).filter(d=>status(dayTot(d))!=="ok");
+  S.pending=low.includes(4)?"thu":null;
+  say("agent",`Here's a draft for Oct 4–10.<ul>
+    <li><b>Set aside first:</b> Tue Work lunch 900, Sat brunch out 600.</li>
+    <li><b>Cooks:</b> ${batches.join("; ")}. Each fills only Meal Times it's tagged for.</li>
+    ${spinach?"<li><b>Spinach:</b> egg scramble for Sun and Mon breakfast.</li>":""}
+    ${noSalmon?"<li><b>No salmon:</b> Wednesday and Thursday dinner are Chicken fajitas instead.</li>":""}
+    <li><b>If room:</b> snacks on 5 days and dessert Friday. None on Tue or Sat: no room after the Set meals.</li>
+    <li>${inAim()} of 7 days land in the aim.${low.map(d=>` ${DAYL[d]} lands at ${n(dayTot(d))}, under ${n(LO)}.`).join("")}</li></ul>
+    ${S.pending?`Want me to make Thursday's lunch 1½ servings of chili and its snack a Yogurt + PB bowl? That brings it to about 1,900.`:""}`,
+    S.pending?["Yes, do that","Leave it"]:["Make Friday lighter","Approve"]);
+  ui.tab="days"; ui.drawer=false;
+}
+const DAYRE=/(sun|mon|tue|wed|thu|fri|sat)/i;
+function say(who,html,chips,undoable){ S.chat.push({who,html,chips:chips||[],undo:undoable?S.hist.length:null}); }
+function send(text){
+  text=(text||"").trim(); if(!text)return; ui.typed=""; say("me",text); const t=text.toLowerCase();
+  const unknown=t.match(/lasagna|pizza|tacos?|curry|stir.?fry|burgers?|pad thai/);
+  if(unknown){ say("agent",`I can only plan from your Recipes, and there's no Recipe for ${unknown[0]}. Add it on the Recipes page and I'll be able to use it. The closest you have: Turkey chili, Chicken fajitas.`,["Draft it"]); return render(); }
+  if(S.status==="empty"){
+    if(/draft|go ahead|plan it|that's all|ready/.test(t)) draft();
+    else { S.notes.push(text); say("agent",`Noted: “${text}”. Anything else, or shall I draft?`,["No salmon this week","Draft it"]); }
+    return render();
+  }
+  if(/^(yes|yep|ok|sure|do (it|that))/.test(t)&&S.pending==="thu"){ snap(); applyThu(); return render(); }
+  if(/^(no|leave)/.test(t)&&S.pending){ S.pending=null; say("agent","Leaving Thursday as it is."); return render(); }
+  if(/approve/.test(t)){ approve(); return render(); }
+  if(/spinach/.test(t)){ snap(); [0,1].forEach(d=>{ replaceAt(d,1,6); }); say("agent","Done: Spinach egg scramble for Sun and Mon breakfast. Two oat jars fewer.",null,true); return render(); }
+  if(/salmon/.test(t)&&/no|swap|instead|skip|don'?t|without/.test(t)){ const c=S.cooks.find(c=>c.rid===5); if(!c){say("agent","There's no salmon in this plan.");return render();} snap(); c.rid=7; c.made=4; say("agent","Done: the Wednesday Cook is Chicken fajitas instead of salmon. It makes 4 servings, so 2 are spare. Use them for Saturday lunch?",["Yes, use them Saturday","Leave them spare"],true); S.pending="spare"; return render(); }
+  if(/saturday|use them/.test(t)&&S.pending==="spare"){ snap(); const c=S.cooks.find(c=>c.rid===7&&c.day===3); S.cooks.forEach(x=>x.portions=x.portions.filter(p=>!(p.d===6&&p.mt===4))); prune(); c.portions.push({d:6,mt:4,size:1}); S.pending=null; say("agent",`Done: Saturday lunch is fajitas from Wednesday's Cook. Saturday: ${n(dayTot(6))}.`,null,true); return render(); }
+  const dm=t.match(DAYRE);
+  if(dm&&/light|less|small|cut/.test(t)){ const d=DAYS.findIndex(x=>x.toLowerCase()===dm[1]); return resizeDay(d,-.25); }
+  if(dm&&/big|more|hungr|heav/.test(t)){ const d=DAYS.findIndex(x=>x.toLowerCase()===dm[1]); return resizeDay(d,.25); }
+  if(/why|how did|order/.test(t)){ say("agent",`I hold Set Meal Times first (they're already decided), then fill every Planned time inside its range, then add If room times while the day is under ${n(HI)}. I prefer starred Recipes and only use Meal Times a Recipe is tagged for unless you ask.`); return render(); }
+  say("agent","I can swap a Recipe, change a Portion, move things between days, or plan around something to use up. I only use your Recipes. You can also tap anything on the plan to change it yourself.",["Make Friday lighter","No salmon this week","Why this order?"]);
+  render();
+}
+function applyThu(){ S.cooks.forEach(c=>c.portions=c.portions.filter(p=>!(p.d===4&&p.mt===5))); prune(); const ch=S.cooks.find(c=>c.rid===1); const p=ch.portions.find(p=>p.d===4&&p.mt===2); if(p)p.size=1.5; addCook(4,4,1,[{d:4,mt:5,size:1}]); S.pending=null;
+  say("agent",`Done. Thursday: ${n(dayTot(4))}. Chili is now ${frac(placed(ch))} of ${ch.made} servings. ${inAim()} of 7 days in the aim.`,null,true); }
+function resizeDay(d,delta){ const ps=portionsAt(d,6); if(!ps.length){say("agent",`There's no dinner planned on ${DAYL[d]}.`);return render();}
+  const o=ps[0],m=MT(6),nw=o.p.size+delta; if(nw*R(o.c.rid).per<m.min){ say("agent",`Dinner is ${n(cal(o.c,o.p))} and its range starts at ${m.min}, so I can't make it smaller. I could drop ${DAYL[d]}'s If room times instead.`,[`Drop ${DAYS[d]}'s dessert`]); return render(); }
+  snap(); const before=dayTot(d); o.p.size=nw; say("agent",`Done: ${DAYL[d]}'s dinner is ${frac(nw)} servings of ${R(o.c.rid).name}. ${DAYL[d]}: ${n(before)} → ${n(dayTot(d))} (${STATUS[status(dayTot(d))]}).`,null,true); render(); }
+function replaceAt(d,mt,rid){ S.cooks.forEach(c=>c.portions=c.portions.filter(p=>!(p.d===d&&p.mt===mt))); prune(); addCook(rid,d,1,[{d,mt,size:1}]); }
+function approve(){ if(S.status==="empty")return; S.approvedList=shopping(); snapSigs(); S.status="approved"; S.pending=null; ui.sheet={type:"approved"}; say("agent",`Approved. The shopping list has ${Object.keys(S.approvedList).length} foods. Do the “have it” pass before you shop.`); render(); }
+function updateList(){ const d=shopDiff(); S.approvedList=shopping(); ui.sheet=null; toast(`Shopping list updated (${d.n} line${d.n===1?"":"s"})`); render(); }
+
+// ---------- shared sheets ----------
+function openPortion(cid,i){ ui.sheet={type:"portion",cid,i}; render(); }
+function openCell(d,mt){ const ps=portionsAt(d,mt); if(MT(mt).kind==="set"){toast(`${MT(mt).name} is Set: ${MT(mt).min} cal held. Change it in Meal Times.`);return;} if(S.status==="empty"){toast("Ask the Agent for a draft first");return;} if(ps.length) openPortion(ps[0].c.id,ps[0].i); else { ui.sheet={type:"pick",d,mt}; render(); } }
+function setSize(cid,i,s){ snap(); S.cooks.find(c=>c.id===cid).portions[i].size=s; render(); }
+function removePortion(cid,i){ snap(); const c=S.cooks.find(c=>c.id===cid); c.portions.splice(i,1); prune(); ui.sheet=null; toast("Removed"); render(); }
+function moveTo(cid,i,d,mt){ snap(); const c=S.cooks.find(c=>c.id===cid), p=c.portions[i], from={d:p.d,mt:p.mt};
+  portionsAt(d,mt).forEach(o=>{o.p.d=from.d;o.p.mt=from.mt;}); p.d=d; p.mt=mt;
+  if(d<c.day){ c.day=d; toast(`${R(c.rid).name} now needs cooking ${DAYS[d]}`); } ui.sheet=null; render(); }
+function pickCook(cid,d,mt){ snap(); const c=S.cooks.find(c=>c.id===cid); clearCell(d,mt); c.portions.push({d,mt,size:Math.min(1,Math.max(.5,c.made-placed(c)))}); prune(); ui.sheet=null; render(); }
+function pickRecipe(rid,d,mt){ snap(); clearCell(d,mt); addCook(rid,d,null,[{d,mt,size:1}]); prune(); ui.sheet=null; render(); }
+function clearCell(d,mt){ S.cooks.forEach(c=>c.portions=c.portions.filter(p=>!(p.d===d&&p.mt===mt))); }
+function setCook(cid,k,v){ snap(); const c=S.cooks.find(c=>c.id===cid); c[k]=v; render(); }
+function delCook(cid){ snap(); S.cooks=S.cooks.filter(c=>c.id!==cid); ui.sheet=null; toast("Cook removed with its Portions"); render(); }
+function sheetHTML(){
+  const s=ui.sheet; if(!s) return "";
+  let h=`<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet">`;
+  const head=t=>`<div class="row" style="margin-bottom:6px"><b style="font-size:17px">${t}</b><span class="sp"></span><button class="btn ghost" onclick="ui.sheet=null;render()">✕</button></div>`;
+  if(s.type==="portion"){
+    const c=S.cooks.find(c=>c.id===s.cid); if(!c){ui.sheet=null;return "";} const p=c.portions[s.i], r=R(c.rid), m=MT(p.mt), k=cal(c,p), sp=c.made-placed(c);
+    h+=head(`${DAYS[p.d]} ${m.name}`)+`<div class="row"><span class="sw" style="background:${cookColor(c)}"></span><b>${r.star?"<span class='star'>★</span> ":""}${r.name}</b></div>
+      <div class="small mute">From the Cook on ${DAYL[c.day]}: makes ${c.made}, ${frac(placed(c))} placed${sp>0?`, ${frac(sp)} spare`:sp<0?`, <b style="color:var(--bad)">${frac(-sp)} short</b>`:""}. <button class="btn ghost xs" onclick="ui.sheet={type:'cook',cid:${c.id}};render()">Edit Cook</button></div>
+      ${suits(r,m)?"":`<div class="infobox">${r.name} isn't tagged for ${m.name}. That's only a hint, so it's fine to keep.</div>`}
+      <div class="grp">Portion</div><div class="sizes">${[.5,.75,1,1.25,1.5,1.75,2].map(z=>`<button class="${p.size===z?"on":""}" onclick="setSize(${c.id},${s.i},${z})">${frac(z)}</button>`).join("")}</div>
+      <div class="row small" style="margin-top:6px"><b class="num">${n(k)} cal</b>${r.g?`<span class="mute">≈ ${n(p.size*r.g)} g</span>`:""}<span class="sp"></span><span class="${k<m.min||k>m.max?"s-over":"s-ok"}">${m.name} range ${m.min}–${m.max}${k<m.min?": below":k>m.max?": above":" ✓"}</span></div>
+      <div class="small" style="margin-top:4px">${DAYL[p.d]}: <b class="num s-${status(dayTot(p.d))}">${n(dayTot(p.d))}</b> <span class="mute">(aim ${n(LO)}–${n(HI)})</span></div>
+      <div class="row wrap" style="margin-top:14px"><button class="btn" onclick="ui.sheet={type:'move',cid:${c.id},i:${s.i}};render()">Move…</button><button class="btn" onclick="ui.sheet={type:'pick',d:${p.d},mt:${p.mt}};render()">Swap Recipe…</button><span class="sp"></span><button class="btn ghost danger" onclick="removePortion(${c.id},${s.i})">Remove</button></div>`;
+  }
+  if(s.type==="move"){
+    const c=S.cooks.find(c=>c.id===s.cid), p=c.portions[s.i];
+    h+=head(`Move ${R(c.rid).name}`)+`<div class="small mute">From ${DAYS[p.d]} ${MT(p.mt).name}. If the spot is taken, the two trade places.</div>`;
+    DAYS.forEach((dn,d)=>{ h+=`<div class="grp">${DAYL[d]} · ${n(dayTot(d))}</div>`; onDay(d).filter(m=>m.kind!=="set"&&!(d===p.d&&m.id===p.mt)).forEach(m=>{const occ=portionsAt(d,m.id);
+      h+=`<div class="opt" onclick="moveTo(${c.id},${s.i},${d},${m.id})"><span class="small" style="width:96px">${m.name}</span><span class="small mute sp">${occ.length?"swap with "+R(occ[0].c.rid).name:m.kind==="planned"?"<span style='color:var(--bad)'>empty</span>":"empty (If room)"}</span>${suits(R(c.rid),m)?"":`<span class="xs mute">not tagged</span>`}</div>`;}); });
+  }
+  if(s.type==="pick"){
+    const m=MT(s.mt), d=s.d, cur=portionsAt(d,s.mt);
+    const spare=S.cooks.filter(c=>c.day<=d&&c.made-placed(c)>=.5&&!cur.some(o=>o.c===c));
+    const rs=[...RECIPES].sort((a,b)=>b.star-a.star||a.name.localeCompare(b.name));
+    const row=r=>`<div class="opt" onclick="pickRecipe(${r.id},${d},${s.mt})"><span class="sp small">${r.star?"<span class='star'>★</span> ":""}${r.name}</span><span class="small num mute">${r.per} / serving${r.serv>1?` · makes ${r.serv}`:""}</span></div>`;
+    h+=head(`${cur.length?"Swap":"Fill"} ${DAYS[d]} ${m.name}`)+`<div class="small mute">${KIND[m.kind]}, ${m.min}–${m.max} cal. ${DAYL[d]} is at ${n(dayTot(d))}${cur.length?` with ${R(cur[0].c.rid).name}`:""}.</div>
+      ${spare.length?`<div class="grp">From Cooks already planned (no extra shopping)</div>${spare.map(c=>`<div class="opt" onclick="pickCook(${c.id},${d},${s.mt})"><span class="sw" style="background:${cookColor(c)}"></span><span class="sp small">${R(c.rid).name} <span class="mute">cooked ${DAYS[c.day]}</span></span><span class="small mute">${frac(c.made-placed(c))} spare</span></div>`).join("")}`:""}
+      <div class="grp">Tagged for ${m.name}</div>${rs.filter(r=>suits(r,m)).map(row).join("")||`<div class="small mute">None.</div>`}
+      <div class="grp">Other Recipes (not tagged, still fine)</div>${rs.filter(r=>!suits(r,m)).map(row).join("")}
+      <div class="xs mute" style="margin-top:8px">A new Recipe here becomes a new Cook on ${DAYS[d]}. Only your Recipes are listed.</div>
+      ${cur.length?`<button class="btn ghost danger" style="margin-top:8px" onclick="removePortion(${cur[0].c.id},${cur[0].i})">Leave it empty</button>`:""}`;
+  }
+  if(s.type==="cook"){
+    const c=S.cooks.find(c=>c.id===s.cid); if(!c){ui.sheet=null;return "";} const r=R(c.rid), sp=c.made-placed(c);
+    h+=head("Cook")+`<div class="row"><span class="sw" style="background:${cookColor(c)}"></span><b>${r.name}</b></div>
+      <div class="row wrap" style="gap:14px;margin-top:8px"><div><div class="xs mute">Cook on</div><select class="btn sm" onchange="setCook(${c.id},'day',+this.value)">${DAYS.map((x,i)=>`<option value="${i}" ${i===c.day?"selected":""}>${x} ${DATES[i]}</option>`).join("")}</select></div>
+      <div><div class="xs mute">Makes (servings)</div><div class="row"><button class="btn sm" onclick="setCook(${c.id},'made',Math.max(1,${c.made}-1))">−</button><b class="num">${c.made}</b><button class="btn sm" onclick="setCook(${c.id},'made',${c.made}+1)">+</button></div></div></div>
+      <div class="small" style="margin-top:8px">${frac(placed(c))} placed${sp>0?`, ${frac(sp)} spare`:""}. ${c.made!==r.serv?`<span class="mute">The Recipe makes ${r.serv}; the shopping list scales to ${c.made}.</span>`:""}</div>
+      ${sp<0?`<div class="badbox">The Portions need ${frac(placed(c))} servings but the Cook makes ${c.made}. <button class="btn sm" onclick="setCook(${c.id},'made',${Math.ceil(placed(c))})">Make ${Math.ceil(placed(c))}</button></div>`:""}
+      ${c.portions.some(p=>p.d<c.day)?`<div class="badbox">A Portion is planned before ${DAYS[c.day]}, when this is cooked.</div>`:""}
+      <div class="grp">Portions</div>${c.portions.map((p,i)=>`<div class="opt" onclick="openPortion(${c.id},${i})"><span class="small sp">${DAYS[p.d]} ${MT(p.mt).name}</span><span class="small num">${frac(p.size)} · ${n(cal(c,p))} cal</span></div>`).join("")}
+      <button class="btn ghost danger" style="margin-top:10px" onclick="delCook(${c.id})">Remove this Cook and its Portions</button>`;
+  }
+  if(s.type==="approved"||s.type==="diff"){
+    const L=shopping(), d=shopDiff();
+    h+=head(s.type==="approved"?"Plan approved":"Changed since approval");
+    if(s.type==="diff"&&d) h+=`<div class="small">Updating the shopping list will:</div><ul class="small">${d.add.map(k=>`<li>add ${fmtQ(k,L[k])}</li>`).join("")}${d.chg.map(k=>`<li>change ${fmtQ(k,L[k])} (was ${frac(Math.round(S.approvedList[k]*4)/4)})</li>`).join("")}${d.rm.map(k=>`<li>remove ${k.split("|")[0]}</li>`).join("")}</ul>
+      <div class="xs mute">Lines you've already ticked as “have it” or bought stay ticked; only what's left to buy changes (see #06).</div><div class="row" style="margin-top:10px"><button class="btn pri" onclick="updateList()">Update shopping list</button><button class="btn" onclick="ui.sheet=null;render()">Not yet</button></div>`;
+    else h+=`<div class="okbox">Shopping list built: ${Object.keys(L).length} foods, one line each, scaled to each Cook.</div>
+      <div class="small" style="margin-top:8px;columns:2;column-gap:14px">${Object.keys(L).sort().map(k=>`<div>${fmtQ(k,L[k])}</div>`).join("")}</div>
+      <div class="xs mute" style="margin-top:8px">Next on the list page: the “have it” pass, then shop (#06). The plan stays editable.</div><button class="btn pri" style="margin-top:10px" onclick="ui.sheet=null;render()">Done</button>`;
+  }
+  return h+"</div>";
+}
+function changedBar(){
+  if(S.status!=="approved") return ""; const d=shopDiff(); if(!d||!d.n) return `<div class="okbox" style="margin:10px 16px">Approved Fri Oct 2 · the shopping list matches the plan.</div>`;
+  return `<div class="chgbar row"><div class="sp"><b>Changed since approval.</b> The shopping list is ${d.n} line${d.n>1?"s":""} behind.</div><button class="btn sm" onclick="ui.sheet={type:'diff'};render()">Review</button></div>`;
+}
+function statusPill(){ return S.status==="empty"?`<span class="pill p-empty">Not drafted</span>`:S.status==="draft"?`<span class="pill p-draft">Draft</span>`:`<span class="pill p-appr">Approved</span>`; }
+function chatLog(){ return S.chat.map((m,i)=>`<div class="msg ${m.who}">${m.html}${m.who==="agent"&&m.undo!=null&&i===S.chat.length-1?` <button class="btn ghost xs" onclick="undo()">Undo</button>`:""}${m.chips.length&&i===S.chat.length-1?`<div>${m.chips.map(c=>`<span class="chip" onclick="chipSend(this)">${c}</span>`).join("")}</div>`:""}</div>`).join(""); }
+function chipSend(el){ const t=el.textContent; if(t==="Approve")return approve(); if(t==="Draft it")return send("Draft it"); send(t); }
+function inputBar(id){ return `<div class="inbar"><input id="${id}" placeholder="${S.status==="empty"?"Anything to use up or plan around?":"Ask for a change…"}" value="${ui.typed}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter'){send(this.value);setTimeout(()=>refocus('${id}'))}"><button class="btn pri" onclick="send(document.getElementById('${id}').value)">Send</button></div>`; }
+function refocus(id){ const e=document.getElementById(id); if(e)e.focus(); }
+
+// ---------- grid (A mini, B full) ----------
+function gridHTML(mini){
+  let h=`<table class="grid"><tr><th style="width:${mini?52:66}px"></th>${DAYS.map((d,i)=>`<th>${d[0]}${d[1]}<div class="xs mute" style="font-weight:400">${DATES[i]}</div></th>`).join("")}</tr>`;
+  [...MTS].sort((a,b)=>a.time.localeCompare(b.time)).forEach(m=>{
+    h+=`<tr><td class="nm"><b>${m.short}</b>${mini?"":`<div class="mute" style="font-size:10px">${KIND[m.kind]}</div>`}</td>`;
+    DAYS.forEach((_,d)=>{
+      if(!m.days.includes(d)){h+=`<td><span class="cell none">·</span></td>`;return;}
+      if(m.kind==="set"){h+=`<td><span class="cell set" onclick="openCell(${d},${m.id})">Set<br>${m.min}</span></td>`;return;}
+      const ps=portionsAt(d,m.id);
+      if(!ps.length){ const left=TARGET-dayTot(d); h+=`<td><span class="cell ${m.kind==="planned"?"empty":"room"}" onclick="openCell(${d},${m.id})">${S.status==="empty"?"":m.kind==="planned"?"fill":left>=m.min?"room":"–"}</span></td>`; return; }
+      const o=ps[0], col=cookColor(o.c), fade=ui.hl&&ui.hl!==o.c.id, k=cal(o.c,o.p), bad=k<m.min||k>m.max;
+      const chg=S.status==="approved"&&changedCell(d,m.id);
+      h+=`<td><span class="cell ${fade?"fade":""} ${chg?"chg":""}" style="background:${col}1f;border-left-color:${col}" onclick="openCell(${d},${m.id})"><div class="rn">${short(R(o.c.rid).name)}</div><span class="num" style="${bad?"color:var(--bad);font-weight:700":""}">${n(k)}</span>${o.p.d===o.c.day&&o.c.portions.length>1?"<span title='cooked today'>🔥</span>":""}</span></td>`;
+    });
+    h+="</tr>";
+  });
+  h+=`<tr><td class="nm mute">Day</td>${DAYS.map((_,d)=>{const t=dayTot(d),s=status(t);return `<td class="num s-${s}" style="font-weight:700;font-size:11px">${S.status==="empty"?"":(t/1000).toFixed(2)+"k"}</td>`}).join("")}</tr>`;
+  if(!mini) h+=`<tr><td class="nm xs mute">vs aim</td>${DAYS.map((_,d)=>`<td>${vbar(d)}</td>`).join("")}</tr>`;
+  return h+"</table>";
+}
+const short=s=>s.replace("Sheet-pan ","").replace(" + sweet potato","").replace("Overnight ","").replace("Chicken ","Chkn ").replace("Turkey ","").replace("Spinach egg ","Egg ").replace("Apple + peanut butter","Apple+PB").replace("Dark chocolate + berries","Choc").replace("Yogurt + PB bowl","Yogurt");
+// cells changed since approval: compare each cell's Recipe and size with the approved snapshot
+let sigs={}; function snapSigs(){ sigs={}; DAYS.forEach((_,d)=>MTS.forEach(m=>sigs[d+"-"+m.id]=cellSig(d,m.id))); }
+function changedCell(d,mt){ return (sigs[d+"-"+mt]||"")!==cellSig(d,mt); }
+function cellSig(d,mt){ return portionsAt(d,mt).map(o=>`${o.c.rid}:${o.p.size}`).join(); }
+function vbar(d){ const t=dayTot(d),top=TARGET*1.2,p=v=>Math.min(100,v/top*100),s=status(t);
+  return `<div class="vbar"><div style="bottom:${p(LO)}%;height:${p(HI-LO)}%;background:rgba(47,125,79,.25)"></div><div style="bottom:0;height:${p(t)}%;background:${s==="over"?"var(--bad)":s==="low"?"#e0a24a":"var(--accent)"};opacity:.8"></div><div style="bottom:${p(TARGET)}%;height:2px;background:var(--bad)"></div></div>`; }
+function hbar(d){ const t=dayTot(d),top=TARGET*1.2,p=v=>Math.min(100,v/top*100),s=status(t);
+  return `<div class="hbar"><div style="left:${p(LO)}%;width:${p(HI-LO)}%;background:rgba(47,125,79,.25)"></div><div style="left:0;width:${p(t)}%;background:${s==="over"?"var(--bad)":s==="low"?"#e0a24a":"var(--accent)"};opacity:.75"></div><div style="left:${p(TARGET)}%;width:2px;background:var(--bad)"></div></div>`; }
+function cooksLegend(){ const multi=S.cooks.filter(c=>c.portions.length>1); if(!multi.length)return "";
+  return `<div class="b small" style="margin-bottom:4px">Cooks (tap to highlight, again to edit)</div>${multi.map(c=>{const sp=c.made-placed(c);return `<div class="opt" style="padding:6px 0;${ui.hl&&ui.hl!==c.id?"opacity:.4":""}" onclick="hlCook(${c.id})"><span class="sw" style="background:${cookColor(c)}"></span><span class="small sp">${R(c.rid).star?"<span class='star'>★</span> ":""}${R(c.rid).name} <span class="mute">· 🔥 ${DAYS[c.day]}</span></span><span class="xs mute">${c.portions.length} meals · ${frac(placed(c))}/${c.made}${sp<0?" <b style='color:var(--bad)'>short</b>":sp>0?` (${frac(sp)} spare)`:""}</span></div>`}).join("")}<div class="xs mute">Grey cells are one-off Cooks (a snack, a single breakfast).</div>`; }
+function hlCook(id){ if(ui.hl===id){ ui.sheet={type:"cook",cid:id}; ui.hl=null; } else ui.hl=id; render(); }
+
+// ---------- Variant A: chat thread ----------
+function VariantA(){
+  let h=`<header class="row"><div><h1>Plan</h1><div class="sub">Oct 4–10 · this week's chat</div></div><span class="sp"></span>${statusPill()}<button class="btn ghost" onclick="undo()">↶</button></header>${changedBar()}<div style="margin:0 12px">`;
+  S.chat.forEach((m,i)=>{
+    h+=`<div class="msg ${m.who}">${m.html}`;
+    if(m.html.startsWith("Here's a draft")) h+=`<div class="card" style="margin:8px -6px 2px;padding:6px 4px">${gridHTML(true)}<div class="xs mute" style="padding:4px 2px">This plan is live: tap any meal to change it. ${inAim()} of 7 days in the aim.</div></div>`;
+    if(m.who==="agent"&&m.undo!=null&&i===S.chat.length-1) h+=` <button class="btn ghost xs" onclick="undo()">Undo</button>`;
+    if(m.chips.length&&i===S.chat.length-1) h+=`<div>${m.chips.map(c=>`<span class="chip" onclick="chipSend(this)">${c}</span>`).join("")}</div>`;
+    h+=`</div>`;
+  });
+  h+=`</div><div style="position:sticky;bottom:58px;margin:10px 12px;background:var(--bg);padding:6px 0">${S.status==="draft"?`<button class="btn good" style="width:100%;margin-bottom:6px" onclick="approve()">Approve and build the shopping list</button>`:""}${inputBar("inA")}</div>`;
+  return h;
+}
+
+// ---------- Variant B: grid + chat drawer ----------
+function VariantB(){
+  let h=`<header class="row"><div><h1>Plan</h1><div class="sub">Oct 4–10 · tap a meal to change it</div></div><span class="sp"></span>${statusPill()}</header>
+  <div class="row" style="margin:0 16px"><button class="btn sm" onclick="undo()">↶ Undo</button><span class="sp"></span>${S.status==="draft"?`<button class="btn good sm" onclick="approve()">Approve</button>`:""}<span class="small mute">${S.status==="empty"?"":`${inAim()}/7 in aim`}</span></div>
+  ${changedBar()}
+  <div class="card" style="padding:6px 4px">${gridHTML(false)}<div class="xs mute" style="padding:4px">Bars: blue = the day, green = aim ${n(LO)}–${n(HI)}, red line = target. 🔥 = cooked that day. Red numbers are outside the Meal Time's range.</div></div>
+  ${S.cooks.length?`<div class="card">${cooksLegend()}</div>`:`<div class="card small mute">Only Set Meal Times so far. Tell the Agent anything to use up, then ask it to draft.</div>`}`;
+  const last=[...S.chat].reverse().find(m=>m.who==="agent");
+  h+=`<div class="drawer">${ui.drawer?`<div class="row"><b class="small">Planning chat</b><span class="sp"></span><button class="btn ghost xs" onclick="ui.drawer=false;render()">Hide ▾</button></div><div class="log" id="logB">${chatLog()}</div>`:
+    `<div class="row small" style="cursor:pointer" onclick="ui.drawer=true;render()"><span class="sp" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--mute)">Agent: ${last?last.html.replace(/<[^>]+>/g," ").slice(0,90):""}</span><b style="color:var(--accent)">Chat ▴</b></div>`}
+    <div style="margin-top:6px">${inputBar("inB")}</div></div>`;
+  return h;
+}
+
+// ---------- Variant C: cooks board ----------
+function VariantC(){
+  let h=`<header class="row"><div><h1>Plan</h1><div class="sub">Oct 4–10</div></div><span class="sp"></span>${statusPill()}<button class="btn ghost" onclick="undo()">↶</button></header>
+  <div class="strip">${DAYS.map((x,d)=>{const t=dayTot(d),s=status(t);return `<div onclick="ui.tab='days';ui.cDay=${d};render()" style="${ui.cDay===d&&ui.tab==="days"?"border-color:var(--ink)":""}"><b>${x}</b><div class="num s-${S.status==="empty"?"":s}" style="font-weight:700">${S.status==="empty"?"–":n(t)}</div><span class="dot" style="background:${S.status==="empty"?"#ddd":s==="ok"?"var(--good)":s==="low"?"#e0a24a":"var(--bad)"}"></span></div>`}).join("")}</div>
+  <div class="row" style="margin:6px 16px 0"><span class="small mute">${S.status==="empty"?"Nothing planned yet":`${inAim()} of 7 days in the aim`}</span><span class="sp"></span>${S.status==="draft"?`<button class="btn good sm" onclick="approve()">Approve</button>`:""}</div>
+  ${changedBar()}
+  <div class="tabs">${[["days","Days"],["cooks","Cooks"],["chat","Chat"]].map(([k,l])=>`<button class="${ui.tab===k?"on":""}" onclick="ui.tab='${k}';render()">${l}${k==="chat"&&S.pending?" •":""}</button>`).join("")}</div>`;
+  if(ui.tab==="chat") h+=`<div style="margin:8px 12px">${chatLog()}<div style="margin-top:10px">${inputBar("inC")}</div></div>`;
+  if(ui.tab==="days"){
+    const ds=ui.cDay==null?[0,1,2,3,4,5,6]:[ui.cDay];
+    if(ui.cDay!=null) h+=`<div style="margin:6px 16px 0"><button class="btn ghost small" onclick="ui.cDay=null;render()">‹ All days</button></div>`;
+    ds.forEach(d=>{ const t=dayTot(d);
+      h+=`<div class="card"><div class="row"><b>${DAYL[d]} ${DATES[d]}</b><span class="sp"></span><b class="num s-${status(t)}">${n(t)}</b><span class="xs mute">/ ${n(TARGET)}</span></div>${hbar(d)}`;
+      onDay(d).forEach(m=>{ const ps=portionsAt(d,m.id);
+        if(m.kind==="set"){h+=`<div class="ml" style="cursor:default"><span class="tm">${m.time}</span><span class="sw" style="background:var(--set)"></span><span class="sp small">${m.name} <span class="mute">· Set</span></span><span class="num small">${m.min}</span></div>`;return;}
+        if(!ps.length){h+=`<div class="ml" onclick="openCell(${d},${m.id})"><span class="tm">${m.time}</span><span class="sw" style="border:1px dashed ${m.kind==="planned"?"var(--bad)":"#bbb"}"></span><span class="sp small" style="color:${m.kind==="planned"?"var(--bad)":"var(--mute)"}">${m.name}: ${S.status==="empty"?"not planned":m.kind==="planned"?"needs filling":TARGET-t>=m.min?`room for up to ${Math.min(m.max,TARGET-t)}`:"no room"}</span></div>`;return;}
+        ps.forEach(o=>{const k=cal(o.c,o.p);h+=`<div class="ml" onclick="openPortion(${o.c.id},${o.i})"><span class="tm">${m.time}</span><span class="sw" style="background:${cookColor(o.c)}"></span><span class="sp small"><span class="mute">${m.name} ·</span> ${R(o.c.rid).name} <span class="mute">${frac(o.p.size)}${o.p.d===o.c.day&&o.c.portions.length>1?" 🔥":o.c.portions.length>1?` · from ${DAYS[o.c.day]}`:""}</span></span><span class="num small" style="${k<m.min||k>m.max?"color:var(--bad)":""}">${n(k)}</span></div>`;});
+      });
+      h+=`</div>`; });
+  }
+  if(ui.tab==="cooks"){
+    if(!S.cooks.length) h+=`<div class="card small mute">No Cooks yet. Ask the Agent for a draft in Chat.</div>`;
+    const byDay=[...S.cooks].sort((a,b)=>a.day-b.day||b.portions.length-a.portions.length);
+    DAYS.forEach((x,d)=>{ const cs=byDay.filter(c=>c.day===d); if(!cs.length)return;
+      h+=`<div class="grp" style="margin:12px 16px 0">Cook on ${DAYL[d]} ${DATES[d]}</div>`;
+      cs.forEach(c=>{const r=R(c.rid),col=cookColor(c),sp=c.made-placed(c);
+        h+=`<div class="card" style="border-left:5px solid ${col};padding:10px 12px"><div class="row" onclick="ui.sheet={type:'cook',cid:${c.id}};render()" style="cursor:pointer"><b class="sp small">${r.star?"<span class='star'>★</span> ":""}${r.name}</b><span class="xs mute">makes ${c.made} · ${frac(placed(c))} placed${sp>0?` · ${frac(sp)} spare`:""}</span>${sp<0?`<b class="xs" style="color:var(--bad)">short</b>`:""}</div>
+        <div>${c.portions.map((p,i)=>`<span class="pchip" style="border-color:${col};background:${col}14" onclick="openPortion(${c.id},${i})">${DAYS[p.d]} ${MT(p.mt).short} · ${frac(p.size)}</span>`).join("")}${sp>=.5?`<span class="pchip" style="border-style:dashed;border-color:#bbb;color:var(--mute)" onclick="placeSpare(${c.id})">+ place spare</span>`:""}</div></div>`;});
+    });
+  }
+  return h;
+}
+function placeSpare(cid){ ui.sheet={type:"place",cid}; render(); }
+// "place" sheet: pick an empty or If room cell for a Cook's spare servings
+const _sheet=sheetHTML;
+sheetHTML=function(){ const s=ui.sheet; if(!s||s.type!=="place") return _sheet();
+  const c=S.cooks.find(c=>c.id===s.cid), r=R(c.rid);
+  let h=`<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet"><div class="row"><b style="font-size:17px">Place spare ${r.name}</b><span class="sp"></span><button class="btn ghost" onclick="ui.sheet=null;render()">✕</button></div><div class="small mute">${frac(c.made-placed(c))} spare from ${DAYL[c.day]}. Taking a spot replaces what's there.</div>`;
+  DAYS.forEach((_,d)=>{ if(d<c.day)return; h+=`<div class="grp">${DAYL[d]} · ${n(dayTot(d))}</div>`; onDay(d).filter(m=>m.kind!=="set"&&suits(r,m)).forEach(m=>{const occ=portionsAt(d,m.id); if(occ.some(o=>o.c===c))return; h+=`<div class="opt" onclick="pickCook(${c.id},${d},${m.id})"><span class="small" style="width:110px">${m.name}</span><span class="small mute sp">${occ.length?"instead of "+R(occ[0].c.rid).name:"empty"}</span></div>`;}); });
+  return h+`<div class="xs mute" style="margin-top:8px">Only Meal Times ${r.name} is tagged for. Use Move on a Portion for anywhere else.</div></div>`; };
+
+// ---------- shell + switcher ----------
+const VARIANTS={A:["Chat thread",VariantA],B:["Grid + chat drawer",VariantB],C:["Cooks board",VariantC]}; const KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; ui.hl=null; render(); scrollTo(0,0); }
+function render(){
+  const y=scrollY, sh=document.querySelector(".sheet"), sy=sh?sh.scrollTop:0;
+  const st={status:S.status,notes:S.notes,pending:S.pending,days:DAYS.map((x,d)=>`${x}: ${n(dayTot(d))} ${S.status==="empty"?"":status(dayTot(d))}`),
+    cooks:S.cooks.map(c=>`${R(c.rid).name} cook ${DAYS[c.day]}, makes ${c.made}: ${c.portions.map(p=>`${DAYS[p.d]} ${MT(p.mt).name} ${frac(p.size)}`).join(", ")}`),shoppingDiff:shopDiff(),undoSteps:S.hist.length};
+  document.getElementById("app").innerHTML=VARIANTS[variant][1]()+sheetHTML()+`<details id="state"><summary class="mute">State</summary><pre>${JSON.stringify(st,null,1)}</pre></details>`;
+  document.getElementById("sw").innerHTML=`<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>`;
+  scrollTo(0,y); const sh2=document.querySelector(".sheet"); if(sh2)sh2.scrollTop=sy;
+  const lb=document.getElementById("logB"); if(lb)lb.scrollTop=lb.scrollHeight;
+}
+addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,select,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });
+say("agent",`New week, new chat. <b>Last week</b> (Sep 27 – Oct 3): 5 of 7 days under 2,000, averaging 1,912. Tuesday went over (the work lunch was logged at 1,150, not 900), and Saturday's dessert took it to 2,140.<br><br>Anything to use up or plan around for Oct 4–10? Or just say draft. I'll only use your ${RECIPES.length} Recipes.`,["Use the spinach by Monday","No salmon this week","Can you add lasagna?","Draft it"]);
+render();
+</script>
+</body>
+</html>
