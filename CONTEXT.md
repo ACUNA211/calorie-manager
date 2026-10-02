@@ -9,7 +9,7 @@ The one person using the app: their own account (a username and password), Calor
 _Avoid_: user, profile, household
 
 **Agent**:
-The built-in AI that drafts the Meal Plan in a planning chat and proposes Rebalances. What the Member asks it for happens straight away; what it suggests waits for a yes. Logging and Recipes work without it.
+The built-in AI that drafts the Meal Plan in a planning chat and talks a Rebalance through when the Member opens its chat. What the Member asks it for happens straight away; what it suggests waits for a yes. Logging and Recipes work without it.
 _Avoid_: bot, assistant, chatbot
 
 **Recipe**:
