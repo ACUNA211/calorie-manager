@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Rebalance (#08)</title>
+<!--
+  THROWAWAY PROTOTYPE for .scratch/mvp-reset/issues/08-rebalance-conversation.md
+  Question: what does a Rebalance conversation look like? You type "lunch went 400 over" or press ⚖ Rebalance on
+  Today (#07), and the Agent proposes changes: by default to the rest of today (smaller Portions, dropping an If room
+  time), or spread over the rest of the week if asked. It never touches Set times or takes a Planned time below its
+  range. Nothing changes until approved. How are the options and their effect on the day and week shown? What does
+  accepting look like?
+  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+    A: Chat. ⚖ opens a chat sheet. The Agent says what happened and proposes the smallest fix, with a before/after
+       bar and the changes listed; chips and typing steer it ("keep the snack", "spread it over the week").
+       Every Agent turn is one AI call.
+    B: Option cards. ⚖ opens a sheet of up to three options, worked out by rules on the phone (no AI), each with its
+       changes and where the day lands. A Today / Rest of the week switch. Typing at the bottom asks the Agent
+       (one AI call) for anything the cards don't cover.
+    C: Preview on Today. ⚖ turns Today into a preview: changed rows show old → new, the counter shows where the day
+       would land, and a bar at the bottom flips between options (‹ ›), adds the rest of the week, and approves.
+       No AI unless you type.
+  Shared in all three:
+    - The options come from the same rules: shrink an unlogged Planned Portion in ¼ servings while it stays in its
+      Meal Time's range, or drop an unlogged If room time. Set times and logged meals are never touched. Options that
+      land in the aim come first, then fewer changes, then the smallest cut.
+    - "Rest of the week" takes what today can't (or what you ask it to) from the later days, each day's smallest
+      change that covers its share; days already under the aim are left alone. A day may end under the aim.
+    - When today ends over the target whatever happens, it says so: today still counts as over, the week just
+      stays on track.
+    - Approve changes the Meal Plan (Portions and dropped If room times), outlines the changed meals in orange,
+      and shows an Undo toast. It never changes Cooks' servings made, so the shopping list stays as it is (#06).
+    - The Today box takes "lunch went 400 over": it logs +400 to Lunch locally and opens Rebalance.
+  Scenario: Wed Oct 7, 3:40pm. Breakfast and Lunch are logged; the snack (Yogurt + PB bowl, If room) and dinner
+  (1½ Chicken rice bowl) are still to come. Thu–Sat are planned. Target 2,000, aim 1,800–2,000.
+  Use the Prototype box to make lunch go over by 208 (chips) or 400, then press ⚖ Rebalance. State is in memory.
+-->
+<style>
+  :root{--bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6a65;--line:#e4e2dc;--good:#2f7d4f;--goodbg:#e3f1e8;--bad:#c0392b;--badbg:#fbe5e1;--warn:#a0561a;--warnbg:#fdebd8;--accent:#3056d3;--soft:#eef2ff;--set:#8a5cc2;--setbg:#efe7f8;--chg:#e08a1e}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d9d7d0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  .phone{max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding:0 0 170px}
+  button{font:inherit;cursor:pointer} input{font:inherit}
+  .row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12.5px} .xs{font-size:11px} .b{font-weight:600} .num{font-variant-numeric:tabular-nums}
+  header{padding:14px 16px 6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:10px 16px;padding:12px 14px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff} .btn.good{background:var(--good);border-color:var(--good);color:#fff}
+  .btn.ghost{border:none;background:none;color:var(--accent);padding:6px 4px} .btn.sm{padding:5px 9px;font-size:13px}
+  .btn.reb{border-color:var(--bad);color:var(--bad)} .btn:disabled{opacity:.45;cursor:default}
+  .chip{display:inline-block;border-radius:999px;padding:4px 11px;font-size:13px;border:1px solid var(--accent);color:var(--accent);background:#fff;margin:4px 4px 0 0;cursor:pointer}
+  .tag{display:inline-block;border-radius:6px;padding:0 6px;font-size:10.5px;background:#ecebe6;color:var(--mute);font-weight:600}
+  .tag.set{background:var(--setbg);color:var(--set)}
+  .s-ok{color:var(--good)} .s-low{color:var(--warn)} .s-over{color:var(--bad)}
+  .big{font-size:40px;font-weight:700;line-height:1}
+  .hbar{position:relative;height:14px;background:#f0efea;border-radius:5px;overflow:hidden;margin:6px 0 2px}
+  .hbar>div{position:absolute;top:0;bottom:0}
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px} table.t td{padding:7px 4px;border-top:1px solid var(--line);vertical-align:middle}
+  tr.chg td{background:#fff7ec} tr.chg td:first-child{box-shadow:inset 3px 0 0 var(--chg)}
+  .old{text-decoration:line-through;color:#a9a7a0} .new{color:var(--chg);font-weight:700}
+  .proto{border:1.5px dashed #a9a7a0;border-radius:12px;margin:10px 16px;padding:8px 12px;font-size:13px;background:#ecebe6}
+  .proto summary{cursor:pointer;color:var(--mute);font-weight:600} .proto button{margin:4px 4px 0 0}
+  .boxbar{position:fixed;left:50%;transform:translateX(-50%);bottom:56px;width:calc(100% - 16px);max-width:404px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.16);z-index:20;padding:8px}
+  .inp{width:100%;border:1px solid var(--line);border-radius:999px;padding:9px 14px;background:#fff}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30}
+  .sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:420px;max-height:88vh;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;z-index:31;padding:14px 16px 80px}
+  .msg{max-width:92%;padding:9px 12px;border-radius:14px;margin:6px 0;font-size:14px;line-height:1.4}
+  .msg.agent{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.me{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:4px;width:fit-content}
+  .msg ul{margin:4px 0;padding-left:18px} .msg li{margin:2px 0}
+  .opt{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin:8px 0}
+  .opt.best{border:2px solid var(--good)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{border:none;background:#fff;padding:6px 12px;font-size:13px;border-right:1px solid var(--line)} .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--ink);color:#fff;font-weight:600}
+  .wk{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px;text-align:center}
+  .wk>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px 2px;font-size:11.5px}
+  .wk>div.chg{border-color:var(--chg);background:#fff7ec}
+  .pbar{position:fixed;left:50%;transform:translateX(-50%);bottom:56px;width:calc(100% - 16px);max-width:404px;background:#1d1d1b;color:#fff;border-radius:16px;z-index:25;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .pbar .btn{border-color:#555;background:#333;color:#fff} .pbar .btn.pri{background:var(--accent);border-color:var(--accent)}
+  #sw{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:6px 8px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:13px;white-space:nowrap}
+  #sw button{background:#333;color:#fff;border:none;border-radius:999px;width:30px;height:30px}
+  #state{margin:20px 16px;font-size:11px} #state pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;max-height:260px;overflow:auto}
+  .toast{position:fixed;bottom:116px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 10px 8px 14px;border-radius:10px;z-index:60;font-size:13px;max-width:390px;display:flex;gap:10px;align-items:center}
+  .toast button{background:none;border:none;color:#9db4ff;font-weight:700}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="sw"></div>
+<script>
+// ---------- model ----------
+const TARGET=2000, LO=1800, NOW="15:40", TODAY=3;
+const DAYL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], DATES=[4,5,6,7,8,9,10];
+const RECIPES={2:["Overnight oats",355],1:["Turkey chili",438],3:["Chicken rice bowl",511],4:["Yogurt + PB bowl",248],5:["Sheet-pan salmon",556],7:["Chicken fajitas",540],8:["Lentil soup",360],9:["Apple + peanut butter",190]};
+const RN=id=>RECIPES[id][0], RP=id=>RECIPES[id][1];
+const mk=(id,name,time,kind,min,max,rid,size)=>({id,name,time,kind,min,max,rid,size});
+const BR=()=>mk(1,"Breakfast","07:30","planned",350,450,2,1), LU=(r,s)=>mk(2,"Lunch","12:00","planned",500,650,r,s), SN=r=>mk(5,"Snack","15:30","ifroom",100,250,r,1), DN=(r,s)=>mk(6,"Dinner","18:30","planned",550,800,r,s);
+const WEEK0={
+  3:[BR(),LU(1,1.25),SN(4),DN(3,1.5)],
+  4:[BR(),LU(1,1.25),SN(9),DN(5,1)],
+  5:[BR(),LU(3,1.25),SN(9),DN(7,1.25)],
+  6:[{id:8,name:"Sat brunch out",time:"10:30",kind:"set",cal:600},mk(4,"Weekend lunch","12:30","planned",450,650,8,1.25),SN(9),DN(1,1.5)],
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function fresh(){ return {week:clone(WEEK0),logged:{1:true,2:true},extra:0,extraLabel:"",changed:[],ai:0,hist:[],dropped:[]}; }
+let S=fresh();
+const ui={sheet:null,chat:[],scope:"today",optI:0,preview:false,typed:"",keep:[],chatOpt:null};
+
+// ---------- helpers ----------
+const n=x=>Math.round(x).toLocaleString("en-US");
+const frac=x=>{const w=Math.floor(x+1e-9),f=Math.round((x-w)*4);return (w||f?"":"0")+(w?w:"")+["","¼","½","¾"][f];};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const t12=t=>{const [h,m]=t.split(":").map(Number);return `${(h+11)%12+1}:${String(m).padStart(2,"0")}${h<12?"am":"pm"}`;};
+const mCal=m=>m.kind==="set"?m.cal:m.rid?RP(m.rid)*m.size:0;
+const dayTot=(d,week)=>(week||S.week)[d].reduce((s,m)=>s+mCal(m),0)+(d===TODAY?S.extra:0);
+const eaten=()=>S.week[TODAY].filter(m=>S.logged[m.id]).reduce((s,m)=>s+mCal(m),0)+S.extra;
+const status=t=>t>TARGET?"over":t<LO?"low":"ok";
+const STATUS={ok:"in the aim",low:"under the aim",over:"over the target"};
+const sCls=t=>"s-"+status(t);
+function toast(t,undoable){ document.querySelectorAll(".toast").forEach(x=>x.remove()); const e=document.createElement("div"); e.className="toast"; e.innerHTML=`<span>${t}</span>${undoable?`<button onclick="undo();this.parentNode.remove()">Undo</button>`:""}`; document.body.appendChild(e); setTimeout(()=>e.remove(),4500); }
+function snap(){ S.hist.push(clone({week:S.week,changed:S.changed,extra:S.extra,extraLabel:S.extraLabel})); }
+function undo(){ const h=S.hist.pop(); if(!h)return; Object.assign(S,h); render(); }
+
+// ---------- the rules that make options (no AI) ----------
+// Each unlogged Meal Time can: Planned → shrink in ¼ servings while it stays in range; If room → keep or drop. Set: never.
+function choices(d,m,keep){
+  if(m.kind==="set"||!m.rid||(d===TODAY&&S.logged[m.id]))return [m.size];
+  if(m.kind==="ifroom") return keep.includes(m.id)?[m.size]:[m.size,0];
+  const out=[]; for(let s=m.size;s>0&&RP(m.rid)*s>=m.min-1e-6;s-=.25) out.push(Math.round(s*4)/4); return out; }
+function combos(d,keep){ const ms=S.week[d]; let acc=[[]]; ms.forEach(m=>{ const cs=choices(d,m,keep||[]); acc=acc.flatMap(a=>cs.map(c=>[...a,c])); });
+  return acc.map(sizes=>{ const ch=[]; let cut=0; sizes.forEach((s,i)=>{ const m=ms[i]; if(s!==m.size){ ch.push({d,id:m.id,name:m.name,rid:m.rid,from:m.size,to:s}); cut+=RP(m.rid)*(m.size-s);} }); return {changes:ch,cut,total:dayTot(d)-cut}; }); }
+function todayOptions(keep){ const all=combos(TODAY,keep).filter(o=>o.changes.length);
+  const fits=all.filter(o=>o.total<=TARGET).sort((a,b)=>(status(b.total)==="ok")-(status(a.total)==="ok")||a.changes.length-b.changes.length||b.total-a.total);
+  const out=[]; fits.forEach(o=>{ if(out.length<3&&!out.some(x=>x.changes.length===o.changes.length&&status(x.total)===status(o.total)&&out.length>=1&&x.total===o.total)) out.push(o); });
+  if(!fits.length){ const best=all.sort((a,b)=>b.cut-a.cut)[0]; if(best) out.push(best); }
+  return out.slice(0,3); }
+// Spread an amount over the later days: each day takes its share with its smallest change that covers it.
+function weekSpread(need){ const days=[4,5,6], plan=[], notes=[]; let left=need;
+  days.forEach((d,i)=>{ if(left<=0)return; const tot=dayTot(d); if(tot<LO){notes.push(`${DAYS[d]} is already under the aim (${n(tot)}), so I left it.`);return;}
+    const share=left/(days.length-i), cs=combos(d).filter(o=>o.changes.length).sort((a,b)=>a.changes.length-b.changes.length||a.cut-b.cut);
+    const pick=cs.find(o=>o.cut>=share)||cs.sort((a,b)=>b.cut-a.cut)[0]; if(!pick)return; plan.push({d,...pick}); left-=pick.cut; });
+  return {days:plan,notes,left:Math.max(0,left)}; }
+function chgText(c){ return c.to===0?`drop ${c.name} (${RN(c.rid)}), −${n(RP(c.rid)*c.from)}`:`${c.name}: ${frac(c.from)} → ${frac(c.to)} serving${c.to>1?"s":""} of ${RN(c.rid)}, −${n(RP(c.rid)*(c.from-c.to))}`; }
+function apply(changes,label){ snap(); changes.forEach(c=>{ const m=S.week[c.d].find(x=>x.id===c.id); m.size=c.to; if(c.to===0){m.dropped=true;} S.changed.push(c.d+":"+c.id); });
+  ui.sheet=null; ui.preview=false; ui.chat=[]; toast(`${label}. The shopping list is unchanged.`,true); render(); }
+const over=()=>dayTot(TODAY)-TARGET;
+
+// ---------- the scripted Agent (A, and typing in B / C) ----------
+function agentPropose(keep,weekToo){ S.ai++; const o=todayOptions(keep), best=o[0], ov=over();
+  if(ov<=0&&!weekToo) return say(`Today lands at ${n(dayTot(TODAY))}, ${STATUS[status(dayTot(TODAY))]}. Nothing needs rebalancing. You can still ask me to trim the rest of the week.`,["Trim the week anyway","Leave it"]);
+  if(weekToo){ const fromToday=best&&best.total<=TARGET?null:best, need=fromToday?fromToday.total-TARGET:Math.max(ov,0)||150, w=weekSpread(need);
+    ui.chatOpt={changes:[...(fromToday?fromToday.changes:[]),...w.days.flatMap(x=>x.changes)],label:"Rebalanced today and the week"};
+    return say(`${fromToday?`Today can only come down to ${n(fromToday.total)} (${fromToday.changes.map(chgText).join("; ")}), so it still counts as over. `:ov>0?`Leaving today at ${n(dayTot(TODAY))}: it counts as over, but the week stays on track. `:""}Here's ${n(need)} taken from the rest of the week:<ul>${w.days.map(x=>`<li><b>${DAYL[x.d]}</b>: ${x.changes.map(chgText).join("; ")} → lands ${n(x.total)}, <span class="${sCls(x.total)}">${STATUS[status(x.total)]}</span></li>`).join("")}</ul>${w.notes.join(" ")}${w.left>0?` That still leaves ${n(w.left)} I can't place without going below a Meal Time's range.`:""}${weekBar(ui.chatOpt.changes)}`,["Approve","Just today","Leave it"]); }
+  if(best.total<=TARGET){ ui.chatOpt={changes:best.changes,label:"Rebalanced today"};
+    const alt=o[1]; return say(`${S.extraLabel||"Today"} puts today at <b class="s-over">${n(dayTot(TODAY))}</b>, ${n(ov)} over. Smallest fix:<ul>${best.changes.map(c=>`<li>${chgText(c)}</li>`).join("")}</ul>That lands today at <b class="${sCls(best.total)}">${n(best.total)}</b>, ${STATUS[status(best.total)]}.${keep.length?"":""} Work lunch and logged meals aren't touched.${dayBar(best.total)}`,
+      ["Approve",...(alt?[alt.changes.some(c=>c.to===0)&&!best.changes.some(c=>c.to===0)?"Skip the snack instead":"Another way"]:[]),...(best.changes.some(c=>c.id===5&&c.to===0)?["Keep the snack"]:[]),"Spread it over the week","Leave it"]); }
+  ui.chatOpt={changes:best.changes,label:"Rebalanced today"};
+  return say(`Today is at <b class="s-over">${n(dayTot(TODAY))}</b>, ${n(ov)} over. The most I can take off today is ${n(best.cut)}: <ul>${best.changes.map(c=>`<li>${chgText(c)}</li>`).join("")}</ul>That's <b class="s-over">${n(best.total)}</b>, still over, so today counts as over either way.${dayBar(best.total)}`,["Approve","Spread it over the week","Leave it"]); }
+function say(html,chips){ ui.chat.push({who:"agent",html,chips}); }
+function chatSend(t){ if(!t.trim())return; ui.chat.push({who:"me",html:esc(t)}); ui.chat.forEach(m=>m.chips=null); const s=t.toLowerCase();
+  if(/^approve|^yes|do it|ok$/.test(s)&&ui.chatOpt){ apply(ui.chatOpt.changes,ui.chatOpt.label); return; }
+  if(/leave|no\b|not now|cancel/.test(s)){ S.ai++; say("OK, nothing changed.",[]); }
+  else if(/keep the snack|keep snack/.test(s)){ ui.keep=[5]; agentPropose(ui.keep,false); }
+  else if(/instead|another/.test(s)){ S.ai++; const o=todayOptions(ui.keep), alt=o[1]||o[0]; ui.chatOpt={changes:alt.changes,label:"Rebalanced today"}; say(`Instead:<ul>${alt.changes.map(c=>`<li>${chgText(c)}</li>`).join("")}</ul>Today lands at <b class="${sCls(alt.total)}">${n(alt.total)}</b>.${dayBar(alt.total)}`,["Approve","Spread it over the week","Leave it"]); }
+  else if(/week|spread|trim/.test(s)) agentPropose(ui.keep,true);
+  else if(/just today/.test(s)) agentPropose(ui.keep,false);
+  else { S.ai++; say(`I can shrink Planned Portions (staying in their ranges) or drop an If room time, today or across the week. I can't change the Work lunch or meals you've logged. Try "keep the snack" or "spread it over the week".`,["Spread it over the week","Leave it"]); }
+  render(); }
+function openRebalance(){ ui.keep=[]; ui.optI=0; ui.scope="today";
+  if(variant==="A"){ ui.chat=[]; agentPropose([],false); ui.sheet={k:"chat"}; }
+  else if(variant==="B"){ ui.sheet={k:"cards"}; }
+  else { ui.preview=true; }
+  render(); }
+
+// ---------- shared drawing ----------
+function dayBar(total){ const W=2400,pc=x=>Math.min(100,x/W*100), now=dayTot(TODAY);
+  return `<div class="hbar" style="margin-top:8px"><div style="left:${pc(LO)}%;width:${pc(TARGET)-pc(LO)}%;background:#cfe6d7"></div><div style="left:0;width:${pc(total)}%;background:${status(total)==="over"?"#e59b90":"var(--good)"}"></div><div style="left:${pc(total)}%;width:${Math.max(0,pc(now)-pc(total))}%;background:repeating-linear-gradient(45deg,#e8b6ad 0 4px,transparent 4px 8px)"></div><div style="left:${pc(TARGET)}%;width:2px;background:var(--bad)"></div></div>
+  <div class="xs mute">now ${n(now)} → <b class="${sCls(total)}">${n(total)}</b> · aim ${n(LO)}–${n(TARGET)}</div>`; }
+function weekBar(changes){ return `<div class="wk">${[3,4,5,6].map(d=>{ const cut=changes.filter(c=>c.d===d).reduce((s,c)=>s+RP(c.rid)*(c.from-c.to),0), b=dayTot(d), a=b-cut;
+  return `<div class="${cut?"chg":""}"><b>${DAYS[d]}</b><div class="${cut?"old":""}">${n(b)}</div>${cut?`<div class="${sCls(a)} b">${n(a)}</div>`:`<div class="xs mute">–</div>`}</div>`; }).join("")}</div>`; }
+function counter(previewTotal){ const e=eaten(), p=dayTot(TODAY), s=status(p);
+  return `<div class="card row"><div class="sp"><div class="big num">${n(TARGET-e)}</div><div class="small mute">left of ${n(TARGET)} · aim ${n(LO)}–${n(TARGET)}</div></div>
+    <button class="btn ${s==="over"?"reb":""}" style="text-align:center;line-height:1.2" onclick="openRebalance()">⚖<br><span class="small">Rebalance</span>${s==="over"?`<br><span class="xs">${n(p-TARGET)} over</span>`:""}</button></div>
+    <div style="margin:-4px 16px 0">${previewTotal!=null?dayBar(previewTotal):dayBar(p)}<div class="small" style="margin-top:4px">${previewTotal!=null?`With this option, today lands at <b class="${sCls(previewTotal)}">${n(previewTotal)}</b>, ${STATUS[status(previewTotal)]}.`:`If the rest goes as planned, today lands at <b class="${sCls(p)}">${n(p)}</b>, ${s==="over"?`<b class="s-over">${n(p-TARGET)} over</b>`:STATUS[s]}.`}</div></div>`; }
+function table(changes){ const ms=S.week[TODAY];
+  return `<div class="card" style="padding:4px 12px"><table class="t">${ms.map(m=>{ const c=(changes||[]).find(x=>x.d===TODAY&&x.id===m.id), was=S.changed.includes(TODAY+":"+m.id), L=S.logged[m.id];
+    const what=m.kind==="set"?"Set":m.dropped?"dropped by Rebalance":m.rid?`${RN(m.rid)} · ${frac(m.size)}`:"";
+    const cal=L?mCal(m)+(m.id===2?S.extra:0):mCal(m);
+    return `<tr class="${c||was?"chg":""}"><td class="xs mute">${t12(m.time)}</td><td><b>${m.name}</b> ${m.kind==="ifroom"?'<span class="tag">If room</span>':""}<div class="xs mute">${c?`<span class="old">${RN(m.rid)} · ${frac(c.from)}</span> <span class="new">${c.to===0?"drop":frac(c.to)}</span>`:what}${L&&m.id===2&&S.extra?` + ${esc(S.extraLabel)}`:""}</div></td>
+      <td class="num" style="text-align:right">${c?`<span class="old">${n(mCal(m))}</span> <span class="new">${n(RP(m.rid)*c.to)}</span>`:`<b>${n(cal)}</b>`}</td><td>${L?'<span class="s-ok">✓</span>':""}</td></tr>`; }).join("")}</table></div>`; }
+function protoBox(){ return `<details class="proto"${S.extra?"":" open"}><summary>Prototype: make lunch go over</summary>
+  <button class="btn sm" onclick="goOver(208,'1.5 oz tortilla chips')">+208 chips at lunch</button><button class="btn sm" onclick="goOver(400,'400 extra')">Lunch went 400 over</button><button class="btn sm" onclick="S=fresh();ui.chat=[];ui.preview=false;ui.sheet=null;render()">Reset</button>
+  <div class="xs mute" style="margin-top:4px">Or type "lunch went 300 over" in the box.</div></details>`; }
+function goOver(nn,label){ snap(); S.extra+=nn; S.extraLabel=S.extraLabel?`${S.extraLabel} + ${label}`:label; render(); toast(`Logged +${nn} to Lunch`,true); }
+function boxSend(){ const t=ui.typed, m=t.toLowerCase().match(/(lunch|breakfast)?\s*(?:went|was)\s*(\d+)\s*over/); ui.typed="";
+  if(m){ goOver(+m[2],`${m[2]} extra`); openRebalance(); return; }
+  if(/rebalance/.test(t.toLowerCase())){ openRebalance(); return; }
+  toast("In this prototype the box only takes “lunch went N over” or “rebalance”."); render(); }
+function head(){ return `<header><div class="row"><button class="btn sm">‹</button><div class="sp" style="text-align:center"><div style="font-size:19px;font-weight:700">${DAYL[TODAY]}, Oct ${DATES[TODAY]}</div><div class="xs mute">Today · ${t12(NOW)}</div></div><button class="btn sm">›</button></div></header>`; }
+function todayPage(previewChanges,previewTotal){ return head()+counter(previewTotal)+table(previewChanges)+protoBox()+
+  `<div class="card small mute">The week so far: ${[4,5,6].map(d=>`${DAYS[d]} ${n(dayTot(d))}${S.changed.some(k=>k.startsWith(d+":"))?" (changed)":""}`).join(" · ")}</div>`; }
+const box=()=>`<div class="boxbar"><input class="inp" placeholder="Log something… or “lunch went 400 over”" value="${esc(ui.typed)}" oninput="ui.typed=this.value" onkeydown="if(event.key==='Enter')boxSend()"></div>`;
+
+// ---------- A: chat ----------
+function variantA(){ return todayPage()+box(); }
+function chatSheet(){ return `<div class="row"><b class="sp" style="font-size:17px">⚖ Rebalance</b><button class="btn ghost" onclick="ui.sheet=null;render()">Close</button></div>
+  <div class="xs mute">Agent · ${S.ai} AI call${S.ai===1?"":"s"} so far · nothing changes until you approve</div>
+  ${ui.chat.map(m=>`<div class="msg ${m.who}">${m.html}</div>${m.chips&&m.chips.length?`<div>${m.chips.map(c=>`<span class="chip" onclick="chatSend('${c.replace(/'/g,"\\'")}')">${c}</span>`).join("")}</div>`:""}`).join("")}
+  <div class="row" style="margin-top:10px"><input class="inp" id="ci" placeholder="Tell it what you want…" onkeydown="if(event.key==='Enter'){chatSend(this.value)}"></div>`; }
+
+// ---------- B: option cards ----------
+function variantB(){ return todayPage()+box(); }
+function cardsSheet(){ const ov=over(); let b=`<div class="row"><b class="sp" style="font-size:17px">⚖ Rebalance</b><button class="btn ghost" onclick="ui.sheet=null;render()">Close</button></div>
+  <div class="small">Today is heading to <b class="${sCls(dayTot(TODAY))}">${n(dayTot(TODAY))}</b>${ov>0?`, <b class="s-over">${n(ov)} over</b>`:`, ${STATUS[status(dayTot(TODAY))]}`}. <span class="xs mute">Worked out on your phone, no AI. Set times and logged meals stay.</span></div>
+  <div style="margin-top:8px"><div class="seg"><button class="${ui.scope==="today"?"on":""}" onclick="ui.scope='today';render()">Rest of today</button><button class="${ui.scope==="week"?"on":""}" onclick="ui.scope='week';render()">+ Rest of the week</button></div></div>`;
+  if(ui.scope==="today"){ const o=todayOptions([]);
+    if(ov<=0) b+=`<div class="opt">Nothing to fix today. Switch to "+ Rest of the week" to trim ahead anyway.</div>`;
+    o.forEach((x,i)=>{ b+=`<div class="opt${i===0&&x.total<=TARGET?" best":""}"><div class="row"><b class="sp">${i===0?"Smallest fix":"Option "+(i+1)}</b><b class="${sCls(x.total)}">${n(x.total)}</b></div><ul class="small" style="margin:4px 0;padding-left:18px">${x.changes.map(c=>`<li>${chgText(c)}</li>`).join("")}</ul>${dayBar(x.total)}
+      ${x.total>TARGET?`<div class="small s-over" style="margin-top:4px">Still over: today counts as over either way. Add the rest of the week to keep the week on track.</div>`:""}
+      <button class="btn ${i===0?"pri":""}" style="width:100%;margin-top:8px" onclick='apply(${JSON.stringify(x.changes)},"Rebalanced today")'>Use this</button></div>`; });
+  } else { const o=todayOptions([]), t=o[0]&&o[0].total>TARGET?o[0]:null, need=t?t.total-TARGET:Math.max(ov,0)||150, w=weekSpread(need), all=[...(t?t.changes:[]),...w.days.flatMap(x=>x.changes)];
+    b+=`<div class="opt best"><div class="small">${t?`Today comes down to <b class="s-over">${n(t.total)}</b> (still over), and the other ${n(need)} comes from later days:`:ov>0?`Today stays at ${n(dayTot(TODAY))} (counts as over), and ${n(need)} comes from later days:`:`Trim ${n(need)} from later days:`}</div>
+      <ul class="small" style="margin:4px 0;padding-left:18px">${t?t.changes.map(c=>`<li><b>Today</b>: ${chgText(c)}</li>`).join(""):""}${w.days.map(x=>x.changes.map(c=>`<li><b>${DAYS[x.d]}</b>: ${chgText(c)}</li>`).join("")).join("")}</ul>
+      ${weekBar(all)}<div class="xs mute" style="margin-top:6px">${w.notes.join(" ")}${w.left>0?` ${n(w.left)} can't be placed without going below a range.`:""}</div>
+      <button class="btn pri" style="width:100%;margin-top:8px" onclick='apply(${JSON.stringify(all)},"Rebalanced the week")'>Use this</button></div>`; }
+  b+=`<div class="xs mute" style="margin-top:12px">Want something else? Ask the Agent (1 AI call):</div><input class="inp" placeholder="“keep the snack”, “take it from Friday”…" onkeydown="if(event.key==='Enter'){ui.chat=[];ui.sheet={k:'chat'};chatSend(this.value)}">`;
+  return b; }
+
+// ---------- C: preview on Today ----------
+function cOptions(){ const o=todayOptions([]).map(x=>({changes:x.changes,total:x.total,label:x.changes.map(chgText).join("; ")}));
+  if(ui.scope==="week"){ const t=o[0]&&o[0].total>TARGET?o[0]:null, need=t?t.total-TARGET:Math.max(over(),0)||150, w=weekSpread(need);
+    return [{changes:[...(t?t.changes:[]),...w.days.flatMap(x=>x.changes)],total:t?t.total:dayTot(TODAY),week:true,label:w.days.map(x=>`${DAYS[x.d]}: ${x.changes.map(chgText).join("; ")}`).join(" · ")+(w.notes.length?" · "+w.notes.join(" "):"")}]; }
+  return o; }
+function variantC(){ if(!ui.preview) return todayPage()+box();
+  const os=cOptions(), i=Math.min(ui.optI,os.length-1), o=os[i];
+  if(!o) { ui.preview=false; toast("Nothing to rebalance"); return todayPage()+box(); }
+  return todayPage(o.changes,o.total)+(ui.scope==="week"?`<div class="card"><b class="small">The rest of the week</b>${weekBar(o.changes)}</div>`:"")+
+  `<div class="pbar"><div class="row"><b class="sp">⚖ Preview</b><button class="btn sm" onclick="ui.optI=(${i}-1+${os.length})%${os.length};render()" ${os.length<2?"disabled":""}>‹</button><span class="small">${i+1} of ${os.length}</span><button class="btn sm" onclick="ui.optI=(${i}+1)%${os.length};render()" ${os.length<2?"disabled":""}>›</button></div>
+    <div class="small" style="margin:4px 0;color:#ddd">${o.label}${o.total>TARGET&&!o.week?" <b style='color:#f19a8e'>· still over</b>":""}</div>
+    <div class="row"><div class="seg" style="border-color:#555"><button class="${ui.scope==="today"?"on":""}" onclick="ui.scope='today';ui.optI=0;render()">Today</button><button class="${ui.scope==="week"?"on":""}" onclick="ui.scope='week';ui.optI=0;render()">+ Week</button></div><span class="sp"></span><button class="btn sm" onclick="ui.preview=false;render()">Cancel</button><button class="btn sm pri" onclick='apply(${JSON.stringify(o.changes)},"${o.week?"Rebalanced the week":"Rebalanced today"}")'>Approve</button></div></div>`; }
+
+// ---------- switcher ----------
+function sheetHTML(){ if(!ui.sheet)return ""; const b=ui.sheet.k==="chat"?chatSheet():cardsSheet(); return `<div class="scrim" onclick="ui.sheet=null;render()"></div><div class="sheet">${b}</div>`; }
+const VARIANTS={A:["Chat",variantA],B:["Option cards",variantB],C:["Preview on Today",variantC]}, KEYS=Object.keys(VARIANTS);
+const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
+function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; ui.preview=false; render(); scrollTo(0,0); }
+document.addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });
+function render(){
+  document.getElementById("app").innerHTML=VARIANTS[variant][1]()+sheetHTML()+`<details id="state"><summary class="mute">State</summary><pre>${esc(JSON.stringify({aiCalls:S.ai,today:Math.round(dayTot(TODAY)),extraAtLunch:S.extra,week:Object.fromEntries([3,4,5,6].map(d=>[DAYS[d],{total:Math.round(dayTot(d)),meals:S.week[d].map(m=>m.kind==="set"?`${m.name} set ${m.cal}`:m.rid?`${m.name}: ${RN(m.rid)} ×${m.size}${m.dropped?" (dropped)":""}`:m.name)}])),changedByRebalance:S.changed},null,1))}</pre></details>`;
+  document.getElementById("sw").innerHTML=`<button onclick="cycle(-1)">←</button><b>${variant} · ${VARIANTS[variant][0]}</b><button onclick="cycle(1)">→</button>`;
+  const ci=document.getElementById("ci"); if(ci&&ui.sheet&&ui.sheet.k==="chat"){ const sh=document.querySelector(".sheet"); if(sh)sh.scrollTop=sh.scrollHeight; }
+}
+render();
+</script>
+</body>
+</html>
