@@ -1,7 +1,7 @@
 # Where do Dishes live, and how are they edited?
 
 Type: grilling
-Status: open
+Status: superseded
 Assignee:
 Blocked by:
 
@@ -26,3 +26,5 @@ Open questions:
 - **The name:** keep "Dish", or bring in "recipe" now while it still has no steps? Then update CONTEXT.md and the map's Out of scope line.
 
 ## Comments
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.

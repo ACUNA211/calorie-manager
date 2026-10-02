@@ -1,7 +1,7 @@
 # What does cooking look like: a Cooking page and planned cooks?
 
 Type: prototype
-Status: open
+Status: superseded
 Assignee: ACUNA211
 Blocked by: [#28](28-dish-database.md)
 
@@ -22,3 +22,5 @@ Open questions:
 Starting point: the recipe builder in `prototypes/22-pantry-page-PROTOTYPE.html` (`recipeSheet`, `doneSheet`, `rCook`).
 
 ## Comments
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.

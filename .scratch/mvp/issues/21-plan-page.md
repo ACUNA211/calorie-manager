@@ -1,7 +1,7 @@
 # What does the Plan page look like?
 
 Type: prototype
-Status: open
+Status: superseded
 Assignee: ACUNA211
 Blocked by:
 
@@ -33,3 +33,5 @@ Waiting for the Member's reaction.
 - **"Shop Saturday" card** under next week's draft banner (and after approval): lists the Missing Ingredients needed Sunday, meaning Sunday's meals plus anything cooked at the Prep Session (e.g. berries, coconut milk). Before approval it says they go on the Grocery List when you approve; after, it says you'll get an alert if they aren't ticked off by Saturday 3pm.
 - **🛒 Shop on Saturday** in the grid, and a shopping-day card on Saturday's day view. While next week is still a draft, it nudges you to approve today so you can shop tomorrow.
 - The approve bar says Saturday is the only day to shop before the Prep Session, and the approve toast ends with "Shop tomorrow: … needed Sunday."
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.

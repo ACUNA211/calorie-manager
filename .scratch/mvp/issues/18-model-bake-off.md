@@ -1,7 +1,7 @@
 # Which AI model passes the bake-off?
 
 Type: research
-Status: open
+Status: superseded
 Assignee:
 Blocked by: 12, 16
 
@@ -12,3 +12,5 @@ Blocked by: 12, 16
 ## Comments
 
 **Test set (2026-09-30):** Written before the Agent exists, so the run can happen as soon as `app/agent/` is built. There are 24 tests on one fixed fixture Household. They cover logging, Rebalance, skipping a meal, plan edits, Check-ins, Recaps, the Grocery List, the Pantry, the Friday reflection and planning, settings and Agent notes. There are 8 hard rules with zero tolerance, 3 runs per test, a scoring sheet and a rule for picking the model. Tool names are placeholders. Still to do: build the Agent, then run it. Found a spec gap: write tools need a `member_override` flag so a Member can break their own hard rule after a warning (#03 vs #16). Now settled in #16. See [../research/model-bake-off-tests.md](../research/model-bake-off-tests.md).
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.

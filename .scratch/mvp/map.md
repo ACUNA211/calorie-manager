@@ -1,5 +1,7 @@
 # Map: Calorie Manager MVP
 
+> **Superseded (2026-10-01)** by [Calorie Manager MVP (reset)](../mvp-reset/map.md). The decisions below are background reading until that map's carry-over ticket sorts them.
+
 Label: wayfinder:map
 
 ## Destination

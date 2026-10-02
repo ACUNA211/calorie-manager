@@ -1,7 +1,7 @@
 # What does the Grocery page look like in the store?
 
 Type: prototype
-Status: open
+Status: superseded
 Assignee: ACUNA211
 Blocked by:
 
@@ -21,3 +21,5 @@ Shared: one measure per food ("2 cups · about 300 g" berries, "1⅔ cups · 400
 Scenario: Sat Oct 3, 10:20am in the store, the same week as the #21 prototype. Next week's plan was approved on Friday, so its Missing Ingredients are on the list, plus shrimp for tonight's tacos.
 
 Waiting for the Member's reaction.
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.

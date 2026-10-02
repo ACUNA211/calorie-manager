@@ -1,7 +1,7 @@
 # What does the Pantry page look like?
 
 Type: prototype
-Status: on hold
+Status: superseded
 Assignee: ACUNA211
 Blocked by:
 
@@ -76,3 +76,5 @@ Scenario: Fri Oct 2, 4:10pm, the same week as the #21 prototype. Saturday is lef
   - Staples get have / low / out and Add to a recipe. Edit details (where it's kept, delete) is still a link.
 
 **On hold (2026-10-01):** the Member has a lot of issues with this ticket and wants to plan things better before going on. Round 5 stays as the latest prototype. Pick it up again from the Member's notes.
+
+**Superseded (2026-10-01):** the MVP was re-charted as a smaller map: [Calorie Manager MVP (reset)](../../mvp-reset/map.md). Kept for reference.
