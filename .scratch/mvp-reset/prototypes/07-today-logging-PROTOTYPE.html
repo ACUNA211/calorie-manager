@@ -27,7 +27,8 @@
       foods), the Meal Time it goes to (from the clock, changeable) or "Other time", then Log. Undo toast after.
     - Tap anything logged to change its amount or Meal Time, or delete it (Undo).
     - Rebalance opens a stub sheet: #08 designs that conversation. Only its placement is in question here.
-  Scenario: Tue Oct 6, 12:40pm, the plan from #05. Breakfast is logged. Work lunch is Set (900). No snack planned
+  Scenario: Tue Oct 6, 12:40pm, the plan from #05. The ‹ › arrows by the date move between days: Sun and Mon
+  are past (Monday's snack was never logged), Wed–Sat are planned only. Breakfast is logged. Work lunch is Set (900). No snack planned
   (no room). Dinner is 1¼ servings of Chicken rice bowl. Target 2,000, aim 1,800–2,000.
   Try: log the work lunch at 1,150 ("Different amount"), "2 eggs and toast with butter", "150g chicken and brocoli",
   "latte", "chipotle burrito bowl with guac" (needs AI or calories), "4 oz almonds" at a custom time.
@@ -135,9 +136,31 @@ const MTS0=[
   {id:6,name:"Dinner",time:"18:30",kind:"planned",min:550,max:800,plan:{rid:3,size:1.25}},
 ];
 const clone=o=>JSON.parse(JSON.stringify(o));
-let S={mts:clone(MTS0),log:[{id:1,mt:1,time:"07:40",how:"planned",items:[{name:"Overnight oats",src:"recipe",rid:2,unit:"serving",qty:1}]}],card:null,ai:0,local:0,hist:[]}, nextId=2;
-const ui={sheet:null,typed:"",forMt:null,offerReb:false};
 const R=id=>RECIPES.find(r=>r.id===id), F=id=>FOODS.find(f=>f.id===id), MT=id=>S.mts.find(m=>m.id===id);
+// The rest of the week (#05's plan). Day 0 = Sun Oct 4; today is Tue (2).
+const TODAY=2, DAYL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], DATES=[4,5,6,7,8,9,10];
+const mk=(id,name,time,kind,min,max,rid,size)=>({id,name,time,kind,min,max,plan:rid?{rid,size}:null});
+const B=s=>mk(1,"Breakfast","07:30","planned",350,450,2,s||1), L_=(r,s)=>mk(2,"Lunch","12:00","planned",500,650,r,s), WL=(r,s)=>mk(4,"Weekend lunch","12:30","planned",450,650,r,s),
+  SN=r=>mk(5,"Snack","15:30","ifroom",100,250,r,1), DN=(r,s)=>mk(6,"Dinner","18:30","planned",550,800,r,s);
+const WEEK=[
+  [B(),WL(8,1.5),SN(9),DN(1,1.75)],
+  [B(),L_(1,1.5),SN(4),DN(3,1.25)],
+  MTS0,
+  [B(),L_(1,1.5),SN(4),DN(5,1)],
+  [B(),L_(1,1.25),SN(9),DN(5,1)],
+  [B(),L_(3,1.25),SN(9),DN(7,1),mk(7,"Dessert","20:30","ifroom",150,300,10,1)],
+  [B(),{id:8,name:"Sat brunch out",time:"10:30",kind:"set",cal:600},WL(8,1.25),DN(7,1)],
+];
+let nextId=1;
+const asPlanned=(m,time,mult)=>({id:nextId++,mt:m.id,time:time||m.time,how:"planned",items:[{name:R(m.plan.rid).name,src:"recipe",rid:m.plan.rid,unit:"serving",qty:m.plan.size*(mult||1)}]});
+const DAYDATA=WEEK.map(ms=>({mts:clone(ms),log:[]}));
+DAYDATA[0].log=DAYDATA[0].mts.map(m=>asPlanned(m));                       // Sunday: all as planned
+DAYDATA[1].log=DAYDATA[1].mts.filter(m=>m.id!==5).map(m=>asPlanned(m,null,m.id===6?.75:1)); // Monday: ¾ dinner, snack never logged
+DAYDATA[2].log=[asPlanned(DAYDATA[2].mts[0],"07:40")];                     // Tuesday: breakfast so far
+let S={day:TODAY,mts:DAYDATA[TODAY].mts,log:DAYDATA[TODAY].log,card:null,ai:0,local:0,hist:[]};
+function goDay(d){ if(d<0||d>6)return; DAYDATA[S.day]={mts:S.mts,log:S.log}; S.day=d; S.mts=DAYDATA[d].mts; S.log=DAYDATA[d].log; S.card=null; S.hist=[]; ui.sheet=null; ui.offerReb=false; ui.typed=""; render(); }
+const isToday=()=>S.day===TODAY, isFuture=()=>S.day>TODAY;
+const ui={sheet:null,typed:"",forMt:null,offerReb:false};
 
 // ---------- helpers ----------
 const n=x=>Math.round(x).toLocaleString("en-US");
@@ -151,11 +174,11 @@ const entryCal=e=>e.items.reduce((s,i)=>s+itemCal(i),0);
 const planCal=m=>m.kind==="set"?m.cal:m.plan?R(m.plan.rid).per*m.plan.size:0;
 const logged=m=>S.log.filter(e=>e.mt===m.id);
 const eaten=()=>S.log.reduce((s,e)=>s+entryCal(e),0);
-const stillPlanned=()=>S.mts.filter(m=>!logged(m).length).reduce((s,m)=>s+planCal(m),0);
+const stillPlanned=()=>S.day<TODAY?0:S.mts.filter(m=>!logged(m).length).reduce((s,m)=>s+planCal(m),0);
 const projected=()=>eaten()+stillPlanned();
 const status=t=>t>TARGET?"over":t<LO?"low":"ok";
 const STATUS={ok:"in the aim",low:"under the aim",over:"over the target"};
-const isPast=t=>t<=NOW;
+const isPast=t=>S.day<TODAY||(S.day===TODAY&&t<=NOW);
 function amtLabel(it){ if(it.src==="est"||it.src==="manual"||it.src==="set")return ""; if(it.src==="recipe")return it.unit==="g"?`${n(it.qty)} g`:`${frac(it.qty)} serving${it.qty>1?"s":""}`;
   return it.unit==="g"?`${n(it.qty)} g`:`${frac(it.qty)} ${it.unit}`; }
 const srcTag=it=>it.src==="recipe"?`<span class="tag">Recipe</span>`:it.src==="food"?`<span class="tag lib">${F(it.fid).src}</span>`:it.src==="est"?`<span class="tag est">est.</span>`:it.src==="set"?`<span class="tag set">Set</span>`:`<span class="tag">typed</span>`;
@@ -163,7 +186,7 @@ function entryLabel(e){ return e.items.map(i=>i.name+(amtLabel(i)?` · ${amtLabe
 function toast(t,undoable){ document.querySelectorAll(".toast").forEach(x=>x.remove()); const e=document.createElement("div"); e.className="toast"; e.innerHTML=`<span>${t}</span>${undoable?`<button onclick="undo();this.parentNode.remove()">Undo</button>`:""}`; document.body.appendChild(e); setTimeout(()=>e.remove(),4000); }
 function snap(){ S.hist.push(clone({log:S.log,mts:S.mts})); }
 function undo(){ const h=S.hist.pop(); if(!h)return; S.log=h.log; S.mts=h.mts; ui.sheet=null; render(); }
-function mtForNow(){ const past=S.mts.filter(m=>isPast(m.time)); const m=past[past.length-1]; if(!m)return null; const [h1,m1]=m.time.split(":").map(Number),[h2,m2]=NOW.split(":").map(Number); return (h2*60+m2)-(h1*60+m1)<=90?m.id:null; }
+function mtForNow(){ if(!isToday()){ const u=S.mts.find(m=>!logged(m).length); return (u||S.mts[S.mts.length-1]).id; } const past=S.mts.filter(m=>isPast(m.time)); const m=past[past.length-1]; if(!m)return null; const [h1,m1]=m.time.split(":").map(Number),[h2,m2]=NOW.split(":").map(Number); return (h2*60+m2)-(h1*60+m1)<=90?m.id:null; }
 function afterLog(msg){ const p=projected(); ui.offerReb=status(p)==="over"; toast(msg,true); }
 
 // ---------- search and parser (local, no AI) ----------
@@ -233,15 +256,22 @@ function delEntry(id){ snap(); S.log=S.log.filter(e=>e.id!==id); ui.sheet=null; 
 function bar(){ const e=eaten(), p=projected(), W=2300, pc=x=>Math.min(100,x/W*100);
   return `<div class="hbar"><div style="left:${pc(LO)}%;width:${pc(TARGET)-pc(LO)}%;background:#cfe6d7"></div><div style="left:0;width:${pc(e)}%;background:var(--good)"></div><div style="left:${pc(e)}%;width:${pc(p)-pc(e)}%;background:repeating-linear-gradient(45deg,#9ab9a6 0 4px,transparent 4px 8px)"></div><div style="left:${pc(TARGET)}%;width:2px;background:var(--bad)"></div></div>
   <div class="row xs mute"><span>■ eaten ${n(e)}</span><span>▨ still planned ${n(p-e)}</span><span class="sp"></span><span>aim ${n(LO)}–${n(TARGET)}</span></div>`; }
-function landLine(){ const p=projected(), s=status(p); return `If the rest goes as planned, today lands at <b class="s-${s}">${n(p)}</b>, ${s==="over"?`<b class="s-over">${n(p-TARGET)} over</b>`:s==="low"?`${n(LO-p)} under the aim`:"in the aim"}.`; }
+function landLine(){ const p=projected(), s=status(p);
+  if(S.day<TODAY){ const miss=S.mts.filter(m=>!logged(m).length&&planCal(m)); const t=eaten(), st=status(t); return `The day ended at <b class="s-${st}">${n(t)}</b>, ${STATUS[st]}.${miss.length?` <b class="s-low">${miss.map(m=>m.name).join(", ")} not logged</b>: log it or leave it skipped.`:""}`; }
+  if(isFuture()) return `Planned to land at <b class="s-${s}">${n(p)}</b>, ${STATUS[s]}. Change it on the Plan page.`;
+  return `If the rest goes as planned, today lands at <b class="s-${s}">${n(p)}</b>, ${s==="over"?`<b class="s-over">${n(p-TARGET)} over</b>`:s==="low"?`${n(LO-p)} under the aim`:"in the aim"}.`; }
 function rebalanceSheet(){ ui.sheet={k:"reb"}; ui.offerReb=false; render(); }
 function mtRow(m){ // what a Meal Time offers when nothing is logged there yet
+  if(isFuture()) return `<div class="xs mute" style="margin-top:6px">Planned. You can log it on the day.</div>`;
   if(m.kind==="set") return `<div class="row wrap" style="margin-top:6px"><button class="btn sm good" onclick="logSet(${m.id})">✓ ${n(m.cal)} as set</button><button class="btn sm" onclick="ui.sheet={k:'setamt',id:${m.id}};render()">Different amount</button><button class="btn sm ghost" onclick="somethingElse(${m.id})">Search…</button></div>`;
   if(m.plan) return `<div class="row wrap" style="margin-top:6px"><button class="btn sm good" onclick="ateAsPlanned(${m.id},1)">✓ Ate as planned</button>${[.5,.75,1.25].map(x=>`<button class="btn sm" onclick="ateAsPlanned(${m.id},${x})">${frac(x)}</button>`).join("")}<button class="btn sm ghost" onclick="somethingElse(${m.id})">Something else</button></div>`;
   const room=TARGET-projected(); return `<div class="row wrap" style="margin-top:6px"><span class="small mute sp">${room>=m.min?`Room for up to ${n(Math.min(room,m.max))}`:"No room today"}</span><button class="btn sm" onclick="somethingElse(${m.id})">+ Add</button></div>`; }
 function planText(m){ return m.kind==="set"?`<span class="tag set">Set</span> ${n(m.cal)}`:m.plan?`${R(m.plan.rid).name} · ${frac(m.plan.size)} serving${m.plan.size>1?"s":""} · ${n(planCal(m))}`:`<span class="mute">If room · ${m.min}–${m.max}</span>`; }
 function loggedLines(entries){ return entries.map(e=>`<div class="row small" style="cursor:pointer;margin-top:3px" onclick="ui.sheet={k:'edit',id:${e.id}};render()"><span class="s-ok">✓</span><span class="sp">${esc(entryLabel(e))}${e.items.some(i=>i.src==="est")?' <span class="est">est.</span>':""}</span><b class="num">${n(entryCal(e))}</b></div>`).join(""); }
-function headTitle(extra){ return `<header><div class="row"><h1 class="sp">Today</h1>${extra||""}</div><div class="sub">Tuesday, Oct 6 · ${t12(NOW)}</div></header>`; }
+function headTitle(extra){ const d=S.day, rel=d===TODAY?`Today · ${t12(NOW)}`:d===TODAY-1?"Yesterday":d===TODAY+1?"Tomorrow":d<TODAY?"Past day":"Coming up";
+  return `<header><div class="row"><button class="btn sm" ${d===0?"disabled":""} onclick="goDay(${d-1})" aria-label="Previous day">‹</button>
+    <div class="sp" style="text-align:center"><div style="font-size:19px;font-weight:700">${DAYL[d]}, Oct ${DATES[d]}</div><div class="xs mute">${rel}${d!==TODAY?` · <a href="#" onclick="goDay(TODAY);return false">back to today</a>`:""}</div></div>
+    <button class="btn sm" ${d===6?"disabled":""} onclick="goDay(${d+1})" aria-label="Next day">›</button></div>${extra?`<div class="row" style="justify-content:flex-end;margin-top:6px">${extra}</div>`:""}</header>`; }
 
 // ---------- A: timeline ----------
 function variantA(){ const e=eaten(), p=projected();
@@ -260,22 +290,22 @@ function variantA(){ const e=eaten(), p=projected();
 
 // ---------- B: next meal first ----------
 function variantB(){ const e=eaten(), p=projected(), s=status(p);
-  let h=headTitle()+`<div class="card row"><div class="sp"><div class="big num">${n(TARGET-e)}</div><div class="small mute">left of ${n(TARGET)} · aim ${n(LO)}–${n(TARGET)}</div></div>
-    <button class="btn ${s==="over"?"reb":""}" style="text-align:center;line-height:1.2" onclick="rebalanceSheet()">⚖<br><span class="small">Rebalance</span>${s==="over"?`<br><span class="xs">${n(p-TARGET)} over</span>`:""}</button></div>
+  let h=headTitle()+`<div class="card row"><div class="sp"><div class="big num">${n(isFuture()?TARGET-p:TARGET-e)}</div><div class="small mute">${isFuture()?"left after the plan":S.day<TODAY?"left at the end of the day":"left"} of ${n(TARGET)} · aim ${n(LO)}–${n(TARGET)}</div></div>
+    ${isToday()?`<button class="btn ${s==="over"?"reb":""}" style="text-align:center;line-height:1.2" onclick="rebalanceSheet()">⚖<br><span class="small">Rebalance</span>${s==="over"?`<br><span class="xs">${n(p-TARGET)} over</span>`:""}</button>`:""}</div>
     <div style="margin:-4px 16px 0">${bar()}<div class="small" style="margin-top:4px">${landLine()}</div></div>`;
   h+=cardHTML();
-  const open=S.mts.filter(m=>!logged(m).length&&m.kind!=="ifroom"), next=open.find(m=>isPast(m.time))||open[0];
-  if(next&&!S.card){ const missed=open.filter(m=>isPast(m.time)&&m!==next).length; const lbl=isPast(next.time)?(Math.abs(+next.time.slice(0,2)-+NOW.slice(0,2))<=1?"now":"not logged yet"):"up next";
+  const open=S.mts.filter(m=>!logged(m).length&&(m.kind!=="ifroom"||m.plan)), next=isFuture()?null:open.find(m=>isPast(m.time))||open[0];
+  if(next&&!S.card){ const missed=open.filter(m=>isPast(m.time)&&m!==next).length; const lbl=isFuture()?"planned":S.day<TODAY?"not logged":isPast(next.time)?(Math.abs(+next.time.slice(0,2)-+NOW.slice(0,2))<=1?"now":"not logged yet"):"up next";
     h+=`<div class="confirm"><div class="xs mute b">${next.name.toUpperCase()} · ${lbl.toUpperCase()} · ${t12(next.time)}</div><div style="font-size:18px;font-weight:600;margin:3px 0">${next.kind==="set"?`Set · ${n(next.cal)}`:`${R(next.plan.rid).name} · ${n(planCal(next))}`}</div>
       <div class="small mute">${next.kind==="set"?"Decided ahead (a work lunch). One tap logs the set calories.":`${frac(next.plan.size)} serving${next.plan.size>1?"s":""}, from the plan`}</div>${mtRow(next)}</div>`; }
-  else if(!next&&!S.card) h+=`<div class="card okbox">Everything planned is logged.</div>`;
+  else if(!next&&!S.card&&!isFuture()) h+=`<div class="card okbox">Everything planned is logged.</div>`;
   h+=`<div class="card" style="padding:4px 12px"><table class="t">${[...S.mts.map(m=>({t:m.time,m})),...S.log.filter(x=>x.mt==null).map(x=>({t:x.time,x}))].sort((a,b)=>a.t.localeCompare(b.t)).map(o=>{
     if(o.x) return `<tr onclick="ui.sheet={k:'edit',id:${o.x.id}};render()" style="cursor:pointer"><td class="xs mute">${t12(o.x.time)}</td><td>${esc(entryLabel(o.x))}</td><td class="num b" style="text-align:right">${n(entryCal(o.x))}</td><td class="s-ok">✓</td></tr>`;
     const m=o.m, L=logged(m);
     if(L.length) return `<tr onclick="ui.sheet={k:'edit',id:${L[0].id}};render()" style="cursor:pointer"><td class="xs mute">${t12(m.time)}</td><td><b>${m.name}</b><div class="xs mute">${esc(L.map(entryLabel).join("; "))}</div></td><td class="num b" style="text-align:right">${n(L.reduce((s,x)=>s+entryCal(x),0))}</td><td class="s-ok">✓</td></tr>`;
     return `<tr><td class="xs mute">${t12(m.time)}</td><td><b>${m.name}</b><div class="xs mute">${m.kind==="set"?"Set":m.plan?R(m.plan.rid).name:"If room"}</div></td><td class="num mute" style="text-align:right">${m.kind==="ifroom"&&!m.plan?"–":n(planCal(m))}</td>
-      <td>${m.kind==="set"?`<button class="btn sm" onclick="logSet(${m.id})">✓</button>`:m.plan?`<button class="btn sm" onclick="ateAsPlanned(${m.id},1)">✓</button>`:`<button class="btn sm" onclick="somethingElse(${m.id})">+</button>`}</td></tr>`; }).join("")}</table></div>`;
-  return h+`<div class="boxbar">${boxHTML()}</div>`; }
+      <td>${isFuture()?"":m.kind==="set"?`<button class="btn sm" onclick="logSet(${m.id})">✓</button>`:m.plan?`<button class="btn sm" onclick="ateAsPlanned(${m.id},1)">✓</button>`:`<button class="btn sm" onclick="somethingElse(${m.id})">+</button>`}</td></tr>`; }).join("")}</table></div>`;
+  return h+(isFuture()?"":`<div class="boxbar">${boxHTML(S.day<TODAY?`Log something for ${DAYL[S.day]}…`:null)}</div>`); }
 
 // ---------- C: budget bar ----------
 function variantC(){ const e=eaten(), p=projected(), W=Math.max(TARGET*1.1,p);
