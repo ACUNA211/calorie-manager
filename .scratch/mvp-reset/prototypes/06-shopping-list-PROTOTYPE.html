@@ -11,13 +11,16 @@
   for a Pantry), then shopping. How are amounts shown? Can items be added by hand? What happens when the plan changes
   after approval, or when a Rebalance needs something new? Is it ordered by store section, and where does that come
   from? What happens to lines already ticked "have it" or bought?
-  Three layouts, switchable via ?variant=A|B|C, the floating bar, or the ← → keys:
+  RESOLVED (2026-10-01): layout D (B's list with A's At home / Shop tabs) won.
+  Four layouts, switchable via ?variant=A|B|C|D, the floating bar, or the ← → keys:
     A: Two passes. Step 1 shows one food at a time (Have it / Need it / Have some). Step 2 is the shopping list by store
        section, with what's at home folded away.
     B: One list, two ticks. A single list by store section; every line has a 🏠 "have it" tick and a 🛒 "in cart" tick.
        Filter chips instead of steps.
     C: By when it's needed. Lines are grouped by the first cook day that needs them, so the list splits into shopping
        trips (Sat for Sun–Tue, Tue for Wed–Sat). A Check home / Shopping switch changes what a tap does.
+    D: B's list with A's tabs. The At home tab is the whole list by section with a 🏠 tick; the Shop tab is what's left
+       to buy by section with a 🛒 tick, and what's at home folded away.
   Shared in all three (proposals, not settled):
     - One measure per food: the shopping measure is one of the food's Food Library serving sizes (broccoli in heads,
       turkey in lb). Recipe amounts are converted through grams and rounded up (whole cans, pieces and tbsp, ¼ lb or cup,
@@ -307,6 +310,26 @@ function variantC(){
   return h+goneBlock();
 }
 
+// ---------- D: B's list with A's tabs ----------
+function variantD(){
+  const c=counts(), tab=ui.stepD||1, live=S.lines.filter(l=>l.state!=="gone");
+  let h=head(`<div class="steps" style="margin:10px 0 0"><button class="${tab===1?"on":""}" onclick="ui.stepD=1;render()">🏠 At home (${c.have})</button><button class="${tab===2?"on":""}" onclick="ui.stepD=2;render()">🛒 Shop (${c.need+c.check})</button></div>`)+chgBar()+protoBox();
+  if(tab===1){
+    h+=`<div class="small mute" style="margin:8px 16px 0">Tick 🏠 what's already at home. Everything else goes on the Shop tab. Tap a name for "have some".</div>`;
+    h+=bySection(live.filter(l=>!l.manual),l=>`<div class="li${l.state==="have"?" done":""}">
+      <div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> ${sub(l)}</div><span class="q">${amtOf(l)}</span>
+      <button class="tick home${l.state==="have"?" on":""}" title="Have it" onclick="set(${l.id},'have')">🏠</button></div>`);
+  } else {
+    h+=addBox()+bySection(live.filter(l=>l.state!=="have"),l=>`<div class="li${l.state==="cart"?" done":""}">
+      <div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> ${sub(l)}</div><span class="q">${amtOf(l)}</span>
+      <button class="tick${l.state==="cart"?" on":""}" title="In cart" onclick="set(${l.id},'cart')">🛒</button></div>`);
+    const hv=live.filter(l=>l.state==="have");
+    if(hv.length) h+=`<details class="card"><summary class="small b">At home (${hv.length})</summary>${hv.map(l=>`<div class="li" style="padding:6px 0"><div class="nm" onclick="ui.sheet={k:'line',id:${l.id}};render()"><span>${nameOf(l)}</span> ${sub(l)}</div><span class="q mute">${amtOf(l)}</span><button class="btn sm" onclick="answer(${l.id},'need')">Need it</button></div>`).join("")}</details>`;
+    if(!c.need&&!c.check&&c.cart) h+=`<div class="card" style="text-align:center">Everything's in the cart. 🎉</div>`;
+  }
+  return h+goneBlock();
+}
+
 // ---------- sheets ----------
 function sheetHTML(){
   const s=ui.sheet; if(!s)return ""; let b="";
@@ -341,7 +364,7 @@ function sheetHTML(){
 }
 
 // ---------- switcher ----------
-const VARIANTS={A:["Two passes",variantA],B:["One list, two ticks",variantB],C:["By when it's needed",variantC]}, KEYS=Object.keys(VARIANTS);
+const VARIANTS={A:["Two passes",variantA],B:["One list, two ticks",variantB],C:["By when it's needed",variantC],D:["B's list + A's tabs",variantD]}, KEYS=Object.keys(VARIANTS);
 const params=new URLSearchParams(location.search); let variant=params.get("variant")||"A"; if(!VARIANTS[variant])variant="A";
 function cycle(dir){ variant=KEYS[(KEYS.indexOf(variant)+dir+KEYS.length)%KEYS.length]; history.replaceState(null,"","?variant="+variant); ui.sheet=null; render(); scrollTo(0,0); }
 document.addEventListener("keydown",e=>{ if(e.target.closest("input,textarea,[contenteditable]"))return; if(e.key==="ArrowLeft")cycle(-1); if(e.key==="ArrowRight")cycle(1); });

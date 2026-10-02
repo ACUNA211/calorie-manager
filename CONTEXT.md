@@ -48,7 +48,7 @@ The foods the app knows calories for, from USDA FoodData Central (including its 
 _Avoid_: food list, database
 
 **Shopping list**:
-What to buy for an approved Meal Plan, one line per food. It starts with a "have it" pass, where the Member ticks what's already at home, then is ticked off while shopping.
+What to buy for an approved Meal Plan, one line per food in one shopping measure, ordered by store section. It starts with a "have it" pass, where the Member ticks what's already at home, then is ticked off while shopping. Items can be added by hand; when a Cook changes, a Review updates it.
 _Avoid_: grocery list
 
 **Rebalance**:
