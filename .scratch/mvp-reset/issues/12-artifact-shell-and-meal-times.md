@@ -1,7 +1,7 @@
 # Artifact shell and the Meal Times tab
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: None
 
@@ -18,3 +18,7 @@ The first end-to-end slice. Supabase tables for Member settings (Calorie Target,
 ## Notes
 
 Tables live in the existing Supabase project alongside grocery_list. Glossary: Meal Time (not "category" or "slot").
+
+## Comments
+
+Built 2026-10-10: tables `member_settings`, `meal_times` (seeded with starter Meal Times from his stated habits), and the Calorie Manager artifact (`app/calorie-manager.html`) with the Times tab as a full editor (grid toggles, editor with Every day / Mon–Fri / Weekend, 45-minute overlap prompt, day ranges against the target). Reads and writes Supabase through the connector. **Awaiting Sergio's check on his phone**, starting with setting his Calorie Target.

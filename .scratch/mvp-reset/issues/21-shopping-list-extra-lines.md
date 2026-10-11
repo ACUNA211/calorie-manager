@@ -1,7 +1,7 @@
 # Extra Shopping list lines when a Cook grows
 
 Type: build
-Status: open
+Status: done
 Assignee:
 Blocked by: [Shopping list built on Approve](20-shopping-list-from-approve.md)
 
@@ -13,3 +13,7 @@ After approval, when a Cook's servings made go up (a grid edit, a Rebalance or t
 
 - Growing an approved Cook adds exactly the extra as a new line
 - Shrinking one changes nothing on the list
+
+## Comments
+
+Done 2026-10-10: a trigger on `cooks` runs `sync_shopping_list`, which adds a "+" line for only the shortfall; shrinking changes nothing; ticked lines are never unticked. Tested on throwaway data (rolled back).

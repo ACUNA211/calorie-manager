@@ -1,7 +1,7 @@
 # Barcode scan on Today
 
 Type: build
-Status: open
+Status: blocked
 Assignee:
 Blocked by: [Does barcode scanning work inside the Claude app on the phone?](11-barcode-phone-test.md), ["Search USDA" through Supabase](15-search-usda-through-supabase.md)
 
@@ -13,3 +13,7 @@ A scan button beside the search box, built on whichever path #11 proved: photo â
 
 - Scanning a real packaged food logs it with its label calories
 - An unknown barcode falls back to search or Estimate with no dead end
+
+## Comments
+
+Blocked by #11 (Sergio's phone run). The USDA barcode lookup (`usda_lookup_gtin`) is already in place.

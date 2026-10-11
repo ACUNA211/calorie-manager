@@ -1,7 +1,7 @@
 # Today: confirm planned meals
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Today: log food by search](14-today-logging-by-search.md), [/plan-week-cal and the Plan tab grid](18-plan-week-cal-and-plan-grid.md)
 
@@ -17,3 +17,7 @@ On Today, a confirm card for the meal that's due (✓ Ate as planned, or ½ / ¾
 ## Notes
 
 From #07's resolution.
+
+## Comments
+
+Built 2026-10-10: confirm card for the meal that's due (✓ Ate as planned, ½ / ¾ / 1¼, Something else; Set: ✓ as set / Different amount; If room: room left + Add), one-tap ✓ on the rest, "not logged" on past days.

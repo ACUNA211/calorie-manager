@@ -1,7 +1,7 @@
 # Estimate button for unmatched food
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Today: log food by search](14-today-logging-by-search.md)
 
@@ -18,3 +18,7 @@ When nothing local or from USDA fits, an Estimate button asks Claude from the pa
 ## Notes
 
 The only AI inside the app (decision Q13).
+
+## Comments
+
+Built 2026-10-10: "Estimate with Claude" on Today asks Claude from the page (sample capability) for name, portion, grams and calories; the accepted result is logged and saved as an *estimated* food. Type calories and From a label are the fallbacks. Hidden when asking Claude isn't available.

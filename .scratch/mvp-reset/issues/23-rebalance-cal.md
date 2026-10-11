@@ -1,7 +1,7 @@
 # /rebalance-cal and the heading-over warning
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Today: confirm planned meals](22-today-confirm-planned-meals.md)
 
@@ -17,3 +17,7 @@ Today shows when the day is heading over the Target (red bar and a short hint to
 ## Notes
 
 Option rules from #08's resolution; the on-phone cards are dropped (decision Q8).
+
+## Comments
+
+Built 2026-10-10: Today turns the bar red and shows "Heading N over, say /rebalance-cal"; `/rebalance-cal` offered as a skill with Rebalance's rules.

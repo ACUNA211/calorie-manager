@@ -1,7 +1,7 @@
 # Remove superseded material
 
 Type: chore
-Status: open
+Status: blocked
 Assignee:
 Blocked by: [/plan-week-cal and the Plan tab grid](18-plan-week-cal-and-plan-grid.md)
 
@@ -12,3 +12,7 @@ Once `/plan-week-cal` works: delete `chat-plan/` and the superseded prototypes (
 ## Done when
 
 - Nothing in the repo describes the PWA design as current
+
+## Comments
+
+Blocked until Sergio has used `/plan-week-cal` for a real week.

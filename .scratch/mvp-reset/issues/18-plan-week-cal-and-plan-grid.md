@@ -1,7 +1,7 @@
 # /plan-week-cal and the Plan tab grid
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Artifact shell and the Meal Times tab](12-artifact-shell-and-meal-times.md), [Food Library, Recipes and /add-recipe-cal](13-food-library-recipes-and-add-recipe.md)
 
@@ -17,3 +17,7 @@ Tables for Meal Plans (one per Sunday–Saturday week, draft/approved), Cooks (R
 ## Notes
 
 Grid design from #05's prototype, minus the chat drawer (ADR 0001).
+
+## Comments
+
+Built 2026-10-10: `meal_plans`, `cooks`, `portions`; Plan tab grid (Cook colours, 🔥 on cook day, fill/room cells, out-of-range in red, day totals with bars, Cooks list with servings placed/made, tap a Cook to highlight); `/plan-week-cal` offered as a skill. `chat-plan/` wasn't in the repo, so the skill was written from the decisions instead. **Awaiting Sergio** planning a real week.

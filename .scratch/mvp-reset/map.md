@@ -76,6 +76,8 @@ Settled while charting (2026-10-01), before any ticket:
 
 ## Build tickets
 
+**Status 2026-10-10:** everything not waiting on Sergio is built. The app is the Calorie Manager artifact (`app/calorie-manager.html`), the database changes are in `supabase/migrations/`, and the three skills are in `skills/`. Waiting on Sergio: #11 (phone test, then #17), a data.gov key for USDA, saving the skills, and a first real week (then #25).
+
 Design is settled (2026-10-10). The work is split into tracer-bullet tickets, each a thin end-to-end slice:
 
 - [#11 Barcode phone test](issues/11-barcode-phone-test.md) (spike, start anytime)

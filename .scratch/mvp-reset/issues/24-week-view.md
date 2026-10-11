@@ -1,7 +1,7 @@
 # Week view
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Today: log food by search](14-today-logging-by-search.md)
 
@@ -17,3 +17,7 @@ The Week view tab: seven bars Sun–Sat against the Calorie Target line and plan
 ## Notes
 
 From #09's resolution.
+
+## Comments
+
+Built 2026-10-10: Week view tab with seven bars against the target line and aim band, days under, average per logged day, paging back, tap a day to open Today.

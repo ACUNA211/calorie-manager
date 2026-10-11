@@ -17,3 +17,7 @@ A throwaway test artifact opened on the Member's phone in the Claude app. Three 
 ## Notes
 
 Live camera access isn't among this account's artifact capabilities; a photo file input usually works in web pages but is unverified inside the Claude app. Delete the test artifact afterwards.
+
+## Comments
+
+Built 2026-10-10: the throwaway test page is the Barcode Phone Test artifact (`app/barcode-test.html`). **Waiting on Sergio** to run it on his phone and send the summary.

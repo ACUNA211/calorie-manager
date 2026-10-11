@@ -1,7 +1,7 @@
 # Food Library, Recipes and /add-recipe-cal
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Artifact shell and the Meal Times tab](12-artifact-shell-and-meal-times.md)
 
@@ -18,3 +18,7 @@ Tables: Food Library foods (source: usda / label / estimated, source ID, nullabl
 ## Notes
 
 Uses the Food Library model from #01's research. Supersedes #04's in-app editor.
+
+## Comments
+
+Built 2026-10-10: `foods`, `recipes`, `recipe_ingredients`, view `recipe_totals`; Recipes tab (search, star, read-only view with each ingredient's share); `/add-recipe-cal` offered as a skill (`skills/add-recipe-cal`). **Awaiting Sergio** saving the skill and adding a first Recipe.

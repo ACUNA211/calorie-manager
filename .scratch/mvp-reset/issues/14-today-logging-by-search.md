@@ -1,7 +1,7 @@
 # Today: log food by search
 
 Type: build
-Status: open
+Status: built
 Assignee:
 Blocked by: [Artifact shell and the Meal Times tab](12-artifact-shell-and-meal-times.md), [Food Library, Recipes and /add-recipe-cal](13-food-library-recipes-and-add-recipe.md)
 
@@ -18,3 +18,7 @@ Calorie Log table (entries at a Meal Time or another time, kcal, source food/Rec
 ## Notes
 
 Layout B from #07's prototype. Planned-meal confirm cards come later (#22).
+
+## Comments
+
+Built 2026-10-10: `calorie_log`; Today tab with day paging, counter and bar (eaten, still planned, aim, target), local search over Recipes and foods, log sheet (servings, grams, oz or the food's serving sizes; Meal Time or another time), tap a log to edit or delete, Undo toasts, read-only future days.
