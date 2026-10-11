@@ -9,7 +9,7 @@ The one person using the app: their own account (a username and password), Calor
 _Avoid_: user, profile, household
 
 **Agent**:
-The built-in AI that drafts the Meal Plan in a planning chat and talks a Rebalance through when the Member opens its chat. What the Member asks it for happens straight away; what it suggests waits for a yes. Logging and Recipes work without it.
+Claude, working in a chat outside the app (typed or by voice) on the Member's data, which it reads and writes directly. It drafts the Meal Plan and talks a Rebalance through, usually started by a slash command. The app's screens hold no chat of their own. What the Member asks it for happens straight away; what it suggests waits for a yes. Logging and Recipes work without it.
 _Avoid_: bot, assistant, chatbot
 
 **Recipe**:
@@ -44,23 +44,23 @@ The Member's record of what they actually ate and its calories, each entry at a 
 _Avoid_: diary, journal, tracker
 
 **Food Library**:
-The foods the app knows calories for, from USDA FoodData Central (including its Branded Foods) or typed in once from a label. Each food has calories per 100 g and its serving sizes in grams.
+The foods the app knows calories for. A food gets in when a Recipe needs it, when the Member picks it from a USDA FoodData Central search or barcode scan (including its Branded Foods), when it's typed in once from a label, or when an accepted Estimate is saved (marked *estimated* until replaced). Each food has calories per 100 g and its serving sizes in grams.
 _Avoid_: food list, database
 
 **Shopping list**:
-What to buy for an approved Meal Plan, one line per food in one shopping measure, ordered by store section. It starts with a "have it" pass, where the Member ticks what's already at home, then is ticked off while shopping. Items can be added by hand; when a Cook changes, a Review updates it.
+The Member's one list of things to buy. Approving a Meal Plan adds a line per food in one shopping measure, ordered by store section; anything else (including non-food items) can be added by hand. Each line shows the date it was added and has one tick, meaning "covered": already at home or bought, it doesn't matter which. Unticked lines stay until the Member ticks them, whatever week they came from; their date shows how long they've waited. When a Cook later needs more, a new unticked line is added for the extra; ticked lines are never unticked. There is no separate grocery list.
 _Avoid_: grocery list
 
 **Rebalance**:
-A command where the Agent proposes changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Set Meal Times or takes a Planned one below its range. Its options are worked out by these rules without AI; the Agent joins only if the Member opens the chat. Nothing changes until the Member approves.
+A command (`/rebalance-cal`) where the Agent proposes up to three changes after a day goes over: by default to the rest of today, or to the rest of the week if asked, using only Cooks already planned. It never touches Set Meal Times or meals already logged, and never takes a Planned one below its range. The app only shows that a day is heading over; the options come from the Agent. Nothing changes until the Member picks one.
 _Avoid_: adjust, correct, fix
 
 **Week view**:
-The one stats page: each day of the week against the Calorie Target and planning band, the count of days under, and the week's average.
-_Avoid_: stats, recap, analytics
+The one stats page: each day of the week against the Calorie Target and planning band, the count of days under, and the week's average. Tapping a day opens it on Today, which is the only day view.
+_Avoid_: stats, recap, analytics, day view
 
 **Pantry** _(later phase, not in the MVP)_:
-The food at home, tracked in the app so the Agent can adapt suggestions to it. In the MVP the Shopping list's "have it" pass stands in for it.
+The food at home, tracked in the app so the Agent can adapt suggestions to it. In the MVP, ticking a Shopping list line as already at home stands in for it.
 _Avoid_: inventory, fridge, stock
 
 ## Relationships

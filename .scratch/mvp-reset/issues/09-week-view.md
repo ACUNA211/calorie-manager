@@ -1,10 +1,14 @@
 # What does the week view show?
 
 Type: prototype
-Status: open
+Status: resolved
 Assignee:
 Blocked by: [What do Today and logging look like?](07-today-and-logging.md)
 
 ## Question
 
 Mock up the one stats view the MVP keeps: each day of the week against the Calorie Target and planning band (green in the band, a note when under it, red over the target), the count of days under the target, and the week's average. Tap a day to see its log? Does it also show how closely the plan was followed? Can you page back to earlier weeks? From #07: Today already pages through days with ‹ ›, and a past day's unlogged planned meal shows "not logged" and isn't counted in the day's total (the old rule greyed such a day out); tapping a day here could open Today on that day.
+
+## Comments
+
+**Resolution (2026-10-10):** kept in the MVP, minimal: seven bars Sun–Sat against the Calorie Target line and planning band, "N of 7 days under", and the week's average; page back a week at a time; tapping a day opens it on Today (the only day view). No plan-following score. Built in #24.
