@@ -44,7 +44,7 @@ The food at home, shared by the Household, with exact amounts in grams or units.
 _Avoid_: inventory, fridge, stock
 
 **Food Library**:
-The foods the app knows calories and macros for, stored per 100 g with serving sizes in grams. A food gets in from a USDA FoodData Central search or barcode scan, from Open Food Facts when USDA misses (kept in its own table), or typed in once from a label.
+The foods the app knows calories and macros for, stored per 100 g with serving sizes in grams. A food gets in from a USDA FoodData Central search or barcode scan, from Open Food Facts when USDA misses (kept in its own table), or typed in once from a label (or read from a photo of the Nutrition Facts panel by a cheap AI call, then confirmed). Each food has an English and a Spanish name; the Spanish one is filled once by a translation API's free tier (a cheap AI call if none fits) and can be edited, and search matches both.
 _Avoid_: food list, database
 
 **Recipe**:
