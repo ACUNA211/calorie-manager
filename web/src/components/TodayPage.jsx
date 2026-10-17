@@ -4,6 +4,7 @@ import { useActingMember } from '../lib/actingMember.jsx';
 import { loadMealTimes } from '../lib/mealTimes.js';
 import { loadTargets } from '../lib/targets.js';
 import { deleteEntry, loadDay, restoreEntry, updateEntry } from '../lib/today.js';
+import { useOfflineLog } from '../lib/useOfflineLog.js';
 import {
   addDays,
   calorieBar,
@@ -50,6 +51,7 @@ export default function TodayPage({ day: openDay = null }) {
   useEffect(() => {
     if (openDay) document.getElementById('today-heading')?.scrollIntoView?.({ block: 'start' });
   }, [openDay]);
+  const offline = useOfflineLog({ client: supabase, memberId: actingMemberId });
 
   useEffect(() => {
     if (actingMemberId == null) return undefined;
@@ -86,7 +88,7 @@ export default function TodayPage({ day: openDay = null }) {
     return () => {
       active = false;
     };
-  }, [actingMemberId, day]);
+  }, [actingMemberId, day, offline.version]);
 
   if (actingMemberId == null) {
     return (
@@ -119,7 +121,8 @@ export default function TodayPage({ day: openDay = null }) {
   }
 
   const { targets, meals } = currentSetup;
-  const { entries } = currentDay;
+  // Entries still on the phone (ticket #34) count in the day beside the saved ones.
+  const entries = sortEntries([...currentDay.entries, ...offline.entriesFor(day)]);
   const weekday = weekdayOf(day);
   const totals = sumEntries(entries);
   const bar = calorieBar(totals.kcal, targets);
@@ -163,17 +166,21 @@ export default function TodayPage({ day: openDay = null }) {
 
   // Adds the saved row to the day at once, so the bar and the Meal Time list update.
   function handleLogged(row) {
-    changeEntries((current) => sortEntries([...current, row]));
+    // A queued row is already on screen (from the queue), so it is not added to the day again.
+    if (!row.pending) changeEntries((current) => sortEntries([...current, row]));
     const meal = meals.find((candidate) => Number(candidate.id) === Number(row.meal_time_id));
+    const details = {
+      kcal: formatNumber(row.kcal, { maximumFractionDigits: 0 }),
+      meal: meal ? meal.name : t('today.otherTime'),
+    };
     showToast(
-      t('today.logged', {
-        kcal: formatNumber(row.kcal, { maximumFractionDigits: 0 }),
-        meal: meal ? meal.name : t('today.otherTime'),
-      }),
-      async () => {
-        await deleteEntry(supabase, row.id);
-        changeEntries((current) => current.filter((entry) => entry.id !== row.id));
-      }
+      row.pending ? t('today.offline.queuedToast', details) : t('today.logged', details),
+      row.pending
+        ? async () => offline.discard(row.id)
+        : async () => {
+            await deleteEntry(supabase, row.id);
+            changeEntries((current) => current.filter((entry) => entry.id !== row.id));
+          }
     );
     setLogOpen(false);
   }
@@ -257,6 +264,7 @@ export default function TodayPage({ day: openDay = null }) {
           meals={dayMeals}
           weekday={weekday}
           onLogged={handleLogged}
+          offline={offline}
         />
       ) : null}
 
@@ -271,7 +279,13 @@ export default function TodayPage({ day: openDay = null }) {
         />
       ) : null}
 
-      <TodayMeals sections={sections.sections} other={sections.other} onEdit={openEdit} />
+      <TodayMeals
+        sections={sections.sections}
+        other={sections.other}
+        onEdit={openEdit}
+        onRetry={offline.retry}
+        onDiscard={offline.discard}
+      />
     </div>
   );
 }

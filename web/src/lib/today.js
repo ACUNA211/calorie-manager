@@ -32,6 +32,18 @@ export async function insertEntry(client, row) {
   return data;
 }
 
+// Sends an entry that was queued on the phone (offline logging, ticket #34). The row carries a
+// client_id, so a resend the server already stored is refused with 23505; that counts as sent.
+// Any other error is thrown as it is.
+export async function insertQueuedEntry(client, row) {
+  try {
+    await insertEntry(client, row);
+  } catch (error) {
+    if (error?.code === '23505') return;
+    throw error;
+  }
+}
+
 // One Food Library row, as a search result (with its macros).
 export async function loadFood(client, foodId) {
   const { data, error } = await client.from('foods').select(FOOD_COLUMNS).eq('id', foodId).single();

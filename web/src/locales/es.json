@@ -616,6 +616,17 @@
         "usdaSave": "No se pudo añadir este alimento de USDA a tu biblioteca. Inténtalo de nuevo.",
         "saveError": "No se pudo registrar el alimento. Inténtalo de nuevo."
       }
+    },
+    "offline": {
+      "banner": "Sin conexión. Los registros se guardan en este teléfono y se envían cuando vuelva la conexión.",
+      "usdaNeedsConnection": "Buscar en USDA necesita conexión. Se muestran los alimentos que este teléfono ya ha visto.",
+      "usdaSaveNeedsConnection": "Un alimento de USDA necesita conexión para añadirse. Elige uno de tu biblioteca de alimentos.",
+      "notSynced": "Sin sincronizar",
+      "failed": "Sin sincronizar: el servidor rechazó este registro.",
+      "retry": "Intentar de nuevo",
+      "discard": "Descartar",
+      "queuedToast": "Guardado en este teléfono: {{kcal}} kcal en {{meal}}. Se sincronizará cuando vuelva la conexión.",
+      "storageError": "No se pudo guardar este registro en el teléfono. Inténtalo de nuevo con conexión."
     }
   },
   "week": {
