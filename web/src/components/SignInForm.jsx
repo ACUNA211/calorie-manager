@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase.js';
+import { useI18n } from '../i18n/I18nProvider.jsx';
 
 export default function SignInForm() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -13,15 +15,16 @@ export default function SignInForm() {
     setBusy(true);
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (signInError) setError(signInError.message);
+    // Server error text is English only, so show our translated message instead.
+    if (signInError) setError(t('signIn.failed'));
   }
 
   return (
     <main>
-      <h1>Sign in</h1>
+      <h1>{t('signIn.heading')}</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Email
+          {t('signIn.email')}
           <input
             type="email"
             autoComplete="email"
@@ -31,7 +34,7 @@ export default function SignInForm() {
           />
         </label>
         <label>
-          Password
+          {t('signIn.password')}
           <input
             type="password"
             autoComplete="current-password"
@@ -41,7 +44,7 @@ export default function SignInForm() {
           />
         </label>
         <button type="submit" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? t('signIn.submitting') : t('signIn.submit')}
         </button>
         {error && <p role="alert">{error}</p>}
       </form>

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import InstallHint from './InstallHint.jsx';
 import { DISMISSED_KEY, isIphoneSafari } from '../lib/installHint.js';
+import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 const IPHONE_SAFARI =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
@@ -37,7 +38,7 @@ describe('InstallHint', () => {
 
   it('shows the hint on iPhone Safari when the app is not installed', () => {
     setUserAgent(IPHONE_SAFARI);
-    render(<InstallHint />);
+    render(<InstallHint />, { wrapper: I18nProvider });
 
     expect(screen.getByRole('region', { name: 'Install hint' })).toHaveTextContent(
       'Add to Home Screen'
@@ -46,7 +47,7 @@ describe('InstallHint', () => {
 
   it('hides the hint after it is dismissed and remembers that in localStorage', async () => {
     setUserAgent(IPHONE_SAFARI);
-    const { unmount } = render(<InstallHint />);
+    const { unmount } = render(<InstallHint />, { wrapper: I18nProvider });
 
     await userEvent.click(screen.getByRole('button', { name: 'Got it' }));
 
@@ -54,14 +55,14 @@ describe('InstallHint', () => {
     expect(window.localStorage.getItem(DISMISSED_KEY)).toBe('1');
 
     unmount();
-    render(<InstallHint />);
+    render(<InstallHint />, { wrapper: I18nProvider });
     expect(screen.queryByRole('region', { name: 'Install hint' })).not.toBeInTheDocument();
   });
 
   it('does not show when the app already runs from the Home Screen', () => {
     setUserAgent(IPHONE_SAFARI);
     setStandalone(true);
-    render(<InstallHint />);
+    render(<InstallHint />, { wrapper: I18nProvider });
 
     expect(screen.queryByRole('region', { name: 'Install hint' })).not.toBeInTheDocument();
   });
@@ -72,7 +73,7 @@ describe('InstallHint', () => {
     ['desktop Safari', DESKTOP_SAFARI],
   ])('never shows on %s', (_name, userAgent) => {
     setUserAgent(userAgent);
-    render(<InstallHint />);
+    render(<InstallHint />, { wrapper: I18nProvider });
 
     expect(screen.queryByRole('region', { name: 'Install hint' })).not.toBeInTheDocument();
   });
