@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase.js';
 import SignInForm from './components/SignInForm.jsx';
 import Home from './components/Home.jsx';
 import HouseholdPage from './components/HouseholdPage.jsx';
+import MealTimesPage from './components/MealTimesPage.jsx';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
 import { useI18n } from './i18n/I18nProvider.jsx';
 
@@ -39,6 +40,7 @@ export default function App() {
       <>
         <Home user={session.user} />
         <HouseholdPage user={session.user} />
+        <MealTimesPage user={session.user} />
       </>
     );
 

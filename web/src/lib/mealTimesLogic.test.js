@@ -1,0 +1,176 @@
+import { describe, it, expect } from 'vitest';
+import {
+  dayTotals,
+  draftToRow,
+  findOverlaps,
+  minutesOf,
+  normalizeTime,
+  targetsFromRow,
+  validateMealTime,
+} from './mealTimesLogic.js';
+
+const target = { calorie_target: 2000, band_low_pct: 90, band_high_pct: 100 };
+
+const planned = (over = {}) => ({
+  name: 'Lunch',
+  time: '12:30',
+  kind: 'planned',
+  weekdays: [1, 2, 3],
+  calMin: '400',
+  calMax: '600',
+  setCalories: '',
+  id: null,
+  ...over,
+});
+
+describe('validateMealTime', () => {
+  it('accepts a complete Planned draft', () => {
+    expect(validateMealTime(planned()).errors).toEqual({});
+  });
+
+  it('needs a name and a time', () => {
+    const { errors } = validateMealTime(planned({ name: '   ', time: '' }));
+    expect(errors.name).toBe('mealTimes.errors.nameRequired');
+    expect(errors.time).toBe('mealTimes.errors.timeRequired');
+  });
+
+  it('needs one calorie number for Set and ignores the range', () => {
+    expect(validateMealTime(planned({ kind: 'set', setCalories: '' })).errors.setCalories).toBe(
+      'mealTimes.errors.setCaloriesRequired'
+    );
+    expect(validateMealTime(planned({ kind: 'set', setCalories: '650' })).errors).toEqual({});
+  });
+
+  it('needs a min and a max for Planned and If room', () => {
+    for (const kind of ['planned', 'if_room']) {
+      expect(validateMealTime(planned({ kind, calMin: '', calMax: '500' })).errors.range).toBe(
+        'mealTimes.errors.rangeRequired'
+      );
+    }
+  });
+
+  it('refuses a min above the max', () => {
+    expect(validateMealTime(planned({ calMin: '700', calMax: '600' })).errors.range).toBe(
+      'mealTimes.errors.rangeOrder'
+    );
+  });
+
+  it('refuses decimals and negative numbers', () => {
+    expect(validateMealTime(planned({ calMin: '12.5' })).errors.range).toBe(
+      'mealTimes.errors.rangeRequired'
+    );
+    expect(validateMealTime(planned({ calMax: '-5' })).errors.range).toBe(
+      'mealTimes.errors.rangeRequired'
+    );
+  });
+});
+
+describe('draftToRow', () => {
+  it('keeps only the range for Planned and only the number for Set', () => {
+    expect(draftToRow(planned({ weekdays: [3, 1, 3] }))).toEqual({
+      name: 'Lunch',
+      time_of_day: '12:30',
+      kind: 'planned',
+      weekdays: [1, 3],
+      set_calories: null,
+      cal_min: 400,
+      cal_max: 600,
+    });
+    expect(draftToRow(planned({ kind: 'set', setCalories: '650' }))).toMatchObject({
+      kind: 'set',
+      set_calories: 650,
+      cal_min: null,
+      cal_max: null,
+    });
+  });
+});
+
+describe('time helpers', () => {
+  it('reads stored times with seconds and works in minutes', () => {
+    expect(normalizeTime('07:30:00')).toBe('07:30');
+    expect(minutesOf('07:30:00')).toBe(450);
+    expect(minutesOf('12:05')).toBe(725);
+  });
+});
+
+describe('findOverlaps', () => {
+  const lunch = { id: 1, name: 'Lunch', time_of_day: '12:30', weekdays: [1, 2, 3] };
+  const snack = { id: 2, name: 'Snack', time_of_day: '13:00', weekdays: [2, 5] };
+  const late = { id: 3, name: 'Late', time_of_day: '14:30', weekdays: [1] };
+
+  it('finds a Meal Time within 45 minutes that shares a weekday', () => {
+    expect(findOverlaps(lunch, [lunch, snack, late], [1, 2, 3])).toEqual([
+      { meal: snack, weekdays: [2] },
+    ]);
+  });
+
+  it('is exactly 45 minutes inclusive and ignores 46', () => {
+    const at45 = { id: 9, time_of_day: '13:15', weekdays: [1] };
+    const at46 = { id: 10, time_of_day: '13:16', weekdays: [1] };
+    expect(findOverlaps(lunch, [at45], [1])).toHaveLength(1);
+    expect(findOverlaps(lunch, [at46], [1])).toHaveLength(0);
+  });
+
+  it('checks only the days asked about', () => {
+    expect(findOverlaps(lunch, [snack], [1])).toEqual([]);
+  });
+
+  it('never clashes with itself', () => {
+    expect(findOverlaps(lunch, [lunch], [1, 2, 3])).toEqual([]);
+  });
+
+  it('treats a new Meal Time (no id) as clashing with the existing ones', () => {
+    const draft = { id: null, time_of_day: '12:45' };
+    expect(findOverlaps(draft, [lunch], [1])).toEqual([{ meal: lunch, weekdays: [1] }]);
+  });
+});
+
+describe('dayTotals', () => {
+  const meals = [
+    { id: 1, kind: 'set', set_calories: 500, weekdays: [1] },
+    { id: 2, kind: 'planned', cal_min: 400, cal_max: 600, weekdays: [1] },
+    { id: 3, kind: 'if_room', cal_min: null, cal_max: 300, weekdays: [1] },
+    { id: 4, kind: 'planned', cal_min: 2100, cal_max: 2200, weekdays: [2] },
+  ];
+
+  it('adds Set in full, Planned min to the floor and max to the ceiling, If room only to the ceiling', () => {
+    const totals = dayTotals(meals, 1, target);
+    expect(totals.floor).toBe(900);
+    expect(totals.ceiling).toBe(1400);
+    expect(totals.aimLow).toBe(1800);
+    expect(totals.aimHigh).toBe(2000);
+  });
+
+  it('is over when the floor passes the Target', () => {
+    expect(dayTotals(meals, 2, target).status).toBe('over');
+  });
+
+  it('is short when even the ceiling cannot reach the bottom of the aim', () => {
+    expect(dayTotals(meals, 1, target).status).toBe('short');
+  });
+
+  it('is ok when the day can land in the aim', () => {
+    const ok = [{ id: 5, kind: 'planned', cal_min: 1500, cal_max: 1900, weekdays: [3] }];
+    expect(dayTotals(ok, 3, target).status).toBe('ok');
+  });
+
+  it('has no aim without a Calorie Target', () => {
+    expect(dayTotals(meals, 1, { calorie_target: null }).status).toBe('noTarget');
+  });
+
+  it('uses the band from the Targets row', () => {
+    const totals = dayTotals([], 0, { calorie_target: 2000, band_low_pct: 80, band_high_pct: 95 });
+    expect(totals.aimLow).toBe(1600);
+    expect(totals.aimHigh).toBe(1900);
+  });
+});
+
+describe('targetsFromRow', () => {
+  it('falls back to the 90 to 100 band when there is no row', () => {
+    expect(targetsFromRow(null)).toEqual({
+      calorie_target: null,
+      band_low_pct: 90,
+      band_high_pct: 100,
+    });
+  });
+});
