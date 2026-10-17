@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { createHousehold, loadHousehold } from '../lib/households.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import AiSpendPanel from './AiSpendPanel.jsx';
 
 export default function HouseholdPage({ user }) {
   const { t } = useI18n();
@@ -53,6 +54,7 @@ function MemberList({ household }) {
           ))}
         </ul>
       )}
+      <AiSpendPanel client={supabase} />
     </section>
   );
 }

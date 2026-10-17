@@ -43,5 +43,28 @@
     "label": "Sugerencia para instalar",
     "body": "Para usar Calorie Manager como una app, toca el botón Compartir de Safari y luego Añadir a pantalla de inicio.",
     "dismiss": "Entendido"
+  },
+  "aiSpend": {
+    "heading": "Gasto de IA este mes",
+    "loading": "Cargando el gasto de IA…",
+    "loadError": "No se pudo cargar el gasto de IA. Solo el Propietario puede verlo.",
+    "noSpend": "Todavía no hay llamadas de IA este mes.",
+    "usd": "{{amount}} US$",
+    "columns": {
+      "provider": "Proveedor",
+      "spent": "Gastado",
+      "cap": "Límite mensual",
+      "status": "Estado"
+    },
+    "status": {
+      "ok": "Por debajo del límite",
+      "limit": "Límite de IA alcanzado este mes"
+    },
+    "providers": {
+      "anthropic": "Anthropic (Claude)",
+      "typesafe": "TypeSafe (Jev)",
+      "google": "Google",
+      "openai": "OpenAI"
+    }
   }
 }
