@@ -617,5 +617,37 @@
         "saveError": "No se pudo registrar el alimento. Inténtalo de nuevo."
       }
     }
+  },
+  "week": {
+    "heading": "Semana",
+    "loading": "Cargando la semana...",
+    "loadError": "No se pudo cargar esta semana. Inténtalo de nuevo.",
+    "noMember": "Para registrar necesitas un miembro. Únete o crea un hogar primero.",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "range": "del {{from}} al {{to}}",
+    "todayTag": "Hoy",
+    "noTarget": "Pon un límite de calorías en la página de Objetivos para ver qué días quedan por debajo.",
+    "summary": {
+      "under": "{{under}} de {{logged}} días registrados por debajo del límite de calorías",
+      "noLogged": "Todavía no hay nada registrado esta semana.",
+      "average": "Media de {{kcal}} kcal por día registrado",
+      "averageMacros": "Media por día registrado: proteína {{protein}} g, carbohidratos {{carbs}} g, grasa {{fat}} g",
+      "missingMacros": "Faltan datos de macros en {{count}} día(s) registrado(s), así que sus totales pueden ser bajos."
+    },
+    "day": {
+      "empty": "Nada registrado",
+      "kcal": "{{kcal}} de {{target}} kcal",
+      "kcalNoTarget": "{{kcal}} kcal",
+      "macros": "Proteína {{protein}} g, carbohidratos {{carbs}} g, grasa {{fat}} g",
+      "missingMacros": "Faltan algunos datos"
+    },
+    "status": {
+      "inBand": "Dentro de la franja de planificación",
+      "aboveBand": "Por encima de la franja, pero aún por debajo del límite",
+      "under": "Por debajo de la franja de planificación",
+      "over": "Por encima del límite de calorías",
+      "noTarget": "Todavía no hay límite de calorías"
+    }
   }
 }
