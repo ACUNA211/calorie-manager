@@ -477,6 +477,23 @@
       "setButton": "Set amount",
       "error": "Could not change this amount. Try again."
     },
+    "scan": {
+      "button": "Scan a package",
+      "looking": "Looking up {{code}}…",
+      "notFound": "No food matches the barcode {{code}}. Search for it by name instead.",
+      "error": "Could not look this package up. Check your connection and try again.",
+      "askWeight": "How many grams does one package of {{name}} weigh? The app remembers it for next time.",
+      "weightLabel": "Grams in one package of {{name}}",
+      "weightSave": "Save weight and add",
+      "weightSaving": "Saving…",
+      "weightError": "Could not save the weight. Try again.",
+      "adding": "Adding…",
+      "added": "Added one package of {{name}} ({{grams}} g) to the Pantry.",
+      "addError": "Could not add this package. Try again.",
+      "scanAgain": "Scan another package",
+      "searchInstead": "Search by name instead",
+      "cancel": "Cancel"
+    },
     "errors": {
       "amountRequired": "Type an amount in grams.",
       "amountInvalid": "Use a number of grams, with at most one decimal place (such as 150 or 62.5).",

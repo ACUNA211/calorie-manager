@@ -477,6 +477,23 @@
       "setButton": "Guardar cantidad",
       "error": "No se pudo cambiar esta cantidad. Inténtalo de nuevo."
     },
+    "scan": {
+      "button": "Escanear un paquete",
+      "looking": "Buscando {{code}}…",
+      "notFound": "Ningún alimento coincide con el código de barras {{code}}. Búscalo por nombre.",
+      "error": "No se pudo buscar este paquete. Revisa tu conexión e inténtalo de nuevo.",
+      "askWeight": "¿Cuántos gramos pesa un paquete de {{name}}? La app lo recuerda para la próxima vez.",
+      "weightLabel": "Gramos de un paquete de {{name}}",
+      "weightSave": "Guardar peso y añadir",
+      "weightSaving": "Guardando…",
+      "weightError": "No se pudo guardar el peso. Inténtalo de nuevo.",
+      "adding": "Añadiendo…",
+      "added": "Se añadió un paquete de {{name}} ({{grams}} g) a la despensa.",
+      "addError": "No se pudo añadir este paquete. Inténtalo de nuevo.",
+      "scanAgain": "Escanear otro paquete",
+      "searchInstead": "Buscar por nombre",
+      "cancel": "Cancelar"
+    },
     "errors": {
       "amountRequired": "Escribe una cantidad en gramos.",
       "amountInvalid": "Usa un número de gramos, con como máximo un decimal (por ejemplo 150 o 62.5).",

@@ -5,6 +5,7 @@ import { groupBySection, visibleItems } from '../lib/pantryLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import PantryAddForm from './PantryAddForm.jsx';
 import PantryList from './PantryList.jsx';
+import PantryScan from './PantryScan.jsx';
 
 // The Household's Pantry: add a food with an amount, and correct what is there. Every
 // Member sees the same list, so the list is reloaded after each change.
@@ -35,6 +36,7 @@ export default function PantryPage() {
     <section>
       <h2>{t('pantry.heading')}</h2>
       <p>{t('pantry.intro')}</p>
+      <PantryScan onAdded={refresh} />
       <PantryAddForm onAdded={refresh} />
       {pantry.status === 'loading' && <p>{t('pantry.loading')}</p>}
       {pantry.status === 'error' && <p role="alert">{t('pantry.loadError')}</p>}
