@@ -5,6 +5,14 @@ import { recipeTotals } from '../lib/recipeTotals.js';
 import RecipeEditor from './RecipeEditor.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
+// The Meal Time names a Recipe is tagged with, one line, or '' when it has none.
+function tagLabel(recipe, t) {
+  const names = (recipe.meal_time_tags ?? []).map(
+    (tag) => tag.name ?? t('recipes.tags.unavailable')
+  );
+  return names.length > 0 ? t('recipes.tags.label', { names: names.join(', ') }) : '';
+}
+
 // Whether every word typed is part of the Recipe's name (case and accents ignored).
 function matchesSearch(recipe, text) {
   const words = text
@@ -24,6 +32,7 @@ export default function RecipesPage() {
   const [state, setState] = useState({ status: 'loading', recipes: [] });
   const [editing, setEditing] = useState(null);
   const [query, setQuery] = useState('');
+  const [starredOnly, setStarredOnly] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -55,13 +64,20 @@ export default function RecipesPage() {
   }
 
   if (editing) {
-    return <RecipeEditor recipe={editing.recipe} onClose={handleClose} />;
+    const original = editing.recipe?.copied_from;
+    const originalName = state.recipes.find((recipe) => recipe.id === original)?.name ?? null;
+    return (
+      <RecipeEditor recipe={editing.recipe} originalName={originalName} onClose={handleClose} />
+    );
   }
 
   if (state.status === 'loading') return <p>{t('recipes.loading')}</p>;
   if (state.status === 'error') return <p role="alert">{t('recipes.loadError')}</p>;
 
-  const shown = state.recipes.filter((recipe) => matchesSearch(recipe, query));
+  const shown = state.recipes.filter(
+    (recipe) => (!starredOnly || recipe.starred) && matchesSearch(recipe, query)
+  );
+  const namesById = new Map(state.recipes.map((recipe) => [recipe.id, recipe.name]));
 
   return (
     <section aria-labelledby="recipes-heading">
@@ -79,11 +95,23 @@ export default function RecipesPage() {
             autoComplete="off"
             onChange={(event) => setQuery(event.target.value)}
           />
+          <div>
+            <input
+              id="recipes-starred-only"
+              type="checkbox"
+              checked={starredOnly}
+              onChange={(event) => setStarredOnly(event.target.checked)}
+            />{' '}
+            <label htmlFor="recipes-starred-only">{t('recipes.filters.starredOnly')}</label>
+          </div>
           {shown.length === 0 && <p>{t('recipes.noMatches')}</p>}
           <ul>
             {shown.map((recipe) => {
               const totals = recipeTotals(recipe);
               const kcal = totals.kcal.perServing;
+              const tags = tagLabel(recipe, t);
+              const hasOriginal = recipe.copied_from != null;
+              const originalName = namesById.get(recipe.copied_from);
               return (
                 <li key={recipe.id}>
                   <button type="button" onClick={() => setEditing({ recipe })}>
@@ -99,6 +127,14 @@ export default function RecipesPage() {
                           kcal: formatNumber(kcal, { maximumFractionDigits: 0 }),
                         })}
                   </div>
+                  {tags && <div>{tags}</div>}
+                  {hasOriginal && (
+                    <div>
+                      {originalName
+                        ? t('recipes.copy.original', { name: originalName })
+                        : t('recipes.copy.originalMissing')}
+                    </div>
+                  )}
                 </li>
               );
             })}

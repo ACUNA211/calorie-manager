@@ -4,10 +4,14 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 28 (Recipes page)
+**Blocked by:** 28 (Recipes page), 69 (Run the database tests locally)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting DB test run)
 
-- [ ] Star and Meal Time tags save and show in the Recipes list (with a starred filter)
+- [x] Star and Meal Time tags save and show in the Recipes list (with a starred filter)
 - [ ] Copy makes a new Recipe with the same ingredients and a link back to the original
 - [ ] Editing the copy never changes the original, and the reverse
+
+**Comments:**
+
+- 2026-10-17: Added migration `016_recipe_star_tags_copy.sql` and its test `recipe_star_tags_copy_test.sql`. Tags move to a join table `recipe_meal_time_tags` (RLS per Household, and a trigger that refuses a Meal Time from another Household); the old `recipes.meal_time_tags` array is left unused. `recipe_copy(id, name)` copies the Recipe, its ingredients and tags in one call; the original link is `copied_from`, cleared (not the copy) when the original is deleted. Web: tag checkboxes and a starred-only filter in `RecipesPage`/`RecipeEditor`, a "Copy as a variation" action, and `loadMealTimeOptions`, `copyRecipe` in `lib/recipes.js`. Verified only with Vitest and fake clients: web suite 248 passed, lint, build and format:check pass. The pgTAP test has NOT been run (no local database here), so the copy and tag-trigger boxes stay unticked. Decisions to confirm: a tag on another Member's Meal Time shows as "a Meal Time you cannot see" and is kept on save; the tag picker lists every Meal Time the caller can read (including Dependents'); the copy is never starred and takes the saved version, not unsaved edits.

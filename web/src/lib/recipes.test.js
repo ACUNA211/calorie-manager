@@ -1,17 +1,23 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   addIngredient,
+  copyRecipe,
   deleteRecipe,
   draftFromRecipe,
   emptyRecipeDraft,
+  loadMealTimeOptions,
   loadRecipes,
+  NAME_MAX,
   parseAmount,
   previewIngredients,
   removeIngredient,
   saveRecipe,
   searchFoods,
   setIngredientGrams,
+  toggleMealTime,
+  uniqueIds,
   validateRecipe,
+  variationName,
 } from './recipes.js';
 
 const rice = { id: 7, name: 'Rice', kcal_per_100g: 130, protein_g: 2.7 };
@@ -124,6 +130,40 @@ describe('draft helpers', () => {
     });
     expect(draft.ingredients[0]).toMatchObject({ food: rice, grams: '300' });
     expect(draft.ingredients[0].key).toBeTruthy();
+    expect(draft.mealTimeIds).toEqual([]);
+  });
+
+  it('takes the Meal Time tags from a stored Recipe, as ids', () => {
+    const draft = draftFromRecipe({
+      id: 3,
+      name: 'Fried rice',
+      starred: false,
+      servings: 2,
+      cooked_weight_g: null,
+      notes: null,
+      meal_time_tags: [
+        { id: 12, name: 'Dinner' },
+        { id: 4, name: null },
+      ],
+      ingredients: [],
+    });
+    expect(draft.mealTimeIds).toEqual([4, 12]);
+  });
+
+  it('turns a copy of a Recipe back into an ordinary draft', () => {
+    const draft = draftFromRecipe({
+      id: 8,
+      name: 'Fried rice (variation)',
+      starred: false,
+      servings: 2,
+      cooked_weight_g: null,
+      notes: null,
+      copied_from: 3,
+      meal_time_tags: [],
+      ingredients: [],
+    });
+    expect(draft).not.toHaveProperty('copied_from');
+    expect(draft.id).toBe(8);
   });
 
   it('previews only ingredients with usable grams', () => {
@@ -153,6 +193,7 @@ describe('validateRecipe', () => {
       servings: 2,
       cookedWeightG: null,
       notes: null,
+      mealTimeIds: [],
       ingredients: [{ foodId: 7, grams: 200 }],
     });
   });
@@ -217,6 +258,81 @@ describe('validateRecipe', () => {
   });
 });
 
+describe('variationName and uniqueIds', () => {
+  it('adds the suffix to the original name', () => {
+    expect(variationName('  Fried rice ', ' (variation)')).toBe('Fried rice (variation)');
+  });
+
+  it('cuts the name so the whole copy name stays within the length limit', () => {
+    const long = 'x'.repeat(NAME_MAX + 20);
+    const name = variationName(long, ' (variation)');
+    expect(name.length).toBe(NAME_MAX);
+    expect(name.endsWith(' (variation)')).toBe(true);
+  });
+
+  it('sorts Meal Time ids and drops repeats', () => {
+    expect(uniqueIds([12, 4, 12, 9])).toEqual([4, 9, 12]);
+    expect(uniqueIds(undefined)).toEqual([]);
+  });
+});
+
+describe('toggleMealTime', () => {
+  it('adds a tag once, and removes it when unticked', () => {
+    let draft = { ...emptyRecipeDraft(), mealTimeIds: [9] };
+    draft = toggleMealTime(draft, 4, true);
+    draft = toggleMealTime(draft, 4, true);
+    expect(draft.mealTimeIds).toEqual([4, 9]);
+    draft = toggleMealTime(draft, 9, false);
+    expect(draft.mealTimeIds).toEqual([4]);
+  });
+});
+
+describe('loadMealTimeOptions', () => {
+  it('lists the Meal Times the caller can read, in time order', async () => {
+    const client = fakeClient({
+      'meal_times:select': {
+        data: [
+          { id: 2, name: 'Lunch', time_of_day: '12:30:00' },
+          { id: 1, name: 'Breakfast', time_of_day: '07:30:00' },
+        ],
+        error: null,
+      },
+    });
+    const options = await loadMealTimeOptions(client);
+    expect(client.calls[0].table).toBe('meal_times');
+    expect(client.calls[0].ops.slice(1)).toEqual([
+      ['order', 'time_of_day', { ascending: true }],
+      ['order', 'id', { ascending: true }],
+    ]);
+    expect(options).toEqual([
+      { id: 2, name: 'Lunch' },
+      { id: 1, name: 'Breakfast' },
+    ]);
+  });
+
+  it('throws when the query fails', async () => {
+    const client = fakeClient({ 'meal_times:select': { data: null, error: new Error('down') } });
+    await expect(loadMealTimeOptions(client)).rejects.toThrow('down');
+  });
+});
+
+describe('copyRecipe', () => {
+  it('calls the recipe_copy function with the id and the new name, and returns the new id', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: 77, error: null });
+    const id = await copyRecipe({ rpc }, 41, 'Fried rice (variation)');
+    expect(rpc).toHaveBeenCalledWith('recipe_copy', {
+      p_recipe_id: 41,
+      p_name: 'Fried rice (variation)',
+    });
+    expect(id).toBe(77);
+  });
+
+  it('throws when the copy fails', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: new Error('not found') });
+    await expect(copyRecipe({ rpc }, 41, 'x')).rejects.toThrow('not found');
+  });
+});
+
 describe('loadRecipes', () => {
   it('orders starred first, then by name, and sorts ingredients by their sort', async () => {
     const client = fakeClient({
@@ -229,6 +345,8 @@ describe('loadRecipes', () => {
             servings: '4',
             cooked_weight_g: null,
             notes: null,
+            copied_from: null,
+            recipe_meal_time_tags: [],
             recipe_ingredients: [
               { id: 22, grams: '100', sort: 2, foods: egg },
               { id: 21, grams: '50', sort: 1, foods: rice },
@@ -254,12 +372,48 @@ describe('loadRecipes', () => {
         servings: 4,
         cooked_weight_g: null,
         notes: null,
+        copied_from: null,
+        meal_time_tags: [],
         ingredients: [
           { id: 21, grams: 50, food: rice },
           { id: 22, grams: 100, food: egg },
         ],
       },
     ]);
+  });
+
+  it('maps the original of a copy and the Meal Time tags, named or not', async () => {
+    const client = fakeClient({
+      'recipes:select': {
+        data: [
+          {
+            id: 5,
+            name: 'Chili (variation)',
+            starred: false,
+            servings: 4,
+            cooked_weight_g: null,
+            notes: null,
+            copied_from: 1,
+            recipe_ingredients: [],
+            recipe_meal_time_tags: [
+              { meal_time_id: 9, meal_times: { id: 9, name: 'Dinner', time_of_day: '18:00:00' } },
+              // Another Member's Meal Time: the row comes back with no name.
+              { meal_time_id: 3, meal_times: null },
+            ],
+          },
+        ],
+        error: null,
+      },
+    });
+
+    const [recipe] = await loadRecipes(client);
+
+    expect(recipe.copied_from).toBe(1);
+    expect(recipe.meal_time_tags).toEqual([
+      { id: 3, name: null },
+      { id: 9, name: 'Dinner' },
+    ]);
+    expect(client.calls[0].table).toBe('recipes');
   });
 
   it('throws when the query fails', async () => {
@@ -339,7 +493,29 @@ describe('saveRecipe', () => {
     expect(client.calls[0].ops[0][0]).toBe('update');
     expect(client.calls[0].ops).toContainEqual(['eq', 'id', 41]);
     // No ingredients: the old lines are cleared and nothing new is inserted.
-    expect(client.calls.map((call) => call.table)).toEqual(['recipes', 'recipe_ingredients']);
+    // No tags: the old tags are cleared and nothing new is inserted.
+    expect(client.calls.map((call) => call.table)).toEqual([
+      'recipes',
+      'recipe_ingredients',
+      'recipe_meal_time_tags',
+    ]);
+  });
+
+  it('replaces the Meal Time tags: clears the old ones, then inserts the ticked ones', async () => {
+    const client = fakeClient({
+      'recipes:insert': { data: { id: 41 }, error: null },
+    });
+    await saveRecipe(client, { ...values, mealTimeIds: [4, 12] });
+
+    const tags = client.calls.filter((call) => call.table === 'recipe_meal_time_tags');
+    expect(tags[0].ops).toEqual([['delete'], ['eq', 'recipe_id', 41]]);
+    expect(tags[1].ops[0]).toEqual([
+      'insert',
+      [
+        { recipe_id: 41, meal_time_id: 4 },
+        { recipe_id: 41, meal_time_id: 12 },
+      ],
+    ]);
   });
 
   it('throws when the Recipe cannot be saved', async () => {

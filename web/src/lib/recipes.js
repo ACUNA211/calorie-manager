@@ -9,6 +9,7 @@ export const GRAMS_MAX = 100000;
 export const SERVINGS_MAX = 1000;
 
 const RECIPE_COLUMNS = 'id, name, starred, servings, cooked_weight_g, notes, copied_from';
+const MEAL_TIME_COLUMNS = 'id, name, time_of_day';
 const FOOD_COLUMNS =
   'id, name, brand, kcal_per_100g, protein_g, carbs_g, fat_g, fibre_g, sugars_g, sodium_mg';
 
@@ -30,6 +31,17 @@ export function parseAmount(text) {
   return { ok: true, value };
 }
 
+// The suffix is the translated " (variation)", passed in so this file stays free of text.
+export function variationName(name, suffix) {
+  const base = String(name ?? '').trim();
+  return `${base.slice(0, NAME_MAX - suffix.length)}${suffix}`;
+}
+
+// Meal Time ids as a sorted list with no repeats, the form the database expects.
+export function uniqueIds(ids) {
+  return [...new Set(ids ?? [])].sort((a, b) => a - b);
+}
+
 export function emptyRecipeDraft() {
   return {
     id: null,
@@ -38,8 +50,16 @@ export function emptyRecipeDraft() {
     servings: '1',
     cookedWeight: '',
     notes: '',
+    mealTimeIds: [],
     ingredients: [],
   };
+}
+
+// Toggles one Meal Time tag on a draft (the checkbox for it).
+export function toggleMealTime(draft, mealTimeId, on) {
+  const current = draft.mealTimeIds ?? [];
+  const next = on ? uniqueIds([...current, mealTimeId]) : current.filter((id) => id !== mealTimeId);
+  return { ...draft, mealTimeIds: next };
 }
 
 // A stored Recipe (as loaded by loadRecipes) becomes an editor draft.
@@ -51,6 +71,7 @@ export function draftFromRecipe(recipe) {
     servings: String(recipe.servings),
     cookedWeight: recipe.cooked_weight_g == null ? '' : String(recipe.cooked_weight_g),
     notes: recipe.notes ?? '',
+    mealTimeIds: uniqueIds((recipe.meal_time_tags ?? []).map((tag) => tag.id)),
     ingredients: (recipe.ingredients ?? []).map((item) => ({
       key: nextKey(),
       id: item.id,
@@ -90,6 +111,7 @@ export function validateRecipe(draft) {
     servings: null,
     cookedWeightG: null,
     notes: String(draft.notes ?? '').trim() || null,
+    mealTimeIds: uniqueIds(draft.mealTimeIds),
     ingredients: [],
   };
 
@@ -153,6 +175,12 @@ function mapRecipe(row) {
       grams: Number(item.grams),
       food: item.foods,
     }));
+  // A tag whose Meal Time the caller cannot read (another Member's) comes back with no
+  // name; the screens say so and keep the tag when the Recipe is saved.
+  const mealTimeTags = (row.recipe_meal_time_tags ?? [])
+    .filter((tag) => tag.meal_time_id != null)
+    .map((tag) => ({ id: tag.meal_time_id, name: tag.meal_times?.name ?? null }))
+    .sort((a, b) => a.id - b.id);
   return {
     id: row.id,
     name: row.name,
@@ -160,6 +188,8 @@ function mapRecipe(row) {
     servings: Number(row.servings),
     cooked_weight_g: row.cooked_weight_g == null ? null : Number(row.cooked_weight_g),
     notes: row.notes,
+    copied_from: row.copied_from ?? null,
+    meal_time_tags: mealTimeTags,
     ingredients,
   };
 }
@@ -168,11 +198,26 @@ function mapRecipe(row) {
 export async function loadRecipes(client) {
   const { data, error } = await client
     .from('recipes')
-    .select(`${RECIPE_COLUMNS}, recipe_ingredients(id, grams, sort, foods(${FOOD_COLUMNS}))`)
+    .select(
+      `${RECIPE_COLUMNS}, recipe_ingredients(id, grams, sort, foods(${FOOD_COLUMNS})), ` +
+        `recipe_meal_time_tags(meal_time_id, meal_times(${MEAL_TIME_COLUMNS}))`
+    )
     .order('starred', { ascending: false })
     .order('name', { ascending: true });
   if (error) throw error;
   return (data || []).map(mapRecipe);
+}
+
+// The Meal Times the caller can read, to tag a Recipe with. Row-level security (migration
+// 007, and 013 once Meal Times are shared) decides which ones; the list is a hint picker.
+export async function loadMealTimeOptions(client) {
+  const { data, error } = await client
+    .from('meal_times')
+    .select('id, name, time_of_day')
+    .order('time_of_day', { ascending: true })
+    .order('id', { ascending: true });
+  if (error) throw error;
+  return (data || []).map((row) => ({ id: row.id, name: row.name }));
 }
 
 // Foods from the Food Library whose name matches the text. The % and _ wildcards and the
@@ -230,7 +275,29 @@ export async function saveRecipe(client, values) {
     if (error) throw error;
   }
 
+  // The tags are replaced as a set: clear the old ones, then insert the ticked ones.
+  const { error: clearTagsError } = await client
+    .from('recipe_meal_time_tags')
+    .delete()
+    .eq('recipe_id', recipeId);
+  if (clearTagsError) throw clearTagsError;
+
+  const tagIds = values.mealTimeIds ?? [];
+  if (tagIds.length > 0) {
+    const tags = tagIds.map((mealTimeId) => ({ recipe_id: recipeId, meal_time_id: mealTimeId }));
+    const { error } = await client.from('recipe_meal_time_tags').insert(tags);
+    if (error) throw error;
+  }
+
   return recipeId;
+}
+
+// Copies a saved Recipe as a variation (migration 016 does it in one call, under the
+// caller's row-level security). Returns the new Recipe's id.
+export async function copyRecipe(client, id, name) {
+  const { data, error } = await client.rpc('recipe_copy', { p_recipe_id: id, p_name: name });
+  if (error) throw error;
+  return data;
 }
 
 export async function deleteRecipe(client, id) {
