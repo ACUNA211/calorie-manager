@@ -92,11 +92,11 @@
     "loadError": "Could not load your Targets.",
     "clearHint": "Leave a field empty and save to clear that Target. Carbs and fat can stay empty.",
     "calorieTargetLabel": "Calorie Target (kcal per day, a ceiling)",
-    "proteinFloorLabel": "Protein floor (g per day)",
-    "carbsLegend": "Carbs (g per day, optional range)",
+    "proteinFloorLabel": "Protein floor ({{unit}} per day)",
+    "carbsLegend": "Carbs ({{unit}} per day, optional range)",
     "carbLowLabel": "Carbs low",
     "carbHighLabel": "Carbs high",
-    "fatLegend": "Fat (g per day, optional range)",
+    "fatLegend": "Fat ({{unit}} per day, optional range)",
     "fatLowLabel": "Fat low",
     "fatHighLabel": "Fat high",
     "bandLegend": "Planning band (% of the Calorie Target)",
@@ -262,7 +262,7 @@
         "long": "Keep the text under 8000 characters."
       },
       "reviewHeading": "Check the matches",
-      "reviewHint": "Each ingredient is matched to a food and turned into grams. Change any match before you continue. Nothing is saved yet.",
+      "reviewHint": "Each ingredient is matched to a food and turned into an amount. Change any match before you continue. Nothing is saved yet.",
       "allMatched": "Every ingredient is matched and needs no check.",
       "flagged": "{{count}} to check",
       "nameLabel": "Name",
@@ -279,17 +279,17 @@
       "searchButton": "Search",
       "searchEmpty": "No foods match that search.",
       "searchFailed": "Could not search the foods. Try again.",
-      "approximate": "Converted from a volume, as if it were water. Check the grams.",
+      "approximate": "Converted from a volume, as if it were water. Check the amount.",
       "reason": {
-        "amount": "No amount was found. Enter the grams.",
-        "unit": "No unit was found. Enter the grams.",
-        "serving": "This food has no per-item weight. Enter the grams."
+        "amount": "No amount was found. Enter the amount.",
+        "unit": "No unit was found. Enter the amount.",
+        "serving": "This food has no per-item weight. Enter the amount."
       },
-      "kcalPer100g": "{{kcal}} kcal per 100 g",
       "remove": "Remove {{name}}",
       "continue": "Continue to the Recipe",
       "noFood": "Pick a food for every line you keep, or remove the line.",
-      "resolveError": "Could not read the matched foods. Try again."
+      "resolveError": "Could not read the matched foods. Try again.",
+      "kcalPerBasis": "{{kcal}} kcal per {{basis}}"
     },
     "starred": "Starred",
     "filters": {
@@ -320,23 +320,23 @@
       "name": "Name",
       "starred": "Starred",
       "servings": "Makes how many servings",
-      "cookedWeight": "Cooked weight (g), optional",
+      "cookedWeight": "Cooked weight ({{unit}}), optional",
       "notes": "Notes"
     },
     "hints": {
       "servings": "The Recipe's calories are shared out across this many servings.",
-      "cookedWeight": "Weigh the cooked result to set the grams in one serving. Leave empty if you do not know it.",
-      "gramsPerServing": "About {{grams}} g per serving",
+      "cookedWeight": "Weigh the cooked result to set the amount in one serving. Leave empty if you do not know it.",
+      "gramsPerServing": "About {{grams}} per serving",
       "notes": "Free text. No cooking steps yet."
     },
     "ingredients": {
-      "heading": "Ingredients (grams from the Food Library)",
+      "heading": "Ingredients (amounts from the Food Library)",
       "empty": "No ingredients yet. Search the Food Library below to add one.",
       "searchLabel": "Find a food in the Food Library",
       "searchEmpty": "No foods match. Add the food to the Food Library first.",
       "searchError": "Could not search the Food Library. Try again.",
       "add": "Add {{name}}",
-      "gramsLabel": "Grams of {{name}}",
+      "gramsLabel": "Amount of {{name}} ({{unit}})",
       "remove": "Remove {{name}}"
     },
     "totals": {
@@ -350,9 +350,9 @@
       "fibre": "Fibre",
       "sugars": "Sugars",
       "sodium": "Sodium",
-      "grams": "{{value}} g",
+      "grams": "{{value}}",
       "milligrams": "{{value}} mg",
-      "weight": "Total weight of the ingredients: {{grams}} g",
+      "weight": "Total weight of the ingredients: {{grams}}",
       "unknownHint": "Unknown means a food in this Recipe has no value for that nutrient."
     },
     "actions": {
@@ -374,7 +374,7 @@
       "tooLarge": "That number is too large.",
       "notesTooLong": "Keep the notes under 2000 characters.",
       "noIngredients": "Add at least one ingredient.",
-      "gramsRequired": "Enter the grams of this ingredient.",
+      "gramsRequired": "Enter the amount of this ingredient.",
       "noFood": "Pick a food from the Food Library."
     }
   },
@@ -388,9 +388,9 @@
     "usdaLoadError": "Could not search USDA. Your Food Library results are shown.",
     "inLibrary": "In your Food Library",
     "fromUsda": "USDA",
-    "per100g": "Per 100 g",
+    "per100g": "Per {{basis}}",
     "perServing": "Per serving",
-    "servingLine": "Serving: {{label}} ({{grams}} g)",
+    "servingLine": "Serving: {{label}} ({{grams}})",
     "noServing": "No serving size known.",
     "macrosAfterSave": "Protein, carbs and fat show after you save this food.",
     "kcal": "Calories",
@@ -400,7 +400,7 @@
     "fibre": "Fibre",
     "sugars": "Sugars",
     "sodium": "Sodium",
-    "grams": "{{value}} g",
+    "grams": "{{value}}",
     "milligrams": "{{value}} mg",
     "kcalValue": "{{value}} kcal",
     "notReported": "not reported",
@@ -436,17 +436,17 @@
     "typeInLabel": "Type in the label",
     "inLibraryFromLabel": "Typed from a label, in your Food Library",
     "labelTitle": "Type in the Nutrition Facts label",
-    "labelIntro": "Enter the values printed per serving. They are converted to per 100 g and saved to your Food Library with this barcode.",
+    "labelIntro": "Enter the values printed per serving, in your units. They are converted to per 100 g and saved to your Food Library with this barcode.",
     "labelBlankNote": "Leave fibre, sugars or sodium empty if the label does not show them.",
     "labelName": "Food name",
     "labelBrand": "Brand (optional)",
-    "labelServing": "Serving size (g)",
+    "labelServing": "Serving size ({{unit}})",
     "labelKcal": "Calories per serving",
-    "labelProtein": "Protein per serving (g)",
-    "labelCarbs": "Carbs per serving (g)",
-    "labelFat": "Fat per serving (g)",
-    "labelFibre": "Fibre per serving (g, optional)",
-    "labelSugars": "Sugars per serving (g, optional)",
+    "labelProtein": "Protein per serving ({{unit}})",
+    "labelCarbs": "Carbs per serving ({{unit}})",
+    "labelFat": "Fat per serving ({{unit}})",
+    "labelFibre": "Fibre per serving ({{unit}}, optional)",
+    "labelSugars": "Sugars per serving ({{unit}}, optional)",
     "labelSodium": "Sodium per serving (mg, optional)",
     "labelSave": "Save food",
     "labelRequired": "Enter a value.",
@@ -470,11 +470,11 @@
   },
   "pantry": {
     "heading": "Pantry",
-    "intro": "Food at home, shared by everyone in your Household. Amounts are in grams for now; units come later.",
+    "intro": "Food at home, shared by everyone in your Household. Amounts follow your display units (metric or US).",
     "loading": "Loading your Pantry…",
     "loadError": "Could not load your Pantry.",
     "empty": "Nothing in the Pantry yet. Search for a food above to add it.",
-    "grams": "{{value}} g",
+    "grams": "{{value}}",
     "sections": {
       "produce": "Produce",
       "meatSeafood": "Meat & seafood",
@@ -497,7 +497,7 @@
       "usdaLoadError": "Could not search USDA foods.",
       "inLibrary": "In your Food Library",
       "fromUsda": "USDA",
-      "amountLabel": "Grams of {{name}}",
+      "amountLabel": "Amount of {{name}} ({{unit}})",
       "addButton": "Add {{name}}",
       "adding": "Adding…",
       "added": "Added {{name}} to the Pantry.",
@@ -506,7 +506,7 @@
     "correct": {
       "usedUp": "Used up",
       "half": "About half",
-      "setLabel": "Type the grams of {{name}} left",
+      "setLabel": "Type the amount of {{name}} left ({{unit}})",
       "setButton": "Set amount",
       "error": "Could not change this amount. Try again."
     },
@@ -515,23 +515,23 @@
       "looking": "Looking up {{code}}…",
       "notFound": "No food matches the barcode {{code}}. Search for it by name instead.",
       "error": "Could not look this package up. Check your connection and try again.",
-      "askWeight": "How many grams does one package of {{name}} weigh? The app remembers it for next time.",
-      "weightLabel": "Grams in one package of {{name}}",
+      "askWeight": "How much does one package of {{name}} weigh? The app remembers it for next time.",
+      "weightLabel": "Weight of one package of {{name}} ({{unit}})",
       "weightSave": "Save weight and add",
       "weightSaving": "Saving…",
       "weightError": "Could not save the weight. Try again.",
       "adding": "Adding…",
-      "added": "Added one package of {{name}} ({{grams}} g) to the Pantry.",
+      "added": "Added one package of {{name}} ({{grams}}) to the Pantry.",
       "addError": "Could not add this package. Try again.",
       "scanAgain": "Scan another package",
       "searchInstead": "Search by name instead",
       "cancel": "Cancel"
     },
     "errors": {
-      "amountRequired": "Type an amount in grams.",
-      "amountInvalid": "Use a number of grams, with at most one decimal place (such as 150 or 62.5).",
-      "amountTooHigh": "The most the Pantry holds for one food is 100000 g.",
-      "amountZero": "Type more than 0 g to add a food."
+      "amountRequired": "Type an amount.",
+      "amountInvalid": "Type an amount, such as 150 or 5.5. You can add a unit name: g, kg, oz or lb.",
+      "amountTooHigh": "That is too much for one food in the Pantry. Enter less.",
+      "amountZero": "Type more than zero to add a food."
     }
   },
   "today": {
@@ -583,11 +583,11 @@
       "protein": "Protein",
       "carbs": "Carbs",
       "fat": "Fat",
-      "eaten": "{{eaten}} g",
-      "floor": "{{eaten}} g of at least {{floor}} g",
-      "range": "{{eaten}} g, aim {{low}} to {{high}} g",
+      "eaten": "{{eaten}}",
+      "floor": "{{eaten}} of at least {{floor}}",
+      "range": "{{eaten}}, aim {{low}} to {{high}}",
       "met": "Target met",
-      "toGo": "{{left}} g to go",
+      "toGo": "{{left}} to go",
       "inRange": "In range",
       "under": "Under the range",
       "over": "Over the range",
@@ -619,14 +619,14 @@
       "change": "Choose another food",
       "amount": "Amount",
       "unit": "Unit",
-      "unitGrams": "grams",
+      "unitGrams": "{{unit}}",
       "unitServings": "servings",
-      "servingHint": "1 serving is {{grams}} g",
+      "servingHint": "1 serving is {{grams}}",
       "mealTime": "Meal Time",
       "mealOption": "{{name}} {{time}}",
       "nearestSuffix": " (nearest now)",
       "preview": "{{kcal}} kcal",
-      "previewMacros": "Protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "previewMacros": "Protein {{protein}}, carbs {{carbs}}, fat {{fat}}",
       "previewNoMacros": "No macro figures for this food yet.",
       "submit": "Log it",
       "saving": "Saving...",
@@ -634,8 +634,8 @@
       "errors": {
         "food": "Pick a food first.",
         "amount": "Enter an amount above zero.",
-        "servingUnknown": "This food has no serving size. Use grams.",
-        "tooLarge": "Enter at most {{max}} g. Log bigger amounts in pieces.",
+        "servingUnknown": "This food has no serving size. Enter an amount instead.",
+        "tooLarge": "Enter at most {{max}}. Log bigger amounts in pieces.",
         "noKcal": "This food has no calorie figure, so it cannot be logged.",
         "futureDay": "Future days cannot be logged.",
         "usdaSave": "Could not add this USDA food to your Food Library. Try again.",
@@ -663,10 +663,10 @@
       "offOnly": "{{name}} is from Open Food Facts. It cannot be added to the Pantry or logged yet.",
       "addToPantry": "Add to Pantry",
       "adding": "Adding...",
-      "pantryAdded": "Added one package of {{name}} ({{grams}} g) to the Pantry.",
+      "pantryAdded": "Added one package of {{name}} ({{grams}}) to the Pantry.",
       "pantryError": "Could not add to the Pantry. Try again.",
       "askWeight": "The package weight of {{name}} is not known. Enter it once.",
-      "weightLabel": "Package weight (g)",
+      "weightLabel": "Package weight ({{unit}})",
       "weightSave": "Save weight and add",
       "eatenButton": "Eaten",
       "saving": "Saving...",
@@ -674,7 +674,7 @@
       "again": "Scan again",
       "close": "Close",
       "toast": "Logged {{kcal}} kcal to {{meal}}. {{pantry}}",
-      "tookPantry": "Took {{grams}} g from the Pantry.",
+      "tookPantry": "Took {{grams}} from the Pantry.",
       "notInPantry": "It is not in the Pantry, so the Pantry is unchanged.",
       "pantryFailed": "The Pantry could not be updated."
     }
@@ -693,14 +693,14 @@
       "under": "{{under}} of {{logged}} logged days under the Calorie Target",
       "noLogged": "Nothing logged this week yet.",
       "average": "Average {{kcal}} kcal per logged day",
-      "averageMacros": "Average per logged day: protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "averageMacros": "Average per logged day: protein {{protein}}, carbs {{carbs}}, fat {{fat}}",
       "missingMacros": "Macro figures are missing on {{count}} logged day(s), so their totals may be low."
     },
     "day": {
       "empty": "Nothing logged",
       "kcal": "{{kcal}} of {{target}} kcal",
       "kcalNoTarget": "{{kcal}} kcal",
-      "macros": "Protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "macros": "Protein {{protein}}, carbs {{carbs}}, fat {{fat}}",
       "missingMacros": "Some figures are missing"
     },
     "status": {
@@ -716,7 +716,7 @@
     "loading": "Loading the weight log...",
     "loadError": "Could not load the weight log. Try again.",
     "dateLabel": "Date",
-    "weightLabel": "Weight (kg)",
+    "weightLabel": "Weight ({{unit}})",
     "save": "Save weight",
     "saved": "Weight saved.",
     "replaces": "A day that already has a weight is replaced.",
@@ -734,17 +734,29 @@
       "chartLabel": "Weight over the last 12 weeks, with a 7-day average",
       "legendDaily": "Logged weight",
       "legendAverage": "7-day average",
-      "range": "Lowest {{low}} kg, highest {{high}} kg",
+      "range": "Lowest {{low}}, highest {{high}}",
       "empty": "Log a weight to see the trend."
     },
     "errors": {
-      "number": "Enter a weight in kg, with one decimal at most, such as 72.5.",
-      "range": "A weight must be between {{min}} and {{max}} kg.",
+      "number": "Enter a weight, with one decimal at most, such as 72.5.",
+      "range": "A weight must be between {{min}} and {{max}}.",
       "future": "A weight cannot be logged for a future day.",
       "date": "Choose a valid date."
     },
-    "entry": "{{date}}: {{kg}} kg",
+    "entry": "{{date}}: {{kg}}",
     "span": "{{from}} to {{to}}"
+  },
+  "units": {
+    "heading": "Display units",
+    "label": "Units",
+    "help": "Amounts are stored in grams and kilograms. This only changes how they are shown and typed.",
+    "us": "US (oz, lb)",
+    "metric": "Metric (g, kg)",
+    "saved": "Units saved.",
+    "saveError": "Could not save the units. Try again.",
+    "errors": {
+      "mass": "Type an amount, such as 150 or 5.5. A bare number is in your units; you can also add g, kg, oz or lb."
+    }
   },
   "sharing": {
     "daysHeading": "Other Members this week",
@@ -767,18 +779,6 @@
       "loadError": "Could not load your sharing setting. Try again.",
       "saveError": "Could not save your sharing setting. Try again.",
       "noMember": "Join or create a Household first."
-    }
-  },
-  "units": {
-    "heading": "Display units",
-    "label": "Units",
-    "help": "Amounts are stored in grams and kilograms. This only changes how they are shown and typed.",
-    "us": "US (oz, lb)",
-    "metric": "Metric (g, kg)",
-    "saved": "Units saved.",
-    "saveError": "Could not save the units. Try again.",
-    "errors": {
-      "mass": "Type an amount, such as 150 or 5.5. A bare number is in your units; you can also add g, kg, oz or lb."
     }
   }
 }
