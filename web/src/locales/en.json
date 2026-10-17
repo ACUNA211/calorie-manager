@@ -416,7 +416,20 @@
     "cancel": "Cancel",
     "namesSaved": "Names saved.",
     "nameRequired": "The English name cannot be empty.",
-    "namesSaveError": "Could not save the names. Try again."
+    "namesSaveError": "Could not save the names. Try again.",
+    "scanButton": "Scan a barcode",
+    "scanVideoLabel": "Camera view",
+    "scanStarting": "Opening the rear camera…",
+    "scanHint": "Point the rear camera at the barcode. It reads on its own.",
+    "scanCameraError": "The camera is not available. Allow camera access, or search by name instead.",
+    "scanReaderError": "The barcode reader could not load. Search by name instead.",
+    "scanLooking": "Looking up barcode {{code}}…",
+    "scanFound": "Found by barcode {{code}}.",
+    "scanNotFound": "Not found: no food has barcode {{code}}.",
+    "scanError": "Could not look up this barcode. Check your connection and try again.",
+    "scanAgain": "Scan again",
+    "scanClose": "Close scanner",
+    "searchByName": "Search by name"
   },
   "loggingFor": {
     "label": "Logging for",

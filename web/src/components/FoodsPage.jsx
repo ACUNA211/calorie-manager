@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import {
   displayName,
+  lookupGtin,
   nutritionFor,
   saveFoodNames,
   saveUsdaFoodAndTranslate,
@@ -10,6 +11,7 @@ import {
 import { searchTokens } from '../lib/norm.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
+import ScanPanel from './ScanPanel.jsx';
 
 // Waits this long after the last keystroke before searching.
 const SEARCH_DELAY_MS = 300;
@@ -40,6 +42,12 @@ export default function FoodsPage() {
   const [saveState, setSaveState] = useState({ key: null, status: null });
   // The Food Library food whose names are being edited: { key, id, name, nameEs, status }
   const [editing, setEditing] = useState(null);
+  // Scan (ticket 18): null, or { phase, attempt, code, result }. Phases: camera, looking,
+  // found, notFound, error. scanToken changes whenever the scan opens or closes, so a
+  // lookup that finishes after that is dropped.
+  const [scan, setScan] = useState(null);
+  const scanToken = useRef(0);
+  const searchInput = useRef(null);
 
   const text = query.trim();
   // Punctuation alone (no words to search for) runs no search.
@@ -83,6 +91,10 @@ export default function FoodsPage() {
       await saveUsdaFoodAndTranslate(supabase, result.fdcId);
       setSaveState({ key: null, status: 'saved' });
       refreshAfterChange();
+      // A food saved from a scan is looked up again, so it now shows as a Food Library food.
+      if (scan && scan.phase === 'found' && scan.result.key === result.key) {
+        lookUp(scan.code);
+      }
     } catch {
       setSaveState({ key: result.key, status: 'error' });
     }
@@ -113,6 +125,42 @@ export default function FoodsPage() {
     } catch {
       setEditing((current) => (current ? { ...current, status: 'error' } : current));
     }
+  }
+
+  // Opens the camera again (a new attempt remounts the panel, which releases the old one).
+  function openScan() {
+    scanToken.current += 1;
+    setScan((current) => ({ phase: 'camera', attempt: (current?.attempt ?? 0) + 1 }));
+  }
+
+  function closeScan() {
+    scanToken.current += 1;
+    setScan(null);
+  }
+
+  // Closes the scan and moves the cursor to the search box, the fallback when a barcode
+  // cannot be read or found.
+  function searchByName() {
+    closeScan();
+    searchInput.current?.focus();
+  }
+
+  // Looks a scanned code up: the Food Library first, then USDA (inside usda_lookup_gtin).
+  async function lookUp(code) {
+    scanToken.current += 1;
+    const token = scanToken.current;
+    setScan({ phase: 'looking', code });
+    let next;
+    try {
+      const outcome = await lookupGtin(supabase, code);
+      next =
+        outcome.status === 'found'
+          ? { phase: 'found', code, result: outcome.result }
+          : { phase: 'notFound', code };
+    } catch {
+      next = { phase: 'error', code };
+    }
+    if (token === scanToken.current) setScan((current) => ({ ...next, attempt: current?.attempt }));
   }
 
   function renderNameForm() {
@@ -198,6 +246,38 @@ export default function FoodsPage() {
     );
   }
 
+  // One food as a list item: its name, source, numbers, and Save (USDA) or Edit names (library).
+  function renderResultItem(result) {
+    const isSaving = saveState.key === result.key && saveState.status === 'saving';
+    const failed = saveState.key === result.key && saveState.status === 'error';
+    return (
+      <li key={result.key}>
+        <h3>
+          {displayName(result, locale)}
+          {result.brand ? ` · ${result.brand}` : ''}
+        </h3>
+        <p>{t(result.source === 'library' ? 'foods.inLibrary' : 'foods.fromUsda')}</p>
+        {renderNutrition(result)}
+        {result.source === 'usda' && (
+          <>
+            <button type="button" disabled={isSaving} onClick={() => handleSave(result)}>
+              {isSaving ? t('foods.saving') : t('foods.save')}
+            </button>
+            {failed && <p role="alert">{t('foods.saveError')}</p>}
+          </>
+        )}
+        {result.source === 'library' &&
+          (editing && editing.key === result.key ? (
+            renderNameForm()
+          ) : (
+            <button type="button" onClick={() => startEditing(result)}>
+              {t('foods.editNames')}
+            </button>
+          ))}
+      </li>
+    );
+  }
+
   function renderResults() {
     const { results, libraryFailed, usdaFailed } = ready;
     return (
@@ -207,39 +287,55 @@ export default function FoodsPage() {
         {results.length === 0 ? (
           <p>{t('foods.noResults', { query: text })}</p>
         ) : (
-          <ul>
-            {results.map((result) => {
-              const isSaving = saveState.key === result.key && saveState.status === 'saving';
-              const failed = saveState.key === result.key && saveState.status === 'error';
-              return (
-                <li key={result.key}>
-                  <h3>
-                    {displayName(result, locale)}
-                    {result.brand ? ` · ${result.brand}` : ''}
-                  </h3>
-                  <p>{t(result.source === 'library' ? 'foods.inLibrary' : 'foods.fromUsda')}</p>
-                  {renderNutrition(result)}
-                  {result.source === 'usda' && (
-                    <>
-                      <button type="button" disabled={isSaving} onClick={() => handleSave(result)}>
-                        {isSaving ? t('foods.saving') : t('foods.save')}
-                      </button>
-                      {failed && <p role="alert">{t('foods.saveError')}</p>}
-                    </>
-                  )}
-                  {result.source === 'library' &&
-                    (editing && editing.key === result.key ? (
-                      renderNameForm()
-                    ) : (
-                      <button type="button" onClick={() => startEditing(result)}>
-                        {t('foods.editNames')}
-                      </button>
-                    ))}
-                </li>
-              );
-            })}
-          </ul>
+          <ul>{results.map((result) => renderResultItem(result))}</ul>
         )}
+      </>
+    );
+  }
+
+  // The scan area: the camera, then the state of the lookup, with a way out of each.
+  function renderScan() {
+    if (scan.phase === 'camera') {
+      return (
+        <ScanPanel
+          key={scan.attempt}
+          onCode={lookUp}
+          onCancel={closeScan}
+          onSearch={searchByName}
+        />
+      );
+    }
+    if (scan.phase === 'looking') {
+      return <p role="status">{t('foods.scanLooking', { code: scan.code })}</p>;
+    }
+    if (scan.phase === 'found') {
+      return (
+        <>
+          <p role="status">{t('foods.scanFound', { code: scan.code })}</p>
+          <ul>{renderResultItem(scan.result)}</ul>
+          <button type="button" onClick={openScan}>
+            {t('foods.scanAgain')}
+          </button>
+          <button type="button" onClick={closeScan}>
+            {t('foods.scanClose')}
+          </button>
+        </>
+      );
+    }
+    // notFound and error: never a dead end, so search and scan again are both offered.
+    return (
+      <>
+        <p role={scan.phase === 'error' ? 'alert' : 'status'}>
+          {scan.phase === 'error'
+            ? t('foods.scanError')
+            : t('foods.scanNotFound', { code: scan.code })}
+        </p>
+        <button type="button" onClick={searchByName}>
+          {t('foods.searchByName')}
+        </button>
+        <button type="button" onClick={openScan}>
+          {t('foods.scanAgain')}
+        </button>
       </>
     );
   }
@@ -254,10 +350,19 @@ export default function FoodsPage() {
       <form role="search" onSubmit={(event) => event.preventDefault()}>
         <label>
           {t('foods.searchLabel')}
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input
+            ref={searchInput}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
         </label>
       </form>
       <p>{t('foods.searchHint')}</p>
+      <button type="button" onClick={openScan}>
+        {t('foods.scanButton')}
+      </button>
+      {scan && renderScan()}
       {saveState.status === 'saved' && <p role="status">{t('foods.saved')}</p>}
       {saveState.status === 'namesSaved' && <p role="status">{t('foods.namesSaved')}</p>}
       {body}

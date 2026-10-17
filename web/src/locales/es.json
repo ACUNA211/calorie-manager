@@ -416,7 +416,20 @@
     "cancel": "Cancelar",
     "namesSaved": "Nombres guardados.",
     "nameRequired": "El nombre en inglés no puede estar vacío.",
-    "namesSaveError": "No se pudieron guardar los nombres. Inténtalo de nuevo."
+    "namesSaveError": "No se pudieron guardar los nombres. Inténtalo de nuevo.",
+    "scanButton": "Escanear un código de barras",
+    "scanVideoLabel": "Vista de la cámara",
+    "scanStarting": "Abriendo la cámara trasera…",
+    "scanHint": "Apunta la cámara trasera al código de barras. Se lee sola.",
+    "scanCameraError": "La cámara no está disponible. Permite el acceso a la cámara o busca por nombre.",
+    "scanReaderError": "No se pudo cargar el lector de códigos de barras. Busca por nombre.",
+    "scanLooking": "Buscando el código de barras {{code}}…",
+    "scanFound": "Encontrado por el código de barras {{code}}.",
+    "scanNotFound": "No encontrado: ningún alimento tiene el código de barras {{code}}.",
+    "scanError": "No se pudo buscar este código de barras. Revisa tu conexión e inténtalo de nuevo.",
+    "scanAgain": "Escanear otra vez",
+    "scanClose": "Cerrar el escáner",
+    "searchByName": "Buscar por nombre"
   },
   "loggingFor": {
     "label": "Registrando para",
