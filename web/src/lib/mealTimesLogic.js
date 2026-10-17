@@ -65,6 +65,22 @@ export function draftToRow(draft) {
   };
 }
 
+// The Members who share a Meal Time: the creator and the Member editing it are always in.
+// Returns sorted, unique numeric ids.
+export function normalizeSharerIds(sharerIds, creatorId, editorId) {
+  const ids = [...(sharerIds || []), creatorId, editorId].map(Number).filter((id) => id > 0);
+  return [...new Set(ids)].sort((a, b) => a - b);
+}
+
+// True when the Member's own row lacks the number its kind needs: Set needs one number,
+// Planned needs both ends of its range, If room needs its maximum (it only fills what is
+// left). A kind change can leave a sharer's row like this.
+export function needsCalories(meal) {
+  if (meal.kind === 'set') return meal.set_calories == null;
+  if (meal.kind === 'if_room') return meal.cal_max == null;
+  return meal.cal_min == null || meal.cal_max == null;
+}
+
 // Other Meal Times that share a weekday with `meal` and start within OVERLAP_MINUTES of it.
 // `weekdays` is the days being checked (a toggle checks one day; a save checks all of its days).
 // Returns [{ meal: other, weekdays: [shared days] }].

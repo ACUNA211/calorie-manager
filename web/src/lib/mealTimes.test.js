@@ -3,15 +3,26 @@ import {
   deleteMealTime,
   loadMealTimes,
   loadMemberId,
+  loadMembers,
   loadTargets,
   saveMealTime,
   setWeekdays,
 } from './mealTimes.js';
 
 // A chainable fake of the Supabase query builder. Each call is recorded; awaiting the
-// builder resolves to the result queued for its table.
+// builder resolves to the next result queued for its table (a single result also works).
+// rpc() records the function name and arguments and resolves to the queued rpc result.
 function fakeClient(results = {}) {
   const calls = [];
+  const queues = {};
+  const next = (key) => {
+    const queued = results[key];
+    if (Array.isArray(queued)) {
+      queues[key] = queues[key] ?? [...queued];
+      return queues[key].shift() ?? { data: null, error: null };
+    }
+    return queued ?? { data: null, error: null };
+  };
   const client = {
     calls,
     from(table) {
@@ -22,7 +33,7 @@ function fakeClient(results = {}) {
         {
           get(_target, prop) {
             if (prop === 'then') {
-              const result = results[table] ?? { data: null, error: null };
+              const result = next(table);
               return (resolve, reject) => Promise.resolve(result).then(resolve, reject);
             }
             return (...args) => {
@@ -33,6 +44,10 @@ function fakeClient(results = {}) {
         }
       );
       return builder;
+    },
+    rpc(name, args) {
+      calls.push({ rpc: name, args, ops: [] });
+      return Promise.resolve(next(`rpc:${name}`));
     },
   };
   return client;
@@ -60,44 +75,109 @@ describe('meal times data access', () => {
     expect(await loadMemberId(client, 'user-2')).toBeNull();
   });
 
-  it("loads one Member's Meal Times in time order with the times trimmed to HH:MM", async () => {
+  it('lists the Household Members in the order they joined', async () => {
     client = fakeClient({
-      meal_times: {
+      members: {
         data: [
-          {
-            id: 1,
-            name: 'Breakfast',
-            time_of_day: '07:30:00',
-            weekdays: [0, 1],
-            kind: 'set',
-            cal_min: null,
-            cal_max: null,
-            set_calories: 300,
-          },
+          { id: 4, display_name: 'Alice', role: 'owner' },
+          { id: 9, display_name: 'Kid', role: 'dependent' },
         ],
         error: null,
       },
+    });
+    expect(await loadMembers(client)).toEqual([
+      { id: 4, display_name: 'Alice', role: 'owner' },
+      { id: 9, display_name: 'Kid', role: 'dependent' },
+    ]);
+    expect(client.calls[0].ops).toContainEqual(['order', 'created_at', { ascending: true }]);
+  });
+
+  it("loads one Member's Meal Times in time order, with that Member's range and the sharers", async () => {
+    client = fakeClient({
+      meal_time_members: [
+        {
+          data: [
+            {
+              cal_min: 400,
+              cal_max: 600,
+              set_calories: null,
+              meal_times: {
+                id: 2,
+                name: 'Snack',
+                time_of_day: '16:00:00',
+                weekdays: [1],
+                kind: 'planned',
+                member_id: 9,
+              },
+            },
+            {
+              cal_min: 600,
+              cal_max: 800,
+              set_calories: null,
+              meal_times: {
+                id: 1,
+                name: 'Family dinner',
+                time_of_day: '07:30:00',
+                weekdays: [0, 1],
+                kind: 'planned',
+                member_id: 4,
+              },
+            },
+          ],
+          error: null,
+        },
+        {
+          data: [
+            { meal_time_id: 1, member_id: 4, members: { display_name: 'Alice' } },
+            { meal_time_id: 1, member_id: 9, members: { display_name: 'Kid' } },
+          ],
+          error: null,
+        },
+      ],
     });
     const meals = await loadMealTimes(client, 4);
     expect(meals).toEqual([
       {
         id: 1,
-        name: 'Breakfast',
+        name: 'Family dinner',
         time_of_day: '07:30',
         weekdays: [0, 1],
-        kind: 'set',
-        cal_min: null,
-        cal_max: null,
-        set_calories: 300,
+        kind: 'planned',
+        createdBy: 4,
+        cal_min: 600,
+        cal_max: 800,
+        set_calories: null,
+        sharers: [
+          { id: 4, name: 'Alice' },
+          { id: 9, name: 'Kid' },
+        ],
+      },
+      {
+        id: 2,
+        name: 'Snack',
+        time_of_day: '16:00',
+        weekdays: [1],
+        kind: 'planned',
+        createdBy: 9,
+        cal_min: 400,
+        cal_max: 600,
+        set_calories: null,
+        sharers: [],
       },
     ]);
-    const ops = client.calls[0].ops;
-    expect(ops).toContainEqual(['eq', 'member_id', 4]);
-    expect(ops).toContainEqual(['order', 'time_of_day', { ascending: true }]);
+    expect(client.calls[0].table).toBe('meal_time_members');
+    expect(client.calls[0].ops).toContainEqual(['eq', 'member_id', 4]);
+    expect(client.calls[1].ops).toContainEqual(['in', 'meal_time_id', [1, 2]]);
+  });
+
+  it('skips the sharer lookup when there are no Meal Times', async () => {
+    client = fakeClient({ meal_time_members: { data: [], error: null } });
+    expect(await loadMealTimes(client, 4)).toEqual([]);
+    expect(client.calls).toHaveLength(1);
   });
 
   it('throws the Supabase error when loading fails', async () => {
-    client = fakeClient({ meal_times: { data: null, error: new Error('down') } });
+    client = fakeClient({ meal_time_members: { data: null, error: new Error('down') } });
     await expect(loadMealTimes(client, 4)).rejects.toThrow('down');
   });
 
@@ -117,34 +197,38 @@ describe('meal times data access', () => {
     expect(client.calls[0].ops).toContainEqual(['eq', 'member_id', 4]);
   });
 
-  it('inserts a new Meal Time for the Member and returns its id', async () => {
-    client = fakeClient({ meal_times: { data: { id: 21 }, error: null } });
+  it('saves a new Meal Time through save_meal_time, with the creator always among the sharers', async () => {
+    client = fakeClient({ 'rpc:save_meal_time': { data: 21, error: null } });
     const id = await saveMealTime(client, 4, {
       id: null,
-      name: ' Lunch ',
-      time: '12:30',
+      name: ' Family dinner ',
+      time: '18:30',
       kind: 'planned',
       weekdays: [3, 1],
-      calMin: '400',
-      calMax: '600',
+      calMin: '600',
+      calMax: '800',
       setCalories: '',
+      createdBy: 4,
+      sharerIds: [9, 9],
     });
     expect(id).toBe(21);
-    const insert = client.calls[0].ops.find(([op]) => op === 'insert');
-    expect(insert[1]).toEqual({
-      name: 'Lunch',
-      time_of_day: '12:30',
-      kind: 'planned',
-      weekdays: [1, 3],
-      set_calories: null,
-      cal_min: 400,
-      cal_max: 600,
-      member_id: 4,
+    expect(client.calls[0].rpc).toBe('save_meal_time');
+    expect(client.calls[0].args).toEqual({
+      p_member_id: 4,
+      p_meal_time_id: null,
+      p_name: 'Family dinner',
+      p_time_of_day: '18:30',
+      p_kind: 'planned',
+      p_weekdays: [1, 3],
+      p_cal_min: 600,
+      p_cal_max: 800,
+      p_set_calories: null,
+      p_sharer_ids: [4, 9],
     });
   });
 
-  it('updates an existing Meal Time only within the Member', async () => {
-    client = fakeClient({ meal_times: { data: null, error: null } });
+  it('updates an existing Meal Time through save_meal_time, adding the editing Member', async () => {
+    client = fakeClient({ 'rpc:save_meal_time': { data: 9, error: null } });
     const id = await saveMealTime(client, 4, {
       id: 9,
       name: 'Snack',
@@ -154,30 +238,63 @@ describe('meal times data access', () => {
       calMin: '',
       calMax: '',
       setCalories: '150',
+      createdBy: 7,
+      sharerIds: [7],
     });
     expect(id).toBe(9);
-    const ops = client.calls[0].ops;
-    expect(ops.find(([op]) => op === 'update')[1]).toMatchObject({
-      kind: 'set',
-      set_calories: 150,
-      weekdays: [6],
+    expect(client.calls[0].args).toMatchObject({
+      p_member_id: 4,
+      p_meal_time_id: 9,
+      p_kind: 'set',
+      p_weekdays: [6],
+      p_cal_min: null,
+      p_cal_max: null,
+      p_set_calories: 150,
+      p_sharer_ids: [4, 7],
     });
-    expect(ops).toContainEqual(['eq', 'id', 9]);
-    expect(ops).toContainEqual(['eq', 'member_id', 4]);
   });
 
-  it('sets weekdays sorted and without repeats', async () => {
+  it('throws the Supabase error when saving fails', async () => {
+    client = fakeClient({ 'rpc:save_meal_time': { data: null, error: new Error('refused') } });
+    await expect(
+      saveMealTime(client, 4, {
+        id: null,
+        name: 'Lunch',
+        time: '12:30',
+        kind: 'planned',
+        weekdays: [1],
+        calMin: '400',
+        calMax: '600',
+        setCalories: '',
+      })
+    ).rejects.toThrow('refused');
+  });
+
+  it('sets weekdays sorted and without repeats, on the Meal Time itself', async () => {
     client = fakeClient({ meal_times: { data: null, error: null } });
     await setWeekdays(client, 4, 9, [5, 1, 5]);
-    expect(client.calls[0].ops.find(([op]) => op === 'update')[1]).toEqual({ weekdays: [1, 5] });
+    const ops = client.calls[0].ops;
+    expect(ops.find(([op]) => op === 'update')[1]).toEqual({ weekdays: [1, 5] });
+    expect(ops).toContainEqual(['eq', 'id', 9]);
   });
 
-  it('deletes a Meal Time within the Member', async () => {
+  it('the creator deletes the Meal Time', async () => {
     client = fakeClient({ meal_times: { data: null, error: null } });
-    await deleteMealTime(client, 4, 9);
+    await deleteMealTime(client, 4, 9, 4);
     const ops = client.calls[0].ops;
+    expect(client.calls[0].table).toBe('meal_times');
     expect(ops).toContainEqual(['delete']);
     expect(ops).toContainEqual(['eq', 'id', 9]);
     expect(ops).toContainEqual(['eq', 'member_id', 4]);
+  });
+
+  it('another sharer only removes their own sharing row', async () => {
+    client = fakeClient({ meal_time_members: { data: null, error: null } });
+    await deleteMealTime(client, 9, 9, 4);
+    const ops = client.calls[0].ops;
+    expect(client.calls[0].table).toBe('meal_time_members');
+    expect(ops).toContainEqual(['delete']);
+    expect(ops).toContainEqual(['eq', 'meal_time_id', 9]);
+    expect(ops).toContainEqual(['eq', 'member_id', 9]);
   });
 });

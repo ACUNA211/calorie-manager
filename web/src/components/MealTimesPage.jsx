@@ -4,6 +4,7 @@ import {
   deleteMealTime,
   loadMealTimes,
   loadMemberId,
+  loadMembers,
   loadTargets,
   saveMealTime,
   setWeekdays,
@@ -14,6 +15,7 @@ import {
   WEEKDAYS,
   dayTotals,
   findOverlaps,
+  needsCalories,
   normalizeTime,
   targetsFromRow,
   validateMealTime,
@@ -30,6 +32,8 @@ const NEW_MEAL_DEFAULTS = {
   calMin: '',
   calMax: '',
   setCalories: '',
+  createdBy: null,
+  sharerIds: [],
 };
 
 // Turns a stored Meal Time into an editor draft (numbers as strings, as typed).
@@ -43,7 +47,14 @@ function draftFromMeal(meal) {
     calMin: meal.cal_min == null ? '' : String(meal.cal_min),
     calMax: meal.cal_max == null ? '' : String(meal.cal_max),
     setCalories: meal.set_calories == null ? '' : String(meal.set_calories),
+    createdBy: meal.createdBy,
+    sharerIds: meal.sharers.map((sharer) => sharer.id),
   };
+}
+
+// The names of the other Members sharing a Meal Time (the grid marks it as shared).
+function sharedWithOthers(meal, viewerId) {
+  return meal.sharers.filter((sharer) => sharer.id !== viewerId).map((sharer) => sharer.name);
 }
 
 // Entry point. `memberId` is optional: when a page for another Member is passed in
@@ -58,11 +69,12 @@ export default function MealTimesPage({ user, memberId }) {
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async (id) => {
-    const [meals, targetRow] = await Promise.all([
+    const [meals, targetRow, members] = await Promise.all([
       loadMealTimes(supabase, id),
       loadTargets(supabase, id),
+      loadMembers(supabase),
     ]);
-    return { meals, targets: targetsFromRow(targetRow) };
+    return { meals, members, targets: targetsFromRow(targetRow) };
   }, []);
 
   useEffect(() => {
@@ -109,7 +121,8 @@ export default function MealTimesPage({ user, memberId }) {
   if (state.status === 'error') return <p role="alert">{t('mealTimes.loadError')}</p>;
   if (state.status === 'noMember') return <p>{t('mealTimes.noMember')}</p>;
 
-  const { meals, targets } = state;
+  const { meals, members, targets } = state;
+  const viewerId = state.memberId;
 
   // Tapping a cell: off turns the day off at once; on checks for a clash first.
   function handleToggle(meal, weekday) {
@@ -166,8 +179,9 @@ export default function MealTimesPage({ user, memberId }) {
     if (ok) setEditor(null);
   }
 
-  async function handleDelete(id) {
-    const ok = await write((memberId) => deleteMealTime(supabase, memberId, id));
+  // The creator deletes the Meal Time for everyone; another sharer only stops sharing it.
+  async function handleDelete(meal) {
+    const ok = await write((current) => deleteMealTime(supabase, current, meal.id, meal.createdBy));
     if (ok) setEditor(null);
   }
 
@@ -223,13 +237,23 @@ export default function MealTimesPage({ user, memberId }) {
                     <span>{normalizeTime(meal.time_of_day)}</span>{' '}
                     <span>
                       {t(`mealTimes.kinds.${meal.kind}`)} ·{' '}
-                      {meal.kind === 'set'
-                        ? t('mealTimes.calories.set', { calories: cal(meal.set_calories) })
-                        : t('mealTimes.calories.range', {
-                            min: cal(meal.cal_min),
-                            max: cal(meal.cal_max),
-                          })}
+                      {needsCalories(meal)
+                        ? t('mealTimes.calories.missing')
+                        : meal.kind === 'set'
+                          ? t('mealTimes.calories.set', { calories: cal(meal.set_calories) })
+                          : t('mealTimes.calories.range', {
+                              min: cal(meal.cal_min),
+                              max: cal(meal.cal_max),
+                            })}
                     </span>
+                    {sharedWithOthers(meal, viewerId).length > 0 && (
+                      <span>
+                        {' '}
+                        {t('mealTimes.shared', {
+                          names: sharedWithOthers(meal, viewerId).join(', '),
+                        })}
+                      </span>
+                    )}
                   </th>
                   {WEEKDAYS.map((day) => {
                     const on = meal.weekdays.includes(day);
@@ -303,6 +327,8 @@ export default function MealTimesPage({ user, memberId }) {
         <MealTimeEditor
           key={editor.draft.id ?? 'new'}
           initial={editor.draft}
+          memberId={viewerId}
+          members={members}
           busy={busy}
           dayLabel={dayLabel}
           onSubmit={handleSubmit}
@@ -316,7 +342,11 @@ export default function MealTimesPage({ user, memberId }) {
         <button
           type="button"
           disabled={busy}
-          onClick={() => setEditor({ draft: { ...NEW_MEAL_DEFAULTS } })}
+          onClick={() =>
+            setEditor({
+              draft: { ...NEW_MEAL_DEFAULTS, createdBy: viewerId, sharerIds: [viewerId] },
+            })
+          }
         >
           {t('mealTimes.addButton')}
         </button>
@@ -353,12 +383,22 @@ function ClashPrompt({ clash, busy, onReplace, onKeep, onCancel, dayLabel }) {
   );
 }
 
-function MealTimeEditor({ initial, busy, dayLabel, onSubmit, onDelete, onCancel }) {
+function MealTimeEditor({
+  initial,
+  memberId,
+  members,
+  busy,
+  dayLabel,
+  onSubmit,
+  onDelete,
+  onCancel,
+}) {
   const { t } = useI18n();
   const [draft, setDraft] = useState(initial);
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isNew = initial.id == null;
+  const isCreator = isNew || initial.createdBy === memberId;
 
   const update = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
 
@@ -368,6 +408,15 @@ function MealTimeEditor({ initial, busy, dayLabel, onSubmit, onDelete, onCancel 
       weekdays: current.weekdays.includes(day)
         ? current.weekdays.filter((d) => d !== day)
         : [...current.weekdays, day].sort((a, b) => a - b),
+    }));
+  }
+
+  function toggleSharer(id) {
+    setDraft((current) => ({
+      ...current,
+      sharerIds: current.sharerIds.includes(id)
+        ? current.sharerIds.filter((sharerId) => sharerId !== id)
+        : [...current.sharerIds, id],
     }));
   }
 
@@ -429,6 +478,27 @@ function MealTimeEditor({ initial, busy, dayLabel, onSubmit, onDelete, onCancel 
         ))}
       </fieldset>
 
+      {members.length > 0 && (
+        <fieldset>
+          <legend>{t('mealTimes.form.sharers')}</legend>
+          {members.map((member) => {
+            const locked = member.id === draft.createdBy || member.id === memberId;
+            return (
+              <label key={member.id}>
+                <input
+                  type="checkbox"
+                  checked={locked || draft.sharerIds.includes(member.id)}
+                  disabled={locked}
+                  onChange={() => toggleSharer(member.id)}
+                />{' '}
+                {member.display_name}
+              </label>
+            );
+          })}
+          <p>{t('mealTimes.form.sharersHint')}</p>
+        </fieldset>
+      )}
+
       {draft.kind === 'set' ? (
         <label>
           {t('mealTimes.form.setCalories')}
@@ -486,14 +556,20 @@ function MealTimeEditor({ initial, busy, dayLabel, onSubmit, onDelete, onCancel 
         {!isNew &&
           (confirmDelete ? (
             <>
-              <span>{t('mealTimes.form.confirmDelete', { name: initial.name })}</span>{' '}
-              <button type="button" disabled={busy} onClick={() => onDelete(initial.id)}>
-                {t('mealTimes.form.confirmDeleteButton')}
+              <span>
+                {isCreator
+                  ? t('mealTimes.form.confirmDelete', { name: initial.name })
+                  : t('mealTimes.form.confirmLeave', { name: initial.name })}
+              </span>{' '}
+              <button type="button" disabled={busy} onClick={() => onDelete(initial)}>
+                {isCreator
+                  ? t('mealTimes.form.confirmDeleteButton')
+                  : t('mealTimes.form.confirmLeaveButton')}
               </button>
             </>
           ) : (
             <button type="button" disabled={busy} onClick={() => setConfirmDelete(true)}>
-              {t('mealTimes.form.delete')}
+              {isCreator ? t('mealTimes.form.delete') : t('mealTimes.form.leave')}
             </button>
           ))}
       </div>
