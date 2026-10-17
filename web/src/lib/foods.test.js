@@ -10,7 +10,14 @@ import {
   searchLibrary,
   searchUsda,
   saveUsdaFood,
+  matchesTokens,
+  displayName,
+  translateFoodName,
+  saveUsdaFoodAndTranslate,
+  saveFoodNames,
+  FOOD_COLUMNS,
 } from './foods.js';
+import { searchTokens } from './norm.js';
 
 const oats = {
   id: 1,
@@ -264,5 +271,196 @@ describe('data access', () => {
     const client = fakeClient({ rpc: { usda_save: { data: null, error: new Error('boom') } } });
 
     await expect(saveUsdaFood(client, 1)).rejects.toThrow('boom');
+  });
+});
+
+// Spanish names (ticket #16)
+const apples = {
+  ...oats,
+  id: 3,
+  name: 'Apples, raw',
+  name_es: 'Manzana cruda',
+  name_es_edited_by_member: true,
+  source: 'label',
+  source_id: null,
+  servings: [],
+};
+
+describe('Spanish names', () => {
+  it('reads the Spanish name and whether a Member wrote it', () => {
+    expect(libraryResult(apples)).toMatchObject({ nameEs: 'Manzana cruda', nameEsEdited: true });
+    expect(
+      libraryResult({ ...apples, name_es: null, name_es_edited_by_member: false })
+    ).toMatchObject({
+      nameEs: null,
+      nameEsEdited: false,
+    });
+  });
+
+  it('a USDA hit has no Spanish name until it is saved', () => {
+    expect(usdaResult({ fdc_id: 9, name: 'Oats' })).toMatchObject({
+      nameEs: null,
+      nameEsEdited: false,
+    });
+  });
+
+  it('reads the Spanish name columns in the library query', async () => {
+    const client = fakeClient({ foods: { data: [], error: null } });
+    await searchLibrary(client, 'manzana');
+    expect(client.chain.select).toHaveBeenCalledWith(FOOD_COLUMNS);
+    expect(FOOD_COLUMNS).toContain('name_es');
+  });
+
+  it('finds an English food by its Spanish name', () => {
+    const rows = [libraryResult(apples), libraryResult({ ...oats, id: 4, name: 'Rolled oats' })];
+    expect(rankLibrary(rows, 'manzana').map((r) => r.id)).toEqual([3]);
+  });
+
+  it('finds an English food by its English name too', () => {
+    expect(rankLibrary([libraryResult(apples)], 'apples').map((r) => r.id)).toEqual([3]);
+  });
+
+  it('lets each word of a query match a different name', () => {
+    const result = libraryResult(apples);
+    expect(matchesTokens(result, searchTokens('apples manzana'))).toBe(true);
+    expect(matchesTokens(result, searchTokens('apples pera'))).toBe(false);
+  });
+
+  it('folds accents in the Spanish name', () => {
+    const result = libraryResult({ ...apples, name: 'Paprika', name_es: 'Pimentón dulce' });
+    expect(rankLibrary([result], 'pimenton')).toHaveLength(1);
+  });
+
+  it('ranks a Spanish name that starts with the word first', () => {
+    const rows = [
+      libraryResult({ ...oats, id: 1, name: 'Sweet bread, pan dulce' }),
+      libraryResult({ ...apples, id: 2, name: 'Brown rice', name_es: 'Pan de maíz' }),
+    ];
+    expect(rankLibrary(rows, 'pan').map((r) => r.id)).toEqual([2, 1]);
+  });
+
+  it('shows the Spanish name on a Spanish screen when there is one', () => {
+    const result = libraryResult(apples);
+    expect(displayName(result, 'es')).toBe('Manzana cruda');
+    expect(displayName(result, 'en')).toBe('Apples, raw');
+  });
+
+  it('falls back to the English name on a Spanish screen with no Spanish name', () => {
+    expect(displayName(libraryResult({ ...apples, name_es: null }), 'es')).toBe('Apples, raw');
+    expect(displayName(usdaResult({ fdc_id: 9, name: 'Oats' }), 'es')).toBe('Oats');
+  });
+});
+
+// A fake that records update() and functions.invoke() calls.
+function writeClient({
+  updateError = null,
+  invoke = { data: { status: 'translated' }, error: null },
+  rpc = {},
+} = {}) {
+  const update = vi.fn();
+  const eq = vi.fn(async () => ({ error: updateError }));
+  update.mockImplementation(() => ({ eq }));
+  const from = vi.fn(() => ({ update }));
+  const functions = { invoke: vi.fn(async () => invoke) };
+  const rpcMock = vi.fn(async (name) => rpc[name] ?? { data: null, error: null });
+  return { from, update, eq, functions, rpc: rpcMock };
+}
+
+describe('saveFoodNames', () => {
+  it('saves both names, trimmed, for one food', async () => {
+    const client = writeClient();
+
+    await saveFoodNames(client, 3, { name: '  Apples, raw ', nameEs: ' Manzana cruda ' });
+
+    expect(client.from).toHaveBeenCalledWith('foods');
+    expect(client.update).toHaveBeenCalledWith({ name: 'Apples, raw', name_es: 'Manzana cruda' });
+    expect(client.eq).toHaveBeenCalledWith('id', 3);
+  });
+
+  it('stores an empty Spanish name as null', async () => {
+    const client = writeClient();
+
+    await saveFoodNames(client, 3, { name: 'Apples', nameEs: '   ' });
+
+    expect(client.update).toHaveBeenCalledWith({ name: 'Apples', name_es: null });
+  });
+
+  it('refuses an empty English name without writing', async () => {
+    const client = writeClient();
+
+    await expect(saveFoodNames(client, 3, { name: '  ', nameEs: 'x' })).rejects.toThrow(
+      'cannot be empty'
+    );
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('throws when the database refuses the write', async () => {
+    const client = writeClient({ updateError: new Error('denied') });
+
+    await expect(saveFoodNames(client, 3, { name: 'Apples', nameEs: '' })).rejects.toThrow(
+      'denied'
+    );
+  });
+});
+
+describe('translateFoodName and saveUsdaFoodAndTranslate', () => {
+  it('asks translate-food-name for the food and returns its answer', async () => {
+    const client = writeClient({
+      invoke: { data: { status: 'translated', name_es: 'Manzana' }, error: null },
+    });
+
+    expect(await translateFoodName(client, '9')).toEqual({
+      status: 'translated',
+      name_es: 'Manzana',
+    });
+    expect(client.functions.invoke).toHaveBeenCalledWith('translate-food-name', {
+      body: { food_id: 9 },
+    });
+  });
+
+  it('throws when the function call fails', async () => {
+    const client = writeClient({ invoke: { data: null, error: new Error('down') } });
+
+    await expect(translateFoodName(client, 9)).rejects.toThrow('down');
+  });
+
+  it('saves a USDA food and then translates it', async () => {
+    const client = writeClient({ rpc: { usda_save: { data: 42, error: null } } });
+
+    expect(await saveUsdaFoodAndTranslate(client, 173904)).toEqual({
+      id: 42,
+      spanish: 'translated',
+    });
+    expect(client.functions.invoke).toHaveBeenCalledWith('translate-food-name', {
+      body: { food_id: 42 },
+    });
+  });
+
+  it('keeps the saved food when translation fails', async () => {
+    const client = writeClient({
+      rpc: { usda_save: { data: 42, error: null } },
+      invoke: { data: null, error: new Error('no key') },
+    });
+
+    expect(await saveUsdaFoodAndTranslate(client, 173904)).toEqual({ id: 42, spanish: 'failed' });
+  });
+
+  it('reports the cap answer when the monthly limit is reached', async () => {
+    const client = writeClient({
+      rpc: { usda_save: { data: 42, error: null } },
+      invoke: { data: { status: 'limit_reached' }, error: null },
+    });
+
+    expect(await saveUsdaFoodAndTranslate(client, 173904)).toEqual({
+      id: 42,
+      spanish: 'limit_reached',
+    });
+  });
+
+  it('does not translate when the save fails', async () => {
+    const client = writeClient({ rpc: { usda_save: { data: null, error: new Error('boom') } } });
+
+    await expect(saveUsdaFoodAndTranslate(client, 1)).rejects.toThrow('boom');
+    expect(client.functions.invoke).not.toHaveBeenCalled();
   });
 });

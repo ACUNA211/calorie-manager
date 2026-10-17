@@ -5,7 +5,9 @@ import FoodsPage from './FoodsPage.jsx';
 import { supabase } from '../lib/supabase.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
-vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }));
+vi.mock('../lib/supabase.js', () => ({
+  supabase: { from: vi.fn(), rpc: vi.fn(), functions: { invoke: vi.fn() } },
+}));
 
 const libraryRow = {
   id: 1,
@@ -41,14 +43,26 @@ function fakeBackend({
   usdaHits = [usdaHit],
   usdaError,
   saveError,
+  translation = { status: 'translated', name_es: 'Hojuelas de avena' },
+  translateError,
 } = {}) {
-  const rows = [...library];
+  const rows = library.map((row) => ({ ...row }));
   const chain = {
     select: () => chain,
     order: () => chain,
-    limit: async () => ({ data: [...rows], error: null }),
+    limit: async () => ({ data: rows.map((row) => ({ ...row })), error: null }),
+    update: (values) => ({
+      eq: async (column, id) => {
+        const row = rows.find((candidate) => candidate[column] === id);
+        if (row) Object.assign(row, values);
+        return { error: null };
+      },
+    }),
   };
   supabase.from.mockImplementation(() => chain);
+  supabase.functions.invoke.mockImplementation(async () =>
+    translateError ? { data: null, error: new Error('down') } : { data: translation, error: null }
+  );
   supabase.rpc.mockImplementation(async (name) => {
     if (name === 'usda_search') {
       return usdaError ? { data: null, error: new Error('down') } : { data: usdaHits, error: null };
@@ -211,5 +225,86 @@ describe('FoodsPage', () => {
     expect(
       within(item).getByRole('button', { name: 'Guardar en la biblioteca de alimentos' })
     ).toBeInTheDocument();
+  });
+
+  it('finds a food by its Spanish name', async () => {
+    fakeBackend({
+      library: [
+        { ...libraryRow, id: 7, name: 'Apples, raw', name_es: 'Manzana cruda', source: 'label' },
+      ],
+    });
+    renderScreen();
+
+    await typeQuery('manzana');
+
+    const item = (await screen.findAllByRole('listitem'))[0];
+    expect(within(item).getByRole('heading', { name: /Apples, raw/ })).toBeInTheDocument();
+  });
+
+  it('shows the Spanish name on a Spanish screen, and the English name when there is none', async () => {
+    window.localStorage.setItem('calorieManager.locale', 'es');
+    fakeBackend({
+      library: [
+        { ...libraryRow, id: 7, name: 'Apples, raw', name_es: 'Manzana cruda', source: 'label' },
+        { ...oatFlakes, id: 8, name: 'Oat flakes', name_es: null },
+      ],
+    });
+    renderScreen();
+
+    await typeQuery('a', 'Buscar alimentos');
+
+    const items = await screen.findAllByRole('listitem');
+    expect(within(items[0]).getByRole('heading', { name: /Manzana cruda/ })).toBeInTheDocument();
+    expect(within(items[1]).getByRole('heading', { name: /Oat flakes/ })).toBeInTheDocument();
+  });
+
+  it('translates a saved USDA food and keeps it saved when translation fails', async () => {
+    fakeBackend({ translateError: true });
+    renderScreen();
+
+    await typeQuery('oats');
+    const item = (await screen.findAllByRole('listitem'))[1];
+    await userEvent.click(within(item).getByRole('button', { name: 'Save to Food Library' }));
+
+    expect(await screen.findByText('Saved to your Food Library.')).toBeInTheDocument();
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('translate-food-name', {
+      body: { food_id: 99 },
+    });
+  });
+
+  it('lets a Member edit the English and Spanish names of a Food Library food', async () => {
+    const { rows } = fakeBackend();
+    renderScreen();
+
+    await typeQuery('oat');
+    const item = (await screen.findAllByRole('listitem'))[0];
+    await userEvent.click(within(item).getByRole('button', { name: 'Edit names' }));
+    const form = within(item).getByRole('form', { name: 'Edit food names' });
+    const spanish = within(form).getByRole('textbox', { name: 'Spanish name' });
+    await userEvent.clear(spanish);
+    await userEvent.type(spanish, 'Avena en hojuelas');
+    await userEvent.click(within(form).getByRole('button', { name: 'Save names' }));
+
+    expect(await screen.findByText('Names saved.')).toBeInTheDocument();
+    expect(rows.find((row) => row.id === 2)).toMatchObject({
+      name: 'Oat flakes',
+      name_es: 'Avena en hojuelas',
+    });
+  });
+
+  it('refuses to save an empty English name', async () => {
+    fakeBackend();
+    renderScreen();
+
+    await typeQuery('oat');
+    const item = (await screen.findAllByRole('listitem'))[0];
+    await userEvent.click(within(item).getByRole('button', { name: 'Edit names' }));
+    const form = within(item).getByRole('form', { name: 'Edit food names' });
+    await userEvent.clear(within(form).getByRole('textbox', { name: 'English name' }));
+    await userEvent.click(within(form).getByRole('button', { name: 'Save names' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent(
+      'The English name cannot be empty.'
+    );
   });
 });

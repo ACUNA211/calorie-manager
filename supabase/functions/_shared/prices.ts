@@ -42,6 +42,24 @@ export const PRICES: Record<string, Record<string, ModelPrice>> = {
       outputPerMTok: 1.5,
       status: 'primary',
     },
+    // Food-name translation, first choice (ticket #16). Inputs are characters, not tokens:
+    // the helper charges inputPerMTok per million characters and nothing for output. The
+    // price was not readable on the vendor page (.scratch/restart/research/translation-apis.md).
+    'cloud-translation-basic': {
+      inputPerMTok: 20,
+      outputPerMTok: 0,
+      status: 'unverified',
+      note: 'Per character; price and free tier not confirmed on the vendor page',
+    },
+  },
+  // Food-name translation, fallback (ticket #16). Per character, as above. S1 price not verified.
+  azure: {
+    'translator-s1': {
+      inputPerMTok: 10,
+      outputPerMTok: 0,
+      status: 'unverified',
+      note: 'Per character; S1 price not verified; the F0 tier is free up to 2M characters a month',
+    },
   },
   openai: {
     // Fallback if Jev goes away (ADR 0002 names gpt-6-luna).
