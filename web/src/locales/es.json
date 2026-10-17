@@ -347,5 +347,54 @@
   "loggingFor": {
     "label": "Registrando para",
     "you": "{{name}} (tú)"
+  },
+  "pantry": {
+    "heading": "Despensa",
+    "intro": "Comida en casa, compartida por todas las personas de tu hogar. Las cantidades son en gramos por ahora; las unidades llegarán después.",
+    "loading": "Cargando tu despensa…",
+    "loadError": "No se pudo cargar tu despensa.",
+    "empty": "Todavía no hay nada en la despensa. Busca un alimento arriba para añadirlo.",
+    "grams": "{{value}} g",
+    "sections": {
+      "produce": "Frutas y verduras",
+      "meatSeafood": "Carne y pescado",
+      "dairyEggs": "Lácteos y huevos",
+      "bakery": "Panadería y tortillas",
+      "frozen": "Congelados",
+      "cannedDry": "Enlatados y secos",
+      "pantry": "Básicos de despensa",
+      "drinks": "Bebidas",
+      "snacks": "Botanas",
+      "other": "Otros"
+    },
+    "add": {
+      "heading": "Añadir a la despensa",
+      "searchLabel": "Buscar alimentos para añadir",
+      "search": "Buscar",
+      "searching": "Buscando…",
+      "noResults": "Ningún alimento coincide con \"{{query}}\".",
+      "libraryLoadError": "No se pudo buscar en tu biblioteca de alimentos.",
+      "usdaLoadError": "No se pudieron buscar alimentos de USDA.",
+      "inLibrary": "En tu biblioteca de alimentos",
+      "fromUsda": "USDA",
+      "amountLabel": "Gramos de {{name}}",
+      "addButton": "Añadir {{name}}",
+      "adding": "Añadiendo…",
+      "added": "{{name}} añadido a la despensa.",
+      "error": "No se pudo añadir este alimento. Inténtalo de nuevo."
+    },
+    "correct": {
+      "usedUp": "Se acabó",
+      "half": "Casi la mitad",
+      "setLabel": "Escribe los gramos de {{name}} que quedan",
+      "setButton": "Guardar cantidad",
+      "error": "No se pudo cambiar esta cantidad. Inténtalo de nuevo."
+    },
+    "errors": {
+      "amountRequired": "Escribe una cantidad en gramos.",
+      "amountInvalid": "Usa un número de gramos, con como máximo un decimal (por ejemplo 150 o 62.5).",
+      "amountTooHigh": "La despensa guarda como máximo 100000 g de un mismo alimento.",
+      "amountZero": "Escribe más de 0 g para añadir un alimento."
+    }
   }
 }
