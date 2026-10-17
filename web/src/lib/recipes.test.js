@@ -1,0 +1,360 @@
+import { describe, it, expect, vi } from 'vitest';
+import {
+  addIngredient,
+  deleteRecipe,
+  draftFromRecipe,
+  emptyRecipeDraft,
+  loadRecipes,
+  parseAmount,
+  previewIngredients,
+  removeIngredient,
+  saveRecipe,
+  searchFoods,
+  setIngredientGrams,
+  validateRecipe,
+} from './recipes.js';
+
+const rice = { id: 7, name: 'Rice', kcal_per_100g: 130, protein_g: 2.7 };
+const egg = { id: 9, name: 'Egg', kcal_per_100g: 143, protein_g: 12.6 };
+
+// A chainable fake of the Supabase query builder. Each table+operation gets a result.
+// Every call is recorded so a test can check what was sent.
+function fakeClient(results = {}) {
+  const calls = [];
+  const from = (table) => {
+    const record = { table, ops: [] };
+    calls.push(record);
+    const builder = {};
+    const chain =
+      (name) =>
+      (...args) => {
+        record.ops.push([name, ...args]);
+        return builder;
+      };
+    for (const name of ['select', 'insert', 'update', 'delete', 'eq', 'ilike', 'order', 'limit']) {
+      builder[name] = chain(name);
+    }
+    builder.single = () => {
+      record.ops.push(['single']);
+      return builder;
+    };
+    builder.then = (resolve, reject) => {
+      const first = record.ops[0]?.[0];
+      const key = `${table}:${first}`;
+      const result = results[key] ?? { data: null, error: null };
+      return Promise.resolve(result).then(resolve, reject);
+    };
+    return builder;
+  };
+  return { from: vi.fn(from), calls };
+}
+
+describe('parseAmount', () => {
+  it('reads a positive whole number or decimal', () => {
+    expect(parseAmount('250')).toEqual({ ok: true, value: 250 });
+    expect(parseAmount(' 2.5 ')).toEqual({ ok: true, value: 2.5 });
+  });
+
+  it('treats an empty field as not given', () => {
+    expect(parseAmount('')).toEqual({ ok: true, value: null });
+    expect(parseAmount('   ')).toEqual({ ok: true, value: null });
+  });
+
+  it('refuses text, negatives and commas', () => {
+    expect(parseAmount('2 cups')).toEqual({ ok: false, error: 'recipes.errors.number' });
+    expect(parseAmount('-5')).toEqual({ ok: false, error: 'recipes.errors.number' });
+    expect(parseAmount('1,5')).toEqual({ ok: false, error: 'recipes.errors.number' });
+  });
+
+  it('refuses zero', () => {
+    expect(parseAmount('0')).toEqual({ ok: false, error: 'recipes.errors.notPositive' });
+    expect(parseAmount('0.0')).toEqual({ ok: false, error: 'recipes.errors.notPositive' });
+  });
+});
+
+describe('draft helpers', () => {
+  it('starts an empty draft with one serving', () => {
+    const draft = emptyRecipeDraft();
+    expect(draft).toMatchObject({
+      id: null,
+      name: '',
+      servings: '1',
+      cookedWeight: '',
+      ingredients: [],
+    });
+  });
+
+  it('adds, edits and removes ingredient lines by key', () => {
+    let draft = addIngredient(emptyRecipeDraft(), rice);
+    draft = addIngredient(draft, egg);
+    expect(draft.ingredients.map((item) => item.food.name)).toEqual(['Rice', 'Egg']);
+    expect(draft.ingredients[0].grams).toBe('');
+
+    const riceKey = draft.ingredients[0].key;
+    draft = setIngredientGrams(draft, riceKey, '200');
+    expect(draft.ingredients[0].grams).toBe('200');
+    expect(draft.ingredients[1].grams).toBe('');
+
+    draft = removeIngredient(draft, riceKey);
+    expect(draft.ingredients.map((item) => item.food.name)).toEqual(['Egg']);
+  });
+
+  it('gives each new ingredient line its own key', () => {
+    const draft = addIngredient(addIngredient(emptyRecipeDraft(), rice), rice);
+    expect(draft.ingredients[0].key).not.toBe(draft.ingredients[1].key);
+  });
+
+  it('turns a stored Recipe into a draft with strings and keys', () => {
+    const draft = draftFromRecipe({
+      id: 3,
+      name: 'Fried rice',
+      starred: true,
+      servings: 4,
+      cooked_weight_g: null,
+      notes: null,
+      ingredients: [{ id: 11, grams: 300, food: rice }],
+    });
+    expect(draft).toMatchObject({
+      id: 3,
+      name: 'Fried rice',
+      starred: true,
+      servings: '4',
+      cookedWeight: '',
+      notes: '',
+    });
+    expect(draft.ingredients[0]).toMatchObject({ food: rice, grams: '300' });
+    expect(draft.ingredients[0].key).toBeTruthy();
+  });
+
+  it('previews only ingredients with usable grams', () => {
+    let draft = addIngredient(addIngredient(emptyRecipeDraft(), rice), egg);
+    draft = setIngredientGrams(draft, draft.ingredients[0].key, '100');
+    draft = setIngredientGrams(draft, draft.ingredients[1].key, 'lots');
+    expect(previewIngredients(draft)).toEqual([{ grams: 100, food: rice }]);
+  });
+});
+
+describe('validateRecipe', () => {
+  const filled = () => {
+    let draft = { ...emptyRecipeDraft(), name: '  Egg fried rice  ', servings: '2' };
+    draft = addIngredient(draft, rice);
+    draft = setIngredientGrams(draft, draft.ingredients[0].key, '200');
+    return draft;
+  };
+
+  it('accepts a complete draft and returns the values to save', () => {
+    const result = validateRecipe(filled());
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual({});
+    expect(result.values).toEqual({
+      id: null,
+      name: 'Egg fried rice',
+      starred: false,
+      servings: 2,
+      cookedWeightG: null,
+      notes: null,
+      ingredients: [{ foodId: 7, grams: 200 }],
+    });
+  });
+
+  it('requires a name, and keeps it under the length limit', () => {
+    expect(validateRecipe({ ...filled(), name: '   ' }).errors.name).toBe(
+      'recipes.errors.nameRequired'
+    );
+    expect(validateRecipe({ ...filled(), name: 'x'.repeat(121) }).errors.name).toBe(
+      'recipes.errors.nameTooLong'
+    );
+  });
+
+  it('requires servings above zero', () => {
+    expect(validateRecipe({ ...filled(), servings: '' }).errors.servings).toBe(
+      'recipes.errors.servingsRequired'
+    );
+    expect(validateRecipe({ ...filled(), servings: '0' }).errors.servings).toBe(
+      'recipes.errors.notPositive'
+    );
+    expect(validateRecipe({ ...filled(), servings: 'four' }).errors.servings).toBe(
+      'recipes.errors.number'
+    );
+  });
+
+  it('takes an optional cooked weight in grams', () => {
+    expect(validateRecipe({ ...filled(), cookedWeight: '1200' }).values.cookedWeightG).toBe(1200);
+    expect(validateRecipe({ ...filled(), cookedWeight: '' }).values.cookedWeightG).toBeNull();
+    expect(validateRecipe({ ...filled(), cookedWeight: '-3' }).errors.cookedWeight).toBe(
+      'recipes.errors.number'
+    );
+  });
+
+  it('needs at least one ingredient, each with a food and grams', () => {
+    expect(validateRecipe(emptyRecipeDraft()).errors.ingredients).toBe(
+      'recipes.errors.noIngredients'
+    );
+
+    let draft = addIngredient(emptyRecipeDraft(), rice);
+    const key = draft.ingredients[0].key;
+    expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.gramsRequired');
+
+    draft = setIngredientGrams(draft, key, '0');
+    expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.notPositive');
+
+    draft = { ...draft, ingredients: [{ key, food: null, grams: '100' }] };
+    expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.noFood');
+  });
+
+  it('trims notes and turns blank notes into null, and limits their length', () => {
+    expect(validateRecipe({ ...filled(), notes: '  Use day-old rice.  ' }).values.notes).toBe(
+      'Use day-old rice.'
+    );
+    expect(validateRecipe({ ...filled(), notes: '   ' }).values.notes).toBeNull();
+    expect(validateRecipe({ ...filled(), notes: 'n'.repeat(2001) }).errors.notes).toBe(
+      'recipes.errors.notesTooLong'
+    );
+  });
+
+  it('keeps the id when editing an existing Recipe', () => {
+    expect(validateRecipe({ ...filled(), id: 5 }).values.id).toBe(5);
+  });
+});
+
+describe('loadRecipes', () => {
+  it('orders starred first, then by name, and sorts ingredients by their sort', async () => {
+    const client = fakeClient({
+      'recipes:select': {
+        data: [
+          {
+            id: 1,
+            name: 'Chili',
+            starred: false,
+            servings: '4',
+            cooked_weight_g: null,
+            notes: null,
+            recipe_ingredients: [
+              { id: 22, grams: '100', sort: 2, foods: egg },
+              { id: 21, grams: '50', sort: 1, foods: rice },
+            ],
+          },
+        ],
+        error: null,
+      },
+    });
+
+    const recipes = await loadRecipes(client);
+
+    expect(client.calls[0].table).toBe('recipes');
+    expect(client.calls[0].ops.slice(1)).toEqual([
+      ['order', 'starred', { ascending: false }],
+      ['order', 'name', { ascending: true }],
+    ]);
+    expect(recipes).toEqual([
+      {
+        id: 1,
+        name: 'Chili',
+        starred: false,
+        servings: 4,
+        cooked_weight_g: null,
+        notes: null,
+        ingredients: [
+          { id: 21, grams: 50, food: rice },
+          { id: 22, grams: 100, food: egg },
+        ],
+      },
+    ]);
+  });
+
+  it('throws when the query fails', async () => {
+    const client = fakeClient({ 'recipes:select': { data: null, error: new Error('down') } });
+    await expect(loadRecipes(client)).rejects.toThrow('down');
+  });
+});
+
+describe('searchFoods', () => {
+  it('returns nothing for blank text without asking the database', async () => {
+    const client = fakeClient();
+    expect(await searchFoods(client, '   ')).toEqual([]);
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('searches the food names and escapes wildcard characters', async () => {
+    const client = fakeClient({ 'foods:select': { data: [rice], error: null } });
+    const found = await searchFoods(client, ' 100%_rice\\ ');
+
+    expect(found).toEqual([rice]);
+    const ops = client.calls[0].ops;
+    expect(ops).toContainEqual(['ilike', 'name', '%100\\%\\_rice\\\\%']);
+    expect(ops).toContainEqual(['limit', 15]);
+  });
+});
+
+describe('saveRecipe', () => {
+  const values = {
+    id: null,
+    name: 'Egg fried rice',
+    starred: true,
+    servings: 2,
+    cookedWeightG: 900,
+    notes: 'Day-old rice',
+    ingredients: [
+      { foodId: 7, grams: 200 },
+      { foodId: 9, grams: 100 },
+    ],
+  };
+
+  it('inserts the Recipe, clears its old lines and inserts the new ones in order', async () => {
+    const client = fakeClient({
+      'recipes:insert': { data: { id: 41 }, error: null },
+    });
+
+    const id = await saveRecipe(client, values);
+
+    expect(id).toBe(41);
+    const [recipes, lines] = client.calls;
+    expect(recipes.ops[0]).toEqual([
+      'insert',
+      {
+        name: 'Egg fried rice',
+        starred: true,
+        servings: 2,
+        cooked_weight_g: 900,
+        notes: 'Day-old rice',
+      },
+    ]);
+    expect(lines.table).toBe('recipe_ingredients');
+    expect(lines.ops[0]).toEqual(['delete']);
+    const insert = client.calls[2];
+    expect(insert.table).toBe('recipe_ingredients');
+    expect(insert.ops[0]).toEqual([
+      'insert',
+      [
+        { recipe_id: 41, food_id: 7, grams: 200, sort: 0 },
+        { recipe_id: 41, food_id: 9, grams: 100, sort: 1 },
+      ],
+    ]);
+  });
+
+  it('updates an existing Recipe instead of inserting one', async () => {
+    const client = fakeClient();
+    await saveRecipe(client, { ...values, id: 41, ingredients: [] });
+
+    expect(client.calls[0].ops[0][0]).toBe('update');
+    expect(client.calls[0].ops).toContainEqual(['eq', 'id', 41]);
+    // No ingredients: the old lines are cleared and nothing new is inserted.
+    expect(client.calls.map((call) => call.table)).toEqual(['recipes', 'recipe_ingredients']);
+  });
+
+  it('throws when the Recipe cannot be saved', async () => {
+    const client = fakeClient({
+      'recipes:insert': { data: null, error: new Error('denied') },
+    });
+    await expect(saveRecipe(client, values)).rejects.toThrow('denied');
+  });
+});
+
+describe('deleteRecipe', () => {
+  it('deletes the Recipe by id (its lines go with it)', async () => {
+    const client = fakeClient();
+    await deleteRecipe(client, 41);
+    expect(client.calls[0].table).toBe('recipes');
+    expect(client.calls[0].ops).toEqual([['delete'], ['eq', 'id', 41]]);
+  });
+});

@@ -208,5 +208,82 @@
       "alreadyInHousehold": "Ya perteneces a un hogar, así que no puedes unirte a este.",
       "joinFailed": "No se pudo unir al hogar. Inténtalo de nuevo."
     }
+  },
+  "recipes": {
+    "heading": "Recetas",
+    "loading": "Cargando tus recetas...",
+    "loadError": "No se pudieron cargar tus recetas. Inténtalo de nuevo.",
+    "empty": "Todavía no hay recetas. Añade la primera abajo.",
+    "searchLabel": "Buscar recetas",
+    "noMatches": "Ninguna receta coincide con la búsqueda.",
+    "addButton": "Añadir una receta",
+    "starred": "Con estrella",
+    "makes": "Rinde {{count}} porciones",
+    "perServing": "{{kcal}} kcal por porción",
+    "unknown": "Desconocido",
+    "editorNew": "Nueva receta",
+    "editorEdit": "Editar receta",
+    "back": "Volver a recetas",
+    "fields": {
+      "name": "Nombre",
+      "starred": "Con estrella",
+      "servings": "¿Cuántas porciones rinde?",
+      "cookedWeight": "Peso cocinado (g), opcional",
+      "notes": "Notas"
+    },
+    "hints": {
+      "servings": "Las calorías de la receta se reparten entre estas porciones.",
+      "cookedWeight": "Pesa el resultado cocinado para saber los gramos de una porción. Déjalo vacío si no lo sabes.",
+      "gramsPerServing": "Unos {{grams}} g por porción",
+      "notes": "Texto libre. Todavía sin pasos de cocina."
+    },
+    "ingredients": {
+      "heading": "Ingredientes (gramos de la biblioteca de alimentos)",
+      "empty": "Todavía no hay ingredientes. Busca un alimento en la biblioteca de abajo para añadirlo.",
+      "searchLabel": "Buscar un alimento en la biblioteca",
+      "searchEmpty": "Ningún alimento coincide. Añade antes el alimento a la biblioteca.",
+      "searchError": "No se pudo buscar en la biblioteca de alimentos. Inténtalo de nuevo.",
+      "add": "Añadir {{name}}",
+      "gramsLabel": "Gramos de {{name}}",
+      "remove": "Quitar {{name}}"
+    },
+    "totals": {
+      "heading": "Por porción",
+      "none": "Añade ingredientes para ver las calorías y los macros por porción.",
+      "kcal": "Calorías",
+      "kcalValue": "{{value}} kcal",
+      "protein": "Proteína",
+      "carbs": "Carbohidratos",
+      "fat": "Grasa",
+      "fibre": "Fibra",
+      "sugars": "Azúcares",
+      "sodium": "Sodio",
+      "grams": "{{value}} g",
+      "milligrams": "{{value}} mg",
+      "weight": "Peso total de los ingredientes: {{grams}} g",
+      "unknownHint": "Desconocido significa que un alimento de esta receta no tiene valor para ese nutriente."
+    },
+    "actions": {
+      "save": "Guardar receta",
+      "cancel": "Cancelar",
+      "delete": "Eliminar receta",
+      "deleteConfirm": "¿Eliminar {{name}}? Sus ingredientes se eliminan con ella.",
+      "deleteYes": "Sí, eliminar",
+      "deleteKeep": "Conservarla"
+    },
+    "saveError": "No se pudo guardar la receta. Inténtalo de nuevo.",
+    "deleteError": "No se pudo eliminar la receta. Puede que se use en una cocción.",
+    "errors": {
+      "nameRequired": "Pon un nombre a la receta.",
+      "nameTooLong": "Mantén el nombre por debajo de 120 caracteres.",
+      "number": "Escribe un número, como 4 o 2.5.",
+      "notPositive": "Escribe un número mayor que 0.",
+      "servingsRequired": "Indica cuántas porciones rinde la receta.",
+      "tooLarge": "Ese número es demasiado grande.",
+      "notesTooLong": "Mantén las notas por debajo de 2000 caracteres.",
+      "noIngredients": "Añade al menos un ingrediente.",
+      "gramsRequired": "Escribe los gramos de este ingrediente.",
+      "noFood": "Elige un alimento de la biblioteca de alimentos."
+    }
   }
 }

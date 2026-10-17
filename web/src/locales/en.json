@@ -208,5 +208,82 @@
       "alreadyInHousehold": "You already belong to a Household, so you cannot join this one.",
       "joinFailed": "Could not join the Household. Try again."
     }
+  },
+  "recipes": {
+    "heading": "Recipes",
+    "loading": "Loading your Recipes...",
+    "loadError": "Could not load your Recipes. Try again.",
+    "empty": "No Recipes yet. Add your first one below.",
+    "searchLabel": "Search Recipes",
+    "noMatches": "No Recipes match that search.",
+    "addButton": "Add a Recipe",
+    "starred": "Starred",
+    "makes": "Makes {{count}} servings",
+    "perServing": "{{kcal}} kcal per serving",
+    "unknown": "Unknown",
+    "editorNew": "New Recipe",
+    "editorEdit": "Edit Recipe",
+    "back": "Back to Recipes",
+    "fields": {
+      "name": "Name",
+      "starred": "Starred",
+      "servings": "Makes how many servings",
+      "cookedWeight": "Cooked weight (g), optional",
+      "notes": "Notes"
+    },
+    "hints": {
+      "servings": "The Recipe's calories are shared out across this many servings.",
+      "cookedWeight": "Weigh the cooked result to set the grams in one serving. Leave empty if you do not know it.",
+      "gramsPerServing": "About {{grams}} g per serving",
+      "notes": "Free text. No cooking steps yet."
+    },
+    "ingredients": {
+      "heading": "Ingredients (grams from the Food Library)",
+      "empty": "No ingredients yet. Search the Food Library below to add one.",
+      "searchLabel": "Find a food in the Food Library",
+      "searchEmpty": "No foods match. Add the food to the Food Library first.",
+      "searchError": "Could not search the Food Library. Try again.",
+      "add": "Add {{name}}",
+      "gramsLabel": "Grams of {{name}}",
+      "remove": "Remove {{name}}"
+    },
+    "totals": {
+      "heading": "Per serving",
+      "none": "Add ingredients to see the calories and macros per serving.",
+      "kcal": "Calories",
+      "kcalValue": "{{value}} kcal",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "fibre": "Fibre",
+      "sugars": "Sugars",
+      "sodium": "Sodium",
+      "grams": "{{value}} g",
+      "milligrams": "{{value}} mg",
+      "weight": "Total weight of the ingredients: {{grams}} g",
+      "unknownHint": "Unknown means a food in this Recipe has no value for that nutrient."
+    },
+    "actions": {
+      "save": "Save Recipe",
+      "cancel": "Cancel",
+      "delete": "Delete Recipe",
+      "deleteConfirm": "Delete {{name}}? Its ingredients go with it.",
+      "deleteYes": "Yes, delete",
+      "deleteKeep": "Keep it"
+    },
+    "saveError": "Could not save the Recipe. Try again.",
+    "deleteError": "Could not delete the Recipe. It may be used in a Cook.",
+    "errors": {
+      "nameRequired": "Give the Recipe a name.",
+      "nameTooLong": "Keep the name under 120 characters.",
+      "number": "Enter a number, such as 4 or 2.5.",
+      "notPositive": "Enter a number above 0.",
+      "servingsRequired": "Say how many servings the Recipe makes.",
+      "tooLarge": "That number is too large.",
+      "notesTooLong": "Keep the notes under 2000 characters.",
+      "noIngredients": "Add at least one ingredient.",
+      "gramsRequired": "Enter the grams of this ingredient.",
+      "noFood": "Pick a food from the Food Library."
+    }
   }
 }
