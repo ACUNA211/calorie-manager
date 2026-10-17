@@ -34,7 +34,8 @@ export default defineConfig({
       },
       workbox: {
         // Precache the app shell: HTML, JS, CSS, the manifest and the icons.
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
+        // .wasm is the zxing barcode reader, so offline scanning works after the first visit.
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,wasm}'],
         // Any page navigation offline gets the cached shell.
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
