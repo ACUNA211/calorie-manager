@@ -414,5 +414,95 @@
       "amountTooHigh": "La despensa guarda como máximo 100000 g de un mismo alimento.",
       "amountZero": "Escribe más de 0 g para añadir un alimento."
     }
+  },
+  "today": {
+    "heading": "Hoy",
+    "loading": "Cargando el día...",
+    "loadError": "No se pudo cargar este día. Inténtalo de nuevo.",
+    "noMember": "Para registrar comida necesitas un Miembro. Únete o crea un hogar primero.",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "backToToday": "Volver a hoy",
+    "todayTag": "Hoy",
+    "futureReadOnly": "Este día está en el futuro, así que solo se puede ver.",
+    "logged": "Se registraron {{kcal}} kcal en {{meal}}.",
+    "otherTime": "Otra hora",
+    "bar": {
+      "eaten": "{{eaten}} de {{target}} kcal comidas",
+      "left": "Quedan {{left}} kcal",
+      "over": "{{over}} kcal por encima de la meta calórica",
+      "aim": "Objetivo de {{low}} a {{high}} kcal",
+      "noTarget": "Pon una meta calórica en la página de Metas para ver la barra del día.",
+      "status": {
+        "inBand": "Dentro de la franja de planificación",
+        "aboveBand": "Por encima de la franja, pero aún bajo la meta",
+        "under": "Por debajo de la franja de planificación",
+        "over": "Por encima de la meta calórica",
+        "noTarget": "Aún no hay meta calórica"
+      }
+    },
+    "macro": {
+      "protein": "Proteína",
+      "carbs": "Carbohidratos",
+      "fat": "Grasa",
+      "eaten": "{{eaten}} g",
+      "floor": "{{eaten}} g de al menos {{floor}} g",
+      "range": "{{eaten}} g, objetivo de {{low}} a {{high}} g",
+      "met": "Meta cumplida",
+      "toGo": "Faltan {{left}} g",
+      "inRange": "En el rango",
+      "under": "Por debajo del rango",
+      "over": "Por encima del rango",
+      "noTarget": "Sin meta"
+    },
+    "meals": {
+      "heading": "Horarios de comida",
+      "empty": "No hay horarios de comida este día.",
+      "nothing": "Aún no hay nada registrado.",
+      "sectionKcal": "{{kcal}} kcal",
+      "range": "Rango de {{min}} a {{max}} kcal",
+      "set": "Fijo en {{kcal}} kcal",
+      "entry": "{{description}}, {{kcal}} kcal",
+      "missingMacros": "{{count}} registrados sin datos de macronutrientes"
+    },
+    "log": {
+      "button": "Registrar comida",
+      "heading": "Registrar comida",
+      "searchLabel": "Buscar alimentos",
+      "search": "Buscar",
+      "searching": "Buscando...",
+      "none": "Ningún alimento coincide. Prueba con otra palabra.",
+      "libraryFailed": "No se pudo buscar en tu biblioteca de alimentos.",
+      "usdaFailed": "No se pudo buscar en USDA.",
+      "sourceLibrary": "Biblioteca de alimentos",
+      "sourceUsda": "USDA",
+      "pick": "Elegir",
+      "selected": "Alimento: {{name}}",
+      "change": "Elegir otro alimento",
+      "amount": "Cantidad",
+      "unit": "Unidad",
+      "unitGrams": "gramos",
+      "unitServings": "porciones",
+      "servingHint": "1 porción son {{grams}} g",
+      "mealTime": "Horario de comida",
+      "mealOption": "{{name}} {{time}}",
+      "nearestSuffix": " (el más cercano ahora)",
+      "preview": "{{kcal}} kcal",
+      "previewMacros": "Proteína {{protein}} g, carbohidratos {{carbs}} g, grasa {{fat}} g",
+      "previewNoMacros": "Este alimento aún no tiene datos de macronutrientes.",
+      "submit": "Registrar",
+      "saving": "Guardando...",
+      "cancel": "Cancelar",
+      "errors": {
+        "food": "Primero elige un alimento.",
+        "amount": "Escribe una cantidad mayor que cero.",
+        "servingUnknown": "Este alimento no tiene tamaño de porción. Usa gramos.",
+        "tooLarge": "Escribe como máximo {{max}} g. Registra cantidades grandes en partes.",
+        "noKcal": "Este alimento no tiene dato calórico, así que no se puede registrar.",
+        "futureDay": "No se pueden registrar días futuros.",
+        "usdaSave": "No se pudo añadir este alimento de USDA a tu biblioteca. Inténtalo de nuevo.",
+        "saveError": "No se pudo registrar el alimento. Inténtalo de nuevo."
+      }
+    }
   }
 }

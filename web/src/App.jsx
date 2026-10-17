@@ -5,6 +5,7 @@ import Home from './components/Home.jsx';
 import HouseholdPage from './components/HouseholdPage.jsx';
 import TargetsPage from './components/TargetsPage.jsx';
 import MealTimesPage from './components/MealTimesPage.jsx';
+import TodayPage from './components/TodayPage.jsx';
 import FoodsPage from './components/FoodsPage.jsx';
 import RecipesPage from './components/RecipesPage.jsx';
 import PantryPage from './components/PantryPage.jsx';
@@ -58,6 +59,7 @@ export default function App() {
     body = (
       <>
         <Home user={session.user} />
+        <TodayPage user={session.user} />
         <HouseholdPage user={session.user} />
         <TargetsPage user={session.user} />
         <MealTimesPage user={session.user} />

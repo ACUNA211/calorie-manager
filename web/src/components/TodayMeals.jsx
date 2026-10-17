@@ -1,0 +1,66 @@
+import { useI18n } from '../i18n/I18nProvider.jsx';
+import { normalizeTime } from '../lib/mealTimesLogic.js';
+
+// The day's Meal Times, each with its calorie range and what is logged to it, then the
+// entries logged at another time. `sections` and `other` come from mealSections().
+export default function TodayMeals({ sections, other }) {
+  const { t, formatNumber } = useI18n();
+  const number = (value) => formatNumber(value, { maximumFractionDigits: 0 });
+
+  return (
+    <section aria-labelledby="today-meals-heading">
+      <h2 id="today-meals-heading">{t('today.meals.heading')}</h2>
+      {sections.length === 0 && other.entries.length === 0 ? <p>{t('today.meals.empty')}</p> : null}
+
+      {sections.map(({ meal, entries, kcal }) => (
+        <article key={meal.id}>
+          <h3>
+            {meal.name} {normalizeTime(meal.time_of_day)}
+          </h3>
+          <p>{calorieRangeText(meal, t, number)}</p>
+          <p>{t('today.meals.sectionKcal', { kcal: number(kcal) })}</p>
+          <EntryList entries={entries} />
+        </article>
+      ))}
+
+      {other.entries.length > 0 ? (
+        <article>
+          <h3>{t('today.otherTime')}</h3>
+          <p>{t('today.meals.sectionKcal', { kcal: number(other.kcal) })}</p>
+          <EntryList entries={other.entries} />
+        </article>
+      ) : null}
+    </section>
+  );
+}
+
+// The Member's own range for the Meal Time, in the words its kind uses.
+function calorieRangeText(meal, t, number) {
+  if (meal.kind === 'set') {
+    return meal.set_calories == null
+      ? ''
+      : t('today.meals.set', { kcal: number(meal.set_calories) });
+  }
+  if (meal.cal_max == null) return '';
+  return t('today.meals.range', {
+    min: number(meal.cal_min ?? 0),
+    max: number(meal.cal_max),
+  });
+}
+
+function EntryList({ entries }) {
+  const { t, formatNumber } = useI18n();
+  if (entries.length === 0) return <p>{t('today.meals.nothing')}</p>;
+  return (
+    <ul>
+      {entries.map((entry) => (
+        <li key={entry.id}>
+          {t('today.meals.entry', {
+            description: entry.description,
+            kcal: formatNumber(entry.kcal, { maximumFractionDigits: 0 }),
+          })}
+        </li>
+      ))}
+    </ul>
+  );
+}

@@ -414,5 +414,95 @@
       "amountTooHigh": "The most the Pantry holds for one food is 100000 g.",
       "amountZero": "Type more than 0 g to add a food."
     }
+  },
+  "today": {
+    "heading": "Today",
+    "loading": "Loading the day...",
+    "loadError": "Could not load this day. Try again.",
+    "noMember": "Logging needs a Member. Join or create a Household first.",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today",
+    "todayTag": "Today",
+    "futureReadOnly": "This day is in the future, so it is read-only.",
+    "logged": "Logged {{kcal}} kcal to {{meal}}.",
+    "otherTime": "Another time",
+    "bar": {
+      "eaten": "{{eaten}} of {{target}} kcal eaten",
+      "left": "{{left}} kcal left",
+      "over": "{{over}} kcal over the Calorie Target",
+      "aim": "Aim {{low}} to {{high}} kcal",
+      "noTarget": "Set a Calorie Target on the Targets page to see the day bar.",
+      "status": {
+        "inBand": "In the Planning band",
+        "aboveBand": "Above the band, still under the Target",
+        "under": "Under the Planning band",
+        "over": "Over the Calorie Target",
+        "noTarget": "No Calorie Target yet"
+      }
+    },
+    "macro": {
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "eaten": "{{eaten}} g",
+      "floor": "{{eaten}} g of at least {{floor}} g",
+      "range": "{{eaten}} g, aim {{low}} to {{high}} g",
+      "met": "Target met",
+      "toGo": "{{left}} g to go",
+      "inRange": "In range",
+      "under": "Under the range",
+      "over": "Over the range",
+      "noTarget": "No target set"
+    },
+    "meals": {
+      "heading": "Meal Times",
+      "empty": "No Meal Times on this day.",
+      "nothing": "Nothing logged yet.",
+      "sectionKcal": "{{kcal}} kcal",
+      "range": "Range {{min}} to {{max}} kcal",
+      "set": "Set at {{kcal}} kcal",
+      "entry": "{{description}}, {{kcal}} kcal",
+      "missingMacros": "{{count}} logged with no macro figures"
+    },
+    "log": {
+      "button": "Log food",
+      "heading": "Log food",
+      "searchLabel": "Search foods",
+      "search": "Search",
+      "searching": "Searching...",
+      "none": "No foods match. Try another word.",
+      "libraryFailed": "Could not search your Food Library.",
+      "usdaFailed": "Could not search USDA.",
+      "sourceLibrary": "Food Library",
+      "sourceUsda": "USDA",
+      "pick": "Pick",
+      "selected": "Food: {{name}}",
+      "change": "Choose another food",
+      "amount": "Amount",
+      "unit": "Unit",
+      "unitGrams": "grams",
+      "unitServings": "servings",
+      "servingHint": "1 serving is {{grams}} g",
+      "mealTime": "Meal Time",
+      "mealOption": "{{name}} {{time}}",
+      "nearestSuffix": " (nearest now)",
+      "preview": "{{kcal}} kcal",
+      "previewMacros": "Protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "previewNoMacros": "No macro figures for this food yet.",
+      "submit": "Log it",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "errors": {
+        "food": "Pick a food first.",
+        "amount": "Enter an amount above zero.",
+        "servingUnknown": "This food has no serving size. Use grams.",
+        "tooLarge": "Enter at most {{max}} g. Log bigger amounts in pieces.",
+        "noKcal": "This food has no calorie figure, so it cannot be logged.",
+        "futureDay": "Future days cannot be logged.",
+        "usdaSave": "Could not add this USDA food to your Food Library. Try again.",
+        "saveError": "Could not log the food. Try again."
+      }
+    }
   }
 }
