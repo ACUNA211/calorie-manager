@@ -1,0 +1,58 @@
+{
+  "_note": "Hand-written sample in the documented FoodData Central shapes (GET /fdc/v1/food/{fdcId} for food, and a foods/search hit for searchHit). Not copied from USDA; the values are illustrative. fdcId 999001 is a made-up test id.",
+  "food": {
+    "fdcId": 999001,
+    "description": "Test sample, chicken breast, roasted",
+    "dataType": "Foundation",
+    "foodNutrients": [
+      {
+        "type": "FoodNutrient",
+        "id": 5001,
+        "nutrient": { "id": 1008, "number": "208", "name": "Energy", "rank": 300, "unitName": "kcal" },
+        "amount": 165
+      },
+      {
+        "type": "FoodNutrient",
+        "id": 5002,
+        "nutrient": { "id": 1003, "number": "203", "name": "Protein", "rank": 600, "unitName": "g" },
+        "amount": 31.0
+      },
+      {
+        "type": "FoodNutrient",
+        "id": 5003,
+        "nutrient": { "id": 1004, "number": "204", "name": "Total lipid (fat)", "rank": 800, "unitName": "g" },
+        "amount": 3.6
+      },
+      {
+        "type": "FoodNutrient",
+        "id": 5004,
+        "nutrient": { "id": 1005, "number": "205", "name": "Carbohydrate, by difference", "rank": 1110, "unitName": "g" },
+        "amount": 0.0
+      },
+      {
+        "type": "FoodNutrient",
+        "id": 5005,
+        "nutrient": { "id": 2000, "number": "269", "name": "Total Sugars", "rank": 1510, "unitName": "g" },
+        "amount": 0.0
+      },
+      {
+        "type": "FoodNutrient",
+        "id": 5006,
+        "nutrient": { "id": 1093, "number": "307", "name": "Sodium, Na", "rank": 5800, "unitName": "MG" },
+        "amount": 74
+      }
+    ]
+  },
+  "searchHit": {
+    "fdcId": 999002,
+    "description": "Test sample, yogurt, plain",
+    "dataType": "SR Legacy",
+    "foodNutrients": [
+      { "nutrientId": 1003, "nutrientName": "Protein", "nutrientNumber": "203", "unitName": "G", "value": 10.2 },
+      { "nutrientId": 1004, "nutrientName": "Total lipid (fat)", "nutrientNumber": "204", "unitName": "G", "value": 0.4 },
+      { "nutrientId": 1005, "nutrientName": "Carbohydrate, by difference", "nutrientNumber": "205", "unitName": "G", "value": 3.6 },
+      { "nutrientId": 2000, "nutrientName": "Total Sugars", "nutrientNumber": "269", "unitName": "G", "value": 3.2 },
+      { "nutrientId": 1093, "nutrientName": "Sodium, Na", "nutrientNumber": "307", "unitName": "MG", "value": 36 }
+    ]
+  }
+}
