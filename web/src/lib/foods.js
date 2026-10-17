@@ -6,6 +6,7 @@
 // 0: USDA search hits carry calories only, so a USDA result shows no macros until saved.
 
 import { norm, searchTokens } from './norm.js';
+import { gtinForms, isValidGtin } from './gtin.js';
 
 export const FOOD_COLUMNS =
   'id, name, name_es, name_es_edited_by_member, brand, source, source_id, kcal_per_100g, servings, protein_g, carbs_g, fat_g, fibre_g, sugars_g, sodium_mg';
@@ -181,6 +182,31 @@ export async function searchFoods(client, query) {
     libraryFailed: library.status === 'rejected',
     usdaFailed: usda.status === 'rejected',
   };
+}
+
+// Looks up a scanned barcode (ticket 18). usda_lookup_gtin (migration 003) checks this
+// Household's Food Library first and asks USDA only when that misses, so a library hit
+// makes no USDA call. Every zero-padded form of a code is the same key on the server, so
+// one call with the 14-digit form covers the 12- and 13-digit forms too.
+// Returns { status: 'found', source: 'library' | 'usda', result } (a result as libraryResult
+// or usdaResult gives), { status: 'notFound' } or { status: 'invalid' }. Throws when the
+// call fails.
+export async function lookupGtin(client, code) {
+  if (!isValidGtin(code)) return { status: 'invalid' };
+  const [, , fourteen] = gtinForms(code);
+  const { data, error } = await client.rpc('usda_lookup_gtin', { p_code: fourteen });
+  if (error) throw error;
+  if (!data) return { status: 'notFound' };
+  if (data.food_id !== undefined && data.food_id !== null) {
+    const { data: row, error: rowError } = await client
+      .from('foods')
+      .select(FOOD_COLUMNS)
+      .eq('id', Number(data.food_id))
+      .single();
+    if (rowError) throw rowError;
+    return { status: 'found', source: 'library', result: libraryResult(row) };
+  }
+  return { status: 'found', source: 'usda', result: usdaResult(data) };
 }
 
 // Saves a USDA food to the Food Library (usda_save returns the existing row when the food

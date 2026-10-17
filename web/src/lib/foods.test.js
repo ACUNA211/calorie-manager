@@ -10,6 +10,7 @@ import {
   searchLibrary,
   searchUsda,
   saveUsdaFood,
+  lookupGtin,
   matchesTokens,
   displayName,
   translateFoodName,
@@ -462,5 +463,85 @@ describe('translateFoodName and saveUsdaFoodAndTranslate', () => {
 
     await expect(saveUsdaFoodAndTranslate(client, 1)).rejects.toThrow('boom');
     expect(client.functions.invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('lookupGtin', () => {
+  const UPC_A = '036000291452';
+  const libraryRow = {
+    id: 7,
+    name: 'Oat flakes',
+    brand: 'Brand',
+    source: 'usda',
+    source_id: '555',
+    kcal_per_100g: 370,
+    servings: [],
+    protein_g: 13,
+    carbs_g: 60,
+    fat_g: 7,
+    fibre_g: null,
+    sugars_g: null,
+    sodium_mg: null,
+  };
+  const usdaHit = {
+    fdc_id: 999,
+    name: 'Oats, branded',
+    brand: 'Brand',
+    kcal_per_100g: 380,
+    serving_g: 40,
+    serving_label: '1 cup',
+  };
+
+  // A client whose usda_lookup_gtin answers `lookupAnswer`, and whose foods table holds
+  // `row` when the answer is a Food Library id.
+  function fakeClient({ lookupAnswer, row = libraryRow, error, rowError } = {}) {
+    const rpc = vi.fn(async () => ({ data: lookupAnswer, error: error ?? null }));
+    const single = vi.fn(async () => ({ data: row, error: rowError ?? null }));
+    const eq = vi.fn(() => ({ single }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    return { rpc, from, select, eq, single };
+  }
+
+  it('asks the database once, with the 14-digit form', async () => {
+    const client = fakeClient({ lookupAnswer: null });
+    await lookupGtin(client, UPC_A);
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+    expect(client.rpc).toHaveBeenCalledWith('usda_lookup_gtin', { p_code: '00036000291452' });
+  });
+
+  it('finds a Food Library food without any USDA function call', async () => {
+    const client = fakeClient({ lookupAnswer: { food_id: 7 } });
+    const outcome = await lookupGtin(client, `0${UPC_A}`);
+    expect(outcome.status).toBe('found');
+    expect(outcome.source).toBe('library');
+    expect(outcome.result.id).toBe(7);
+    expect(outcome.result.macros.protein).toBe(13);
+    expect(client.from).toHaveBeenCalledWith('foods');
+    expect(client.eq).toHaveBeenCalledWith('id', 7);
+    expect(client.rpc.mock.calls.map(([name]) => name)).toEqual(['usda_lookup_gtin']);
+  });
+
+  it('returns a USDA Branded hit, ready to save', async () => {
+    const client = fakeClient({ lookupAnswer: usdaHit });
+    const outcome = await lookupGtin(client, UPC_A);
+    expect(outcome).toEqual({ status: 'found', source: 'usda', result: usdaResult(usdaHit) });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('says not found when neither source has the code', async () => {
+    const client = fakeClient({ lookupAnswer: null });
+    expect(await lookupGtin(client, UPC_A)).toEqual({ status: 'notFound' });
+  });
+
+  it('refuses a code that fails its check digit without calling the database', async () => {
+    const client = fakeClient({ lookupAnswer: null });
+    expect(await lookupGtin(client, '036000291453')).toEqual({ status: 'invalid' });
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+
+  it('throws when the lookup call fails', async () => {
+    const client = fakeClient({ error: new Error('down') });
+    await expect(lookupGtin(client, UPC_A)).rejects.toThrow('down');
   });
 });
