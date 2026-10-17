@@ -63,7 +63,7 @@ _Avoid_: batch, meal prep (as a noun)
 How much of a Cook one Member eats at one Meal Time, and so how many calories and macros it gives. A logged Portion comes out of its Cook, not the Pantry.
 
 **Leftovers**:
-Servings of a made Cook that no logged Portion has used yet. They stay until eaten or thrown out; a shrunk Portion in a Rebalance adds to them.
+Servings of a made Cook that no logged Portion has used yet. They stay until eaten or thrown out; a shrunk Portion in a Rebalance adds to them. After 4 days (editable) they're flagged, and planning uses them, and opened Pantry items, first. Pantry items have no expiry dates.
 _Avoid_: spare (as a noun)
 
 **Meal Plan**:
@@ -71,7 +71,7 @@ The Household's plan for one week, Sunday to Saturday: Cooks and their Portions 
 _Avoid_: plan (alone), menu, schedule
 
 **Calorie Log**:
-A Member's record of what they actually ate, with calories and macros, each entry at a Meal Time or another time. Logging is plain code: scan, search, pick a Portion, or a Voice command.
+A Member's record of what they actually ate, with calories and macros. Other Members see only what's on the shared Meal Plan and an on track / over flag per day, unless the Member shares everything; weight stays private unless shared. Every adult sees Dependents' logs. Each entry is at a Meal Time or another time. Logging is plain code: scan, search, pick a Portion, or a Voice command.
 _Avoid_: diary, journal, tracker
 
 **Shopping list**:
@@ -93,8 +93,19 @@ _Avoid_: cron, automation
 **Scan**:
 Reading a barcode with the phone camera. What it does fits the screen: on the Pantry it adds the package, on the Shopping list it ticks the line Bought, and on Today it shows the food with **Add to Pantry** and **Eaten** (logged at the current Meal Time). A food is looked up once and then kept in the Food Library.
 
+**Week view**:
+The stats page, per Member: each day's calories and macros against Targets and the Planning band, days under, the week's average and a weight trend. A small Household panel shows Cooks made vs planned and Leftovers thrown out. No streaks or badges.
+_Avoid_: stats, recap, analytics
+
 **AI cap**:
 A $5/month hard limit per AI provider, plus an in-app counter that stops AI calls when it is reached.
+
+## Ground rules
+
+- Android and iPhone are both supported from day one (Web Push on iPhone needs the app on the Home Screen).
+- Every screen is in English or Spanish, switched per Member, with all text kept in translation files so more languages can follow. Each Member picks display units (metric or US); everything is stored in grams, and the Shopping list uses the units stores sell in.
+- The Shopping list and logging work offline and sync later; planning, Scan lookups and Voice commands need a connection.
+- Grocery prices are out of the first version; Preferences keep only a budget feel.
 
 ## Relationships
 
@@ -106,7 +117,7 @@ A $5/month hard limit per AI provider, plus an in-app counter that stops AI call
 
 ## Flagged ambiguities
 
-- The Household's Members use Android, but iPhone is supported from day one (Web Push there needs the app on the Home Screen).
+
 
 - "Plan" was used for both the weekly meal plan and a calorie goal. Resolved: **Meal Plan** and **Targets**.
 - "Text to speech" for Voice commands means speech-to-text: the Member speaks, the app reads it.
