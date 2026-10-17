@@ -43,5 +43,39 @@
     "label": "Sugerencia para instalar",
     "body": "Para usar Calorie Manager como una app, toca el botón Compartir de Safari y luego Añadir a pantalla de inicio.",
     "dismiss": "Entendido"
+  },
+  "targets": {
+    "heading": "Objetivos",
+    "loading": "Cargando tus objetivos…",
+    "loadError": "No se pudieron cargar tus objetivos.",
+    "clearHint": "Deja un campo vacío y guarda para borrar ese objetivo. Los carbohidratos y la grasa pueden quedar vacíos.",
+    "calorieTargetLabel": "Objetivo de calorías (kcal al día, un máximo)",
+    "proteinFloorLabel": "Mínimo de proteína (g al día)",
+    "carbsLegend": "Carbohidratos (g al día, rango opcional)",
+    "carbLowLabel": "Carbohidratos mínimo",
+    "carbHighLabel": "Carbohidratos máximo",
+    "fatLegend": "Grasa (g al día, rango opcional)",
+    "fatLowLabel": "Grasa mínimo",
+    "fatHighLabel": "Grasa máximo",
+    "bandLegend": "Franja de planificación (% del objetivo de calorías)",
+    "bandLowLabel": "Franja mínimo (%)",
+    "bandHighLabel": "Franja máximo (%)",
+    "aim": "Meta: {{low}}–{{high}}",
+    "aimNeedsTarget": "Define un objetivo de calorías para ver la franja en calorías.",
+    "aimInvalid": "Corrige los campos de arriba para ver la franja en calorías.",
+    "saveButton": "Guardar objetivos",
+    "saving": "Guardando…",
+    "saved": "Objetivos guardados.",
+    "saveError": "No se pudieron guardar tus objetivos.",
+    "errors": {
+      "whole": "Escribe un número entero, por ejemplo 1800.",
+      "calorieTargetPositive": "El objetivo de calorías debe ser mayor que 0.",
+      "notNegative": "Los gramos no pueden ser negativos.",
+      "tooLarge": "Ese número es demasiado grande.",
+      "rangeIncomplete": "Completa los dos extremos del rango, o deja ambos vacíos.",
+      "rangeOrder": "El mínimo no puede ser mayor que el máximo.",
+      "bandRange": "Escribe un porcentaje de 50 a 100.",
+      "bandOrder": "El mínimo de la franja no puede ser mayor que su máximo."
+    }
   }
 }
