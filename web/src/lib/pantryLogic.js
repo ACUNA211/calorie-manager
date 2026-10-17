@@ -2,6 +2,8 @@
 // screen here, so every rule can be tested on its own. The database (migration 019) applies
 // the same rules to the stored amount.
 
+import { parseMass } from './units.js';
+
 export const PANTRY_MAX_GRAMS = 100000;
 
 // Store sections in the order a shopper walks the store. `value` is what foods.store_section
@@ -31,22 +33,29 @@ export function roundGrams(value) {
   return Math.round(value * 10) / 10;
 }
 
-// Reads a typed amount in grams. A comma is accepted as the decimal mark. Returns a
+// Reads a typed amount in the Member's units (grams in metric, ounces in US, see units.js).
+// A comma is accepted as the decimal mark. Returns the grams, rounded to one decimal, or a
 // translation key for the error so the screen can show it through t().
-export function parseGrams(text) {
-  const cleaned = String(text ?? '')
-    .trim()
-    .replace(',', '.');
-  if (cleaned === '') return { ok: false, error: 'pantry.errors.amountRequired' };
-  if (!/^\d+(\.\d)?$/.test(cleaned)) return { ok: false, error: 'pantry.errors.amountInvalid' };
-  const value = Number(cleaned);
-  if (value > PANTRY_MAX_GRAMS) return { ok: false, error: 'pantry.errors.amountTooHigh' };
-  return { ok: true, value };
+export function parseGrams(text, units = 'metric') {
+  const trimmed = String(text ?? '').trim();
+  if (trimmed === '') return { ok: false, error: 'pantry.errors.amountRequired' };
+  // The Pantry stores one decimal place (migration 019), so a typed amount has at most one.
+  const decimals = /^\s*\d+[.,](\d+)/.exec(trimmed);
+  if (decimals && decimals[1].length > 1)
+    return { ok: false, error: 'pantry.errors.amountInvalid' };
+  const parsed = parseMass(trimmed, units);
+  if (!parsed.ok) {
+    // Zero is read here so that validateAddAmount can refuse it with its own message.
+    if (/^0+([.,]0+)?$/.test(trimmed)) return { ok: true, value: 0 };
+    return { ok: false, error: 'pantry.errors.amountInvalid' };
+  }
+  if (parsed.grams > PANTRY_MAX_GRAMS) return { ok: false, error: 'pantry.errors.amountTooHigh' };
+  return { ok: true, value: parsed.grams };
 }
 
 // An amount added to the Pantry must be more than zero.
-export function validateAddAmount(text) {
-  const parsed = parseGrams(text);
+export function validateAddAmount(text, units = 'metric') {
+  const parsed = parseGrams(text, units);
   if (!parsed.ok) return parsed;
   if (parsed.value <= 0) return { ok: false, error: 'pantry.errors.amountZero' };
   return parsed;

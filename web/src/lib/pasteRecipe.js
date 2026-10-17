@@ -9,6 +9,7 @@
 import { norm } from './norm.js';
 import { saveUsdaFood, searchFoods } from './foods.js';
 import { emptyRecipeDraft, nextKey } from './recipes.js';
+import { toInputMass } from './units.js';
 
 export const PASTE_MAX_CHARS = 8000;
 export const PASTE_MAX_INGREDIENTS = 60;
@@ -95,14 +96,14 @@ export function newRow(line, index) {
 }
 
 // Recomputes the grams of a row from its food and line, unless the Member typed grams.
-export function withConversion(row) {
+export function withConversion(row, units = 'metric') {
   const conversion = gramsFor(row, row.food);
   if (row.gramsEdited) {
     return { ...row, approximate: false, reason: null };
   }
   return {
     ...row,
-    grams: conversion.grams === null ? '' : String(conversion.grams),
+    grams: conversion.grams === null ? '' : toInputMass(conversion.grams, units),
     approximate: conversion.approximate,
     reason: row.food ? conversion.reason : null,
   };
@@ -110,8 +111,8 @@ export function withConversion(row) {
 
 // The Member picks a food for the row. A pick is a confirmed match, so it is no longer
 // flagged as a guess.
-export function rowWithFood(row, food) {
-  return withConversion({ ...row, food, status: food ? 'sure' : 'none' });
+export function rowWithFood(row, food, units = 'metric') {
+  return withConversion({ ...row, food, status: food ? 'sure' : 'none' }, units);
 }
 
 // The Member types the grams. Typed grams replace the conversion.
@@ -140,34 +141,40 @@ export function canContinue(rows) {
 }
 
 // Splits a search result into what a row shows. A failed search keeps the other source.
-function applyFound(row, found, pickName) {
+function applyFound(row, found, pickName, units) {
   const results = Array.isArray(found?.results) ? found.results : [];
   const searchFailed = Boolean(found?.libraryFailed && found?.usdaFailed);
   if (pickName === null) {
     // A new search from the Member: the candidates change, the chosen food stays.
-    return withConversion({ ...row, candidates: results.slice(0, CANDIDATE_LIMIT), searchFailed });
+    return withConversion(
+      { ...row, candidates: results.slice(0, CANDIDATE_LIMIT), searchFailed },
+      units
+    );
   }
   const match = chooseMatch(pickName, results);
-  return withConversion({
-    ...row,
-    candidates: results.slice(0, CANDIDATE_LIMIT),
-    food: match.food,
-    status: match.status,
-    searchFailed,
-  });
+  return withConversion(
+    {
+      ...row,
+      candidates: results.slice(0, CANDIDATE_LIMIT),
+      food: match.food,
+      status: match.status,
+      searchFailed,
+    },
+    units
+  );
 }
 
 // Searches for each parsed line and returns the review rows. Lines are searched together;
 // a failed search leaves that row with no food and searchFailed set.
-export async function matchRecipeLines(client, lines, search = searchFoods) {
+export async function matchRecipeLines(client, lines, search = searchFoods, units = 'metric') {
   return Promise.all(
     lines.map(async (line, index) => {
       const row = newRow(line, index);
       try {
         const found = await search(client, line.name);
-        return applyFound(row, found, line.name);
+        return applyFound(row, found, line.name, units);
       } catch {
-        return { ...withConversion(row), searchFailed: true };
+        return { ...withConversion(row, units), searchFailed: true };
       }
     })
   );

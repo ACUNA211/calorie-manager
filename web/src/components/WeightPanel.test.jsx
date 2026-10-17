@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import WeightPanel from './WeightPanel.jsx';
 import { deleteWeight, loadWeight, saveWeight } from '../lib/weight.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/weight.js', () => ({
@@ -18,7 +18,7 @@ const TODAY = '2026-10-17';
 
 function renderPanel() {
   render(<WeightPanel memberId={4} weekStart={WEEK_START} todayKey={TODAY} />, {
-    wrapper: I18nProvider,
+    wrapper: MetricProvider,
   });
 }
 
@@ -44,7 +44,7 @@ describe('WeightPanel', () => {
   it('loads the 12 weeks that end with the week shown, and draws the trend with its entries', async () => {
     const { container } = render(
       <WeightPanel memberId={4} weekStart={WEEK_START} todayKey={TODAY} />,
-      { wrapper: I18nProvider }
+      { wrapper: MetricProvider }
     );
 
     expect(await screen.findByRole('img', { name: /Weight over the last 12 weeks/ })).toBeTruthy();
@@ -71,7 +71,7 @@ describe('WeightPanel', () => {
   it('refuses a weight for a future day and saves nothing', async () => {
     const { container } = render(
       <WeightPanel memberId={4} weekStart={WEEK_START} todayKey={TODAY} />,
-      { wrapper: I18nProvider }
+      { wrapper: MetricProvider }
     );
     await screen.findByText(/Sun, Oct 11: 72\.5 kg/);
 
@@ -95,7 +95,7 @@ describe('WeightPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save weight' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Enter a weight in kg, with one decimal at most, such as 72.5.'
+      'Enter a weight, with one decimal at most, such as 72.5.'
     );
     expect(saveWeight).not.toHaveBeenCalled();
   });

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { parseLabelForm, saveLabelFood } from '../lib/label.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // The fields, in the order a Nutrition Facts label reads. Each is a text box so a comma
 // works as the decimal mark; lib/label.js reads the numbers.
@@ -35,6 +36,7 @@ const EMPTY = Object.fromEntries(FIELDS.map(([field]) => [field, '']));
 // ("Save anyway") before the food is saved.
 export default function LabelForm({ code, onSaved, onCancel }) {
   const { t } = useI18n();
+  const units = useUnits();
   const [values, setValues] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   // null, 'confirmEnergy' (the calories need a second press), 'saving' or 'error'
@@ -59,7 +61,7 @@ export default function LabelForm({ code, onSaved, onCancel }) {
 
   function submit(event) {
     event.preventDefault();
-    const outcome = parseLabelForm(values);
+    const outcome = parseLabelForm(values, units.units);
     if (!outcome.ok) {
       setErrors(outcome.errors);
       setStatus(null);
@@ -78,7 +80,7 @@ export default function LabelForm({ code, onSaved, onCancel }) {
   }
 
   function saveAnyway() {
-    const outcome = parseLabelForm(values);
+    const outcome = parseLabelForm(values, units.units);
     if (!outcome.ok) {
       setErrors(outcome.errors);
       setStatus(null);
@@ -99,7 +101,7 @@ export default function LabelForm({ code, onSaved, onCancel }) {
         const id = `label-${field}`;
         return (
           <div key={field}>
-            <label htmlFor={id}>{t(labelKey)}</label>
+            <label htmlFor={id}>{t(labelKey, { unit: units.massUnit })}</label>
             <input
               id={id}
               type="text"

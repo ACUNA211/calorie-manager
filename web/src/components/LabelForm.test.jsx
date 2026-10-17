@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import LabelForm from './LabelForm.jsx';
 import { supabase } from '../lib/supabase.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({
   supabase: { rpc: vi.fn() },
@@ -15,7 +15,7 @@ function renderForm(props = {}) {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
   render(<LabelForm code={CODE} onSaved={onSaved} onCancel={onCancel} {...props} />, {
-    wrapper: I18nProvider,
+    wrapper: MetricProvider,
   });
   return { onSaved, onCancel };
 }

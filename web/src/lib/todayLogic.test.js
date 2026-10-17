@@ -440,7 +440,7 @@ describe('amountToGrams', () => {
   });
 
   it('refuses empty, negative, zero and non-numeric amounts', () => {
-    for (const amount of ['', '  ', '0', '-5', 'abc', '1,5', '2e3']) {
+    for (const amount of ['', '  ', '0', '-5', 'abc', '2e3']) {
       expect(amountToGrams({ amount, unit: 'grams' })).toEqual({
         ok: false,
         error: 'today.log.errors.amount',

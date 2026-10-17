@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import PantryPage from './PantryPage.jsx';
 import { supabase } from '../lib/supabase.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }));
 
@@ -83,7 +83,7 @@ const carrot = {
 };
 
 function renderScreen() {
-  return render(<PantryPage />, { wrapper: I18nProvider });
+  return render(<PantryPage />, { wrapper: MetricProvider });
 }
 
 describe('PantryPage', () => {
@@ -127,7 +127,7 @@ describe('PantryPage', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search foods to add' }), 'rice');
     await userEvent.click(screen.getByRole('button', { name: 'Search' }));
     await screen.findByRole('heading', { name: 'Rice, white' });
-    await userEvent.type(screen.getByRole('textbox', { name: 'Grams of Rice, white' }), '50');
+    await userEvent.type(screen.getByRole('textbox', { name: 'Amount of Rice, white (g)' }), '50');
     await userEvent.click(screen.getByRole('button', { name: 'Add Rice, white' }));
 
     expect(supabase.rpc).toHaveBeenCalledWith('pantry_add', { p_food_id: 5, p_grams: 50 });
@@ -144,10 +144,13 @@ describe('PantryPage', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search foods to add' }), 'rice');
     await userEvent.click(screen.getByRole('button', { name: 'Search' }));
     await screen.findByRole('heading', { name: 'Rice, white' });
-    await userEvent.type(screen.getByRole('textbox', { name: 'Grams of Rice, white' }), 'lots');
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Amount of Rice, white (g)' }),
+      'lots'
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Add Rice, white' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Use a number of grams/);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Type an amount, such as 150/);
     expect(supabase.rpc).not.toHaveBeenCalledWith('pantry_add', expect.anything());
   });
 
@@ -188,7 +191,7 @@ describe('PantryPage', () => {
     await screen.findByText('Carrot');
 
     await userEvent.type(
-      screen.getByRole('textbox', { name: 'Type the grams of Carrot left' }),
+      screen.getByRole('textbox', { name: 'Type the amount of Carrot left (g)' }),
       '62,5'
     );
     await userEvent.click(screen.getByRole('button', { name: 'Set amount' }));

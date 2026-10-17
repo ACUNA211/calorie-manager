@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { canContinue, rowNeedsCheck } from '../lib/pasteRecipe.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // The review of a pasted Recipe: the header fields, and one row per ingredient with its
 // match, a way to pick another food, and the grams. Rows that need a look are flagged.
@@ -92,6 +93,7 @@ export default function PasteRecipeReview({
 // One ingredient line. The search box keeps its own text until the Member searches.
 function PasteRow({ row, onFood, onGrams, onRemove, onSearch }) {
   const { t, formatNumber } = useI18n();
+  const units = useUnits();
   const ids = useId();
   const [query, setQuery] = useState(row.query);
   const needsCheck = rowNeedsCheck(row);
@@ -155,7 +157,7 @@ function PasteRow({ row, onFood, onGrams, onRemove, onSearch }) {
 
       <div>
         <label htmlFor={`${ids}-grams`}>
-          {t('recipes.ingredients.gramsLabel', { name: row.name })}
+          {t('recipes.ingredients.gramsLabel', { name: row.name, unit: units.massUnit })}
         </label>{' '}
         <input
           id={`${ids}-grams`}
@@ -172,7 +174,13 @@ function PasteRow({ row, onFood, onGrams, onRemove, onSearch }) {
         {t('recipes.paste.remove', { name: row.name })}
       </button>
       {row.food && row.food.kcalPer100g != null && (
-        <span> {t('recipes.paste.kcalPer100g', { kcal: formatNumber(row.food.kcalPer100g) })}</span>
+        <span>
+          {' '}
+          {t('recipes.paste.kcalPerBasis', {
+            kcal: formatNumber(units.perBasis(row.food.kcalPer100g), { maximumFractionDigits: 0 }),
+            basis: units.basisLabel,
+          })}
+        </span>
       )}
     </li>
   );

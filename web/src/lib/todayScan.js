@@ -9,6 +9,7 @@
 
 import { addToPantry, loadFoodPackage, setPackageGrams, takeFromPantry } from './pantry.js';
 import { packageGrams, validateAddAmount } from './pantryLogic.js';
+import { toInputMass } from './units.js';
 import { insertEntry, deleteEntry } from './today.js';
 import {
   amountToGrams,
@@ -29,18 +30,28 @@ export function canActOnScan(outcome) {
 
 // The amount the Eaten picker starts at: one serving when the food has a serving size,
 // otherwise 100 g.
-export function defaultEatenAmount(food) {
+export function defaultEatenAmount(food, units = 'metric') {
   if (food.servingGrams > 0) return { amount: '1', unit: 'servings' };
-  return { amount: '100', unit: 'grams' };
+  return { amount: toInputMass(100, units), unit: 'grams' };
 }
 
 // The Calorie Log row for Eaten, or the first problem as a translation key. Uses the same
 // checks as Log food: a day that can take entries, an amount within limits and a known
 // calorie figure for the food.
-export function eatenRow({ memberId, logDate, todayKey, food, amount, unit, mealChoice, now }) {
-  const problem = logProblem({ food, amount, unit, logDate, todayKey });
+export function eatenRow({
+  memberId,
+  logDate,
+  todayKey,
+  food,
+  amount,
+  unit,
+  mealChoice,
+  now,
+  units = 'metric',
+}) {
+  const problem = logProblem({ food, amount, unit, logDate, todayKey, units });
   if (problem) return { ok: false, error: problem, max: MAX_LOG_GRAMS };
-  const parsed = amountToGrams({ amount, unit, servingGrams: food.servingGrams });
+  const parsed = amountToGrams({ amount, unit, servingGrams: food.servingGrams, units });
   const nutrition = entryNutrition(food, parsed.grams);
   const mealTimeId = mealChoice == null || mealChoice === OTHER_TIME ? null : Number(mealChoice);
   const row = buildLogRow({
@@ -100,8 +111,8 @@ export async function addOnePackage(client, foodId, grams) {
 
 // Remembers a typed package weight on the food, then adds one package at that weight.
 // A typed weight that fails validation is returned as a translation key, nothing is saved.
-export async function addPackageWithWeight(client, foodId, text) {
-  const parsed = validateAddAmount(text);
+export async function addPackageWithWeight(client, foodId, text, units = 'metric') {
+  const parsed = validateAddAmount(text, units);
   if (!parsed.ok) return { ok: false, error: parsed.error };
   await setPackageGrams(client, foodId, parsed.value);
   await addOnePackage(client, foodId, parsed.value);

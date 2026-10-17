@@ -5,6 +5,7 @@ import BarcodeTest from './components/BarcodeTest.jsx';
 import InstallHint from './components/InstallHint.jsx';
 import { I18nProvider } from './i18n/I18nProvider.jsx';
 import { ActingMemberProvider } from './lib/actingMember.jsx';
+import { UnitsProvider } from './lib/useUnits.jsx';
 import { registerServiceWorker } from './lib/registerServiceWorker.js';
 import { wantsBarcodeTest } from './lib/barcodeTestRoute.js';
 
@@ -16,7 +17,9 @@ const screen = wantsBarcodeTest(window.location) ? (
 ) : (
   <I18nProvider>
     <ActingMemberProvider>
-      <App />
+      <UnitsProvider>
+        <App />
+      </UnitsProvider>
     </ActingMemberProvider>
     <InstallHint />
   </I18nProvider>

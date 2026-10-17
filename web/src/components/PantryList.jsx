@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase.js';
 import { correctPantryItem } from '../lib/pantry.js';
 import { parseGrams } from '../lib/pantryLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
-import { formatNumber } from '../i18n/format.js';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // The Pantry grouped by store section. Each item can be corrected: used up, about half,
 // or a typed amount.
@@ -26,7 +26,8 @@ export default function PantryList({ groups, onChanged }) {
 }
 
 function PantryRow({ item, onChanged }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const units = useUnits();
   const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -46,7 +47,7 @@ function PantryRow({ item, onChanged }) {
 
   function handleSet(event) {
     event.preventDefault();
-    const parsed = parseGrams(typed);
+    const parsed = parseGrams(typed, units.units);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -59,11 +60,7 @@ function PantryRow({ item, onChanged }) {
       <p>
         <strong>{item.name}</strong>
         {item.brand ? ` · ${item.brand}` : ''}{' '}
-        <span>
-          {t('pantry.grams', {
-            value: formatNumber(item.grams, locale, { maximumFractionDigits: 1 }),
-          })}
-        </span>
+        <span>{t('pantry.grams', { value: units.formatMass(item.grams) })}</span>
       </p>
       <button type="button" disabled={busy} onClick={() => correct('used_up')}>
         {t('pantry.correct.usedUp')}
@@ -73,7 +70,7 @@ function PantryRow({ item, onChanged }) {
       </button>
       <form onSubmit={handleSet}>
         <label>
-          {t('pantry.correct.setLabel', { name: item.name })}
+          {t('pantry.correct.setLabel', { name: item.name, unit: units.massUnit })}
           <input
             type="text"
             inputMode="decimal"

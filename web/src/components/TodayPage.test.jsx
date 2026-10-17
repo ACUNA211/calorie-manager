@@ -15,7 +15,7 @@ import {
 } from '../lib/today.js';
 import { searchFoods } from '../lib/foods.js';
 import { addDays, dateKey } from '../lib/todayLogic.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/actingMember.jsx', () => ({ useActingMember: vi.fn() }));
@@ -70,7 +70,7 @@ const tomorrow = addDays(today, 1);
 
 function renderPage(actingMemberId = 4) {
   useActingMember.mockReturnValue({ actingMemberId, actingName: 'Alice' });
-  return render(<TodayPage />, { wrapper: I18nProvider });
+  return render(<TodayPage />, { wrapper: MetricProvider });
 }
 
 describe('TodayPage', () => {

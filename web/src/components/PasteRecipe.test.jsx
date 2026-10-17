@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PasteRecipe from './PasteRecipe.jsx';
 import { supabase } from '../lib/supabase.js';
 import { saveUsdaFood, searchFoods } from '../lib/foods.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 import recorded from '../test/recorded/paste-recipe-chili.json';
 
 vi.mock('../lib/supabase.js', () => ({
@@ -108,7 +108,7 @@ const rawFoods = [
 
 function renderPaste(props = {}) {
   const handlers = { onDone: vi.fn(), onManual: vi.fn(), onCancel: vi.fn(), ...props };
-  render(<PasteRecipe {...handlers} />, { wrapper: I18nProvider });
+  render(<PasteRecipe {...handlers} />, { wrapper: MetricProvider });
   return handlers;
 }
 
@@ -209,7 +209,7 @@ describe('Paste a Recipe', () => {
     await user.click(screen.getByRole('button', { name: 'Remove cumin' }));
     await user.click(screen.getByRole('button', { name: 'Remove salt' }));
 
-    const grams = screen.getByLabelText('Grams of eggs');
+    const grams = screen.getByLabelText('Amount of eggs (g)');
     await user.clear(grams);
     await user.type(grams, '90');
     expect(grams).toHaveValue('90');

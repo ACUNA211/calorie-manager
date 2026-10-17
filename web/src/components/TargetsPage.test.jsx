@@ -6,7 +6,7 @@ import LoggingForSwitch from './LoggingForSwitch.jsx';
 import { ActingMemberProvider } from '../lib/actingMember.jsx';
 import { loadHousehold } from '../lib/households.js';
 import { supabase } from '../lib/supabase.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({
   supabase: {
@@ -63,7 +63,7 @@ const storedRow = {
 };
 
 function renderScreen(props = {}) {
-  return render(<TargetsPage user={user} {...props} />, { wrapper: I18nProvider });
+  return render(<TargetsPage user={user} {...props} />, { wrapper: MetricProvider });
 }
 
 describe('TargetsPage', () => {
@@ -215,12 +215,12 @@ describe('TargetsPage', () => {
     const { upsert } = fakeClient({ settingsRow: storedRow, memberRow: { id: 5 } });
 
     render(
-      <I18nProvider>
+      <MetricProvider>
         <ActingMemberProvider>
           <LoggingForSwitch />
           <TargetsPage user={user} />
         </ActingMemberProvider>
-      </I18nProvider>
+      </MetricProvider>
     );
 
     await screen.findByRole('heading', { name: 'Targets' });

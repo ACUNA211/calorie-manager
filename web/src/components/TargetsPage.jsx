@@ -12,12 +12,15 @@ import {
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
 import { useActingMember } from '../lib/actingMember.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
+import UnitsSetting from './UnitsSetting.jsx';
 
 // Targets for one Member: the Member being acted as ("logging for", see actingMember.jsx).
 // A memberId prop overrides that; without either, the signed-in person's own Member is used.
 export default function TargetsPage({ user, memberId }) {
   const { t, locale } = useI18n();
   const { actingMemberId, actingName, actingIsDependent } = useActingMember();
+  const units = useUnits();
   const targetMemberId = memberId ?? actingMemberId;
   // The state records which request it answers, so a new user or Member shows the
   // loading line until its own Targets arrive, without resetting state inside the effect.
@@ -37,7 +40,7 @@ export default function TargetsPage({ user, memberId }) {
         if (id === null || id === undefined) throw new Error('no Member');
         const row = await loadTargets(supabase, id);
         if (!active) return;
-        setForm(rowToForm(row));
+        setForm(rowToForm(row, units.units));
         setErrors({});
         setNotice(null);
         setLoaded({ key: requestKey, status: 'ready', memberId: id });
@@ -49,7 +52,7 @@ export default function TargetsPage({ user, memberId }) {
     return () => {
       active = false;
     };
-  }, [user.id, targetMemberId, requestKey]);
+  }, [user.id, targetMemberId, requestKey, units.units]);
 
   const state = loaded.key === requestKey ? loaded : { status: 'loading', memberId: null };
 
@@ -62,7 +65,7 @@ export default function TargetsPage({ user, memberId }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setNotice(null);
-    const result = validateTargets(form);
+    const result = validateTargets(form, units.units);
     setErrors(result.errors);
     if (!result.ok) return;
 
@@ -83,7 +86,7 @@ export default function TargetsPage({ user, memberId }) {
   const aim = aimText();
 
   function aimText() {
-    const check = validateTargets(form);
+    const check = validateTargets(form, units.units);
     const calorieTarget = check.values.calorie_target;
     const aimOk = !check.errors.calorieTarget && !check.errors.bandLow && !check.errors.bandHigh;
     if (!aimOk) return t('targets.aimInvalid');
@@ -105,7 +108,7 @@ export default function TargetsPage({ user, memberId }) {
     return (
       <div>
         <label>
-          {t(labelKey)}
+          {t(labelKey, { unit: units.massUnit })}
           <input
             type="text"
             inputMode="numeric"
@@ -127,6 +130,7 @@ export default function TargetsPage({ user, memberId }) {
   return (
     <section aria-labelledby="targets-heading">
       <h2 id="targets-heading">{t('targets.heading')}</h2>
+      <UnitsSetting />
       {actingIsDependent && !memberId && <p>{t('targets.forDependent', { name: actingName })}</p>}
       <p>{t('targets.clearHint')}</p>
       <form onSubmit={handleSubmit} noValidate>
@@ -134,12 +138,12 @@ export default function TargetsPage({ user, memberId }) {
         <p>{aim}</p>
         {field('proteinFloor', 'targets.proteinFloorLabel')}
         <fieldset>
-          <legend>{t('targets.carbsLegend')}</legend>
+          <legend>{t('targets.carbsLegend', { unit: units.massUnit })}</legend>
           {field('carbLow', 'targets.carbLowLabel')}
           {field('carbHigh', 'targets.carbHighLabel')}
         </fieldset>
         <fieldset>
-          <legend>{t('targets.fatLegend')}</legend>
+          <legend>{t('targets.fatLegend', { unit: units.massUnit })}</legend>
           {field('fatLow', 'targets.fatLowLabel')}
           {field('fatHigh', 'targets.fatHighLabel')}
         </fieldset>

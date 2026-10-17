@@ -8,6 +8,7 @@ import {
   emptyRecipeDraft,
   loadMealTimeOptions,
   parseAmount,
+  parseGramsField,
   previewIngredients,
   removeIngredient,
   saveRecipe,
@@ -20,6 +21,7 @@ import { gramsPerServing, recipeTotals } from '../lib/recipeTotals.js';
 import RecipeIngredientsField from './RecipeIngredientsField.jsx';
 import RecipeTotals from './RecipeTotals.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // Creates a Recipe (recipe = null) or edits one. initialDraft opens a new Recipe on a draft
 // (a pasted Recipe, not yet saved). onClose(changed) runs after a save, a delete or a copy
@@ -31,10 +33,11 @@ export default function RecipeEditor({
   originalName = null,
   onClose,
 }) {
-  const { t, formatNumber } = useI18n();
+  const { t } = useI18n();
+  const units = useUnits();
   const ids = useId();
   const [draft, setDraft] = useState(() => {
-    if (recipe) return draftFromRecipe(recipe);
+    if (recipe) return draftFromRecipe(recipe, units.units);
     return initialDraft ?? emptyRecipeDraft();
   });
   const [errors, setErrors] = useState({});
@@ -68,13 +71,16 @@ export default function RecipeEditor({
   }
 
   const servings = parseAmount(draft.servings).value;
-  const cooked = parseAmount(draft.cookedWeight).value;
-  const totals = recipeTotals({ servings, ingredients: previewIngredients(draft) });
+  const cooked = parseGramsField(draft.cookedWeight, units.units, draft.storedCookedWeight).value;
+  const totals = recipeTotals({
+    servings,
+    ingredients: previewIngredients(draft, units.units),
+  });
   const perServingGrams = gramsPerServing(cooked, servings);
 
   async function handleSave(event) {
     event.preventDefault();
-    const result = validateRecipe(draft);
+    const result = validateRecipe(draft, units.units);
     setErrors(result.errors);
     setNotice('');
     if (!result.ok) return;
@@ -172,7 +178,9 @@ export default function RecipeEditor({
         </div>
 
         <div>
-          <label htmlFor={fieldId('cooked')}>{t('recipes.fields.cookedWeight')}</label>
+          <label htmlFor={fieldId('cooked')}>
+            {t('recipes.fields.cookedWeight', { unit: units.massUnit })}
+          </label>
           <input
             id={fieldId('cooked')}
             type="text"
@@ -186,7 +194,7 @@ export default function RecipeEditor({
             {perServingGrams === null
               ? t('recipes.hints.cookedWeight')
               : t('recipes.hints.gramsPerServing', {
-                  grams: formatNumber(perServingGrams, { maximumFractionDigits: 0 }),
+                  grams: units.formatMass(perServingGrams),
                 })}
           </p>
           {errors.cookedWeight && (

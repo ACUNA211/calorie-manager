@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import PantryScan from './PantryScan.jsx';
 import { supabase } from '../lib/supabase.js';
 import { createBarcodeDetector } from '../lib/barcodeDetector.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }));
 // The camera and the reader are mocked: the real ones need a phone camera and a WebAssembly file.
@@ -119,7 +119,7 @@ function fakeBackend({
 const addCalls = (state) => state.calls.filter(([name]) => name === 'pantry_add');
 
 function renderScan(onAdded = vi.fn()) {
-  render(<PantryScan onAdded={onAdded} />, { wrapper: I18nProvider });
+  render(<PantryScan onAdded={onAdded} />, { wrapper: MetricProvider });
   return onAdded;
 }
 
@@ -171,13 +171,13 @@ describe('PantryScan (ticket #26)', () => {
     await user.click(screen.getByRole('button', { name: 'Scan a package' }));
     expect(
       await screen.findByText(
-        'How many grams does one package of Oat flakes weigh? The app remembers it for next time.'
+        'How much does one package of Oat flakes weigh? The app remembers it for next time.'
       )
     ).toBeInTheDocument();
     expect(addCalls(backend)).toEqual([]);
 
     await user.type(
-      screen.getByRole('textbox', { name: 'Grams in one package of Oat flakes' }),
+      screen.getByRole('textbox', { name: 'Weight of one package of Oat flakes (g)' }),
       '450'
     );
     await user.click(screen.getByRole('button', { name: 'Save weight and add' }));
@@ -192,7 +192,7 @@ describe('PantryScan (ticket #26)', () => {
     await user.click(screen.getByRole('button', { name: 'Scan another package' }));
     await waitFor(() => expect(addCalls(backend)).toHaveLength(2));
     expect(
-      screen.queryByRole('textbox', { name: 'Grams in one package of Oat flakes' })
+      screen.queryByRole('textbox', { name: 'Weight of one package of Oat flakes (g)' })
     ).toBeNull();
     expect(backend.calls.filter(([name]) => name === 'set_package_grams')).toHaveLength(1);
   });
@@ -208,11 +208,13 @@ describe('PantryScan (ticket #26)', () => {
     fakeCamera();
     await user.click(screen.getByRole('button', { name: 'Scan a package' }));
     await user.type(
-      await screen.findByRole('textbox', { name: 'Grams in one package of Oat flakes' }),
+      await screen.findByRole('textbox', { name: 'Weight of one package of Oat flakes (g)' }),
       'lots'
     );
     await user.click(screen.getByRole('button', { name: 'Save weight and add' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Use a number of grams');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Type an amount, such as 150 or 5.5. You can add a unit name: g, kg, oz or lb.'
+    );
     expect(backend.calls.filter(([name]) => name === 'set_package_grams')).toHaveLength(0);
     expect(addCalls(backend)).toEqual([]);
   });

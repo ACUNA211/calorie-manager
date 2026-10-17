@@ -4,6 +4,7 @@
 // The Planning band comes from targets.js and the Meal Time clock rules from mealTimesLogic.js.
 
 import { scaleToGrams } from './foods.js';
+import { parseMass, parseMassKeeping, toInputMass } from './units.js';
 import { bandCalories, DEFAULT_BAND } from './targets.js';
 import { minutesOf } from './mealTimesLogic.js';
 
@@ -226,21 +227,26 @@ export function macroBar(totals, targets) {
 // ---- Logging ---------------------------------------------------------------------------
 
 // Turns the amount typed on the form into grams. In servings it needs the food's serving size.
-// Returns { ok, grams, servings } (servings null for grams) or { ok: false, error }.
-export function amountToGrams({ amount, unit, servingGrams }) {
+// In grams the text is read in the Member's units (oz in US, see units.js); `units` defaults to
+// metric so callers that pass grams keep their meaning. Returns { ok, grams, servings }
+// (servings null for grams) or { ok: false, error }.
+export function amountToGrams({ amount, unit, servingGrams, units = 'metric' }) {
   const text = String(amount ?? '').trim();
-  if (!/^\d+(\.\d+)?$/.test(text) || Number(text) <= 0) {
-    return { ok: false, error: 'today.log.errors.amount' };
-  }
-  const value = Number(text);
-  let grams = value;
+  let grams;
   let servings = null;
   if (unit === 'servings') {
+    if (!/^\d+(\.\d+)?$/.test(text) || Number(text) <= 0) {
+      return { ok: false, error: 'today.log.errors.amount' };
+    }
     if (!(Number(servingGrams) > 0)) {
       return { ok: false, error: 'today.log.errors.servingUnknown' };
     }
-    servings = value;
-    grams = value * Number(servingGrams);
+    servings = Number(text);
+    grams = servings * Number(servingGrams);
+  } else {
+    const parsed = parseMass(text, units);
+    if (!parsed.ok) return { ok: false, error: 'today.log.errors.amount' };
+    grams = parsed.grams;
   }
   grams = Math.round(grams * 10) / 10;
   if (grams <= 0) return { ok: false, error: 'today.log.errors.amount' };
@@ -290,10 +296,10 @@ export function buildLogRow({
 
 // Checks what the log form needs before saving. Returns the first problem as a translation
 // key, or null when the entry can be logged.
-export function logProblem({ food, amount, unit, logDate, todayKey }) {
+export function logProblem({ food, amount, unit, logDate, todayKey, units = 'metric' }) {
   if (!food) return 'today.log.errors.food';
   if (isFutureDay(logDate, todayKey)) return 'today.log.errors.futureDay';
-  const parsed = amountToGrams({ amount, unit, servingGrams: food.servingGrams });
+  const parsed = amountToGrams({ amount, unit, servingGrams: food.servingGrams, units });
   if (!parsed.ok) return parsed.error;
   if (entryNutrition(food, parsed.grams).kcal == null) return 'today.log.errors.noKcal';
   return null;
@@ -315,13 +321,13 @@ export function sortEntries(entries) {
 
 // How an existing entry is shown in the edit form: in servings when it has them, else grams.
 // The serving size is worked out from the entry (grams divided by servings).
-export function entryUnits(entry) {
+export function entryUnits(entry, units = 'metric') {
   const grams = Number(entry.grams);
   const servings = entry.servings == null ? null : Number(entry.servings);
   if (servings > 0 && grams > 0) {
     return { unit: 'servings', amount: String(servings), servingGrams: grams / servings };
   }
-  return { unit: 'grams', amount: String(entry.grams ?? ''), servingGrams: null };
+  return { unit: 'grams', amount: toInputMass(entry.grams, units), servingGrams: null };
 }
 
 // The calories and macros of an entry at a new weight. The entry's own figures per gram are
@@ -341,10 +347,19 @@ export function rescaleNutrition(entry, grams) {
 // another time. Moving to a Meal Time clears the clock time; moving to another time keeps the
 // entry's own clock time, or uses `nowTime` when it had none. Returns { ok, patch, changed }
 // or { ok: false, error } with a translation key.
-export function editEntryPatch({ entry, amount, unit, mealChoice, nowTime }) {
+export function editEntryPatch({ entry, amount, unit, mealChoice, nowTime, units = 'metric' }) {
   if (!(Number(entry.grams) > 0)) return { ok: false, error: 'today.edit.errors.noGrams' };
-  const parsed = amountToGrams({ amount, unit, servingGrams: entryUnits(entry).servingGrams });
-  if (!parsed.ok) return { ok: false, error: parsed.error };
+  let parsed;
+  if (unit === 'grams') {
+    // Text still as shown keeps the stored grams (no drift from rounding oz for display).
+    const kept = parseMassKeeping(amount, units, entry.grams);
+    if (!kept.ok) return { ok: false, error: 'today.log.errors.amount' };
+    parsed = { ok: true, grams: Math.round(kept.grams * 10) / 10, servings: null };
+    if (parsed.grams > MAX_LOG_GRAMS) return { ok: false, error: 'today.log.errors.tooLarge' };
+  } else {
+    parsed = amountToGrams({ amount, unit, servingGrams: entryUnits(entry).servingGrams, units });
+    if (!parsed.ok) return { ok: false, error: parsed.error };
+  }
 
   const mealTimeId = mealChoice === OTHER_TIME ? null : Number(mealChoice);
   const logTime = mealTimeId == null ? (entry.log_time ?? nowTime) : null;

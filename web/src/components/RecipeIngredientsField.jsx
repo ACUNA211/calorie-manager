@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { searchFoods } from '../lib/recipes.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 const SEARCH_DELAY_MS = 250;
 
@@ -9,6 +10,7 @@ const SEARCH_DELAY_MS = 250;
 // Amounts are typed in grams. The parent owns the draft; this component only reports edits.
 export default function RecipeIngredientsField({ ingredients, errors, onAdd, onRemove, onGrams }) {
   const { t } = useI18n();
+  const units = useUnits();
   const searchId = useId();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -48,7 +50,9 @@ export default function RecipeIngredientsField({ ingredients, errors, onAdd, onR
           const gramsId = `${searchId}-grams-${item.key}`;
           return (
             <li key={item.key}>
-              <label htmlFor={gramsId}>{t('recipes.ingredients.gramsLabel', { name })}</label>{' '}
+              <label htmlFor={gramsId}>
+                {t('recipes.ingredients.gramsLabel', { name, unit: units.massUnit })}
+              </label>{' '}
               <input
                 id={gramsId}
                 type="text"

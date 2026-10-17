@@ -12,6 +12,7 @@ import {
 } from '../lib/weightLogic.js';
 import { parseDateKey } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 import WeightTrend from './WeightTrend.jsx';
 
 const CHART = { width: 320, height: 140, pad: 12 };
@@ -21,7 +22,8 @@ const LOADING = { key: null, status: 'loading', entries: [] };
 // the week on screen, a form to log a weight for a day, and the entries in that span, each
 // with Edit and Delete. One weight per day: logging a day again replaces it.
 export default function WeightPanel({ memberId, weekStart, todayKey }) {
-  const { t, formatDate, formatNumber } = useI18n();
+  const { t, formatDate } = useI18n();
+  const units = useUnits();
   const { startKey, endKey, fetchFromKey } = trendWindow(weekStart);
   const [version, setVersion] = useState(0);
   const [loaded, setLoaded] = useState(LOADING);
@@ -52,12 +54,16 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
   const trend = view.status === 'ready' ? buildTrend(view.entries, startKey, endKey) : null;
   const layout = trend ? trendLayout(trend, CHART) : null;
   const listed = trend ? [...trend.entries].reverse() : [];
-  const bounds = { min: MIN_KG, max: MAX_KG };
-  const number = (value) => formatNumber(value, { maximumFractionDigits: 1 });
+  const bounds = { min: units.formatWeight(MIN_KG), max: units.formatWeight(MAX_KG) };
 
   async function handleSave(event) {
     event.preventDefault();
-    const check = checkWeightEntry({ date: form.date, weight: form.weight, todayKey });
+    const check = checkWeightEntry({
+      date: form.date,
+      weight: form.weight,
+      todayKey,
+      units: units.units,
+    });
     if (!check.ok) {
       setForm((current) => ({ ...current, error: { key: check.error } }));
       setNotice(null);
@@ -77,7 +83,7 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
   }
 
   async function handleSaveEdit(entry) {
-    const parsed = parseWeight(editing.weight);
+    const parsed = parseWeight(editing.weight, units.units);
     if (!parsed.ok) {
       setEditing((current) => ({ ...current, error: parsed.error }));
       return;
@@ -130,7 +136,7 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
           />
         </label>
         <label>
-          {t('weight.weightLabel')}{' '}
+          {t('weight.weightLabel', { unit: units.weightUnit })}{' '}
           <input
             type="text"
             inputMode="decimal"
@@ -167,7 +173,7 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
                   <li key={entry.id}>
                     <span>{date} </span>
                     <label>
-                      {t('weight.weightLabel')}{' '}
+                      {t('weight.weightLabel', { unit: units.weightUnit })}{' '}
                       <input
                         type="text"
                         inputMode="decimal"
@@ -193,13 +199,17 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
               }
               return (
                 <li key={entry.id}>
-                  <span>{t('weight.entry', { date, kg: number(entry.kg) })} </span>
+                  <span>{t('weight.entry', { date, kg: units.formatWeight(entry.kg) })} </span>
                   <button
                     type="button"
                     aria-label={t('weight.editAria', { date })}
                     disabled={busy}
                     onClick={() =>
-                      setEditing({ id: entry.id, weight: String(entry.kg), error: null })
+                      setEditing({
+                        id: entry.id,
+                        weight: units.toInputWeight(entry.kg),
+                        error: null,
+                      })
                     }
                   >
                     {t('weight.edit')}

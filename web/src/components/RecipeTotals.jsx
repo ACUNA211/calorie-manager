@@ -1,10 +1,12 @@
 import { MACRO_KEYS } from '../lib/recipeTotals.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // Per-serving calories and macros for a Recipe, from recipeTotals(). A value that is null
 // is unknown (a food lacks it), and is shown as such rather than as zero.
 export default function RecipeTotals({ totals, hasIngredients }) {
   const { t, formatNumber } = useI18n();
+  const units = useUnits();
 
   if (!hasIngredients) {
     return (
@@ -19,11 +21,14 @@ export default function RecipeTotals({ totals, hasIngredients }) {
   const rows = MACRO_KEYS.map((key) => {
     const macro = totals.macros[key];
     const value = macro ? macro.perServing : null;
-    const unit = key === 'sodium' ? 'milligrams' : 'grams';
-    const text =
-      value === null
-        ? t('recipes.unknown')
-        : t(`recipes.totals.${unit}`, { value: formatNumber(value, { maximumFractionDigits: 1 }) });
+    // Sodium is in milligrams; the macros are grams, shown in the Member's units.
+    let text;
+    if (value === null) text = t('recipes.unknown');
+    else if (key === 'sodium') {
+      text = t('recipes.totals.milligrams', {
+        value: formatNumber(value, { maximumFractionDigits: 1 }),
+      });
+    } else text = t('recipes.totals.grams', { value: units.formatMass(value) });
     return { key, text, unknown: value === null };
   });
 
@@ -51,7 +56,7 @@ export default function RecipeTotals({ totals, hasIngredients }) {
       {rows.some((row) => row.unknown) && <p>{t('recipes.totals.unknownHint')}</p>}
       <p>
         {t('recipes.totals.weight', {
-          grams: formatNumber(totals.totalGrams, { maximumFractionDigits: 0 }),
+          grams: units.formatMass(totals.totalGrams),
         })}
       </p>
     </section>

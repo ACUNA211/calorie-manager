@@ -7,6 +7,7 @@
 // value (fibre, sugars, sodium) is null, never 0.
 
 import { gtinForms, isValidGtin } from './gtin.js';
+import { ouncesToGrams } from './units.js';
 
 export const SAVE_LABEL_FUNCTION = 'save_label_food';
 
@@ -37,6 +38,8 @@ export const LABEL_FIELDS = [
 ];
 export const REQUIRED_FIELDS = ['name', 'servingGrams', 'kcal', 'protein', 'carbs', 'fat'];
 const MACRO_FIELDS = ['protein', 'carbs', 'fat', 'fibre', 'sugars'];
+// The fields typed in grams on a label. In US units they are typed in ounces and stored in grams.
+const MASS_FIELDS = ['servingGrams', 'protein', 'carbs', 'fat', 'fibre', 'sugars'];
 
 const round1 = (value) => Math.round(value * 10) / 10;
 
@@ -78,7 +81,7 @@ const inRange = (value, { min, max }) => value >= min && value <= max;
 //     values), per100g (converted) and energyWarning (the energyCheck result when it fails,
 //     else null), or
 //   { ok: false, errors } where errors maps a field name to a message key.
-export function parseLabelForm(form) {
+export function parseLabelForm(form, units = 'metric') {
   const errors = {};
   const values = {};
   for (const field of LABEL_FIELDS) {
@@ -87,6 +90,13 @@ export function parseLabelForm(form) {
       values[field] = String(raw ?? '').trim();
     } else {
       values[field] = parseAmount(raw);
+    }
+  }
+  if (units === 'us') {
+    for (const field of MASS_FIELDS) {
+      if (typeof values[field] === 'number' && !Number.isNaN(values[field])) {
+        values[field] = round1(ouncesToGrams(values[field]));
+      }
     }
   }
 

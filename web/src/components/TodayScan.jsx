@@ -20,6 +20,7 @@ import {
   packageToAdd,
 } from '../lib/todayScan.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 import ScanPanel from './ScanPanel.jsx';
 
 // Scan on Today (ticket #27). A scanned food is shown with two buttons: Add to Pantry adds one
@@ -41,6 +42,7 @@ export default function TodayScan({
   onEaten,
 }) {
   const { t, formatNumber } = useI18n();
+  const units = useUnits();
   const number = (value, digits = 0) => formatNumber(value, { maximumFractionDigits: digits });
   const [scan, setScan] = useState(null);
   const [amount, setAmount] = useState('1');
@@ -70,7 +72,7 @@ export default function TodayScan({
 
   // Shows a found food with the Eaten picker set to one serving and the nearest Meal Time.
   function showFood(food, code) {
-    const start = defaultEatenAmount(food);
+    const start = defaultEatenAmount(food, units.units);
     const nearest = defaultMealTimeId(meals, weekday, new Date());
     setAmount(start.amount);
     setUnit(start.unit);
@@ -132,7 +134,7 @@ export default function TodayScan({
       const grams = await addOnePackage(supabase, food.id, pkg.grams);
       setStatus({
         kind: 'ok',
-        text: t('today.scan.pantryAdded', { name: food.name, grams: number(grams, 1) }),
+        text: t('today.scan.pantryAdded', { name: food.name, grams: units.formatMass(grams) }),
       });
     } catch {
       if (token === run.current) setStatus({ kind: 'error', text: t('today.scan.pantryError') });
@@ -150,7 +152,7 @@ export default function TodayScan({
     const token = run.current;
     setBusy(true);
     try {
-      const saved = await addPackageWithWeight(supabase, food.id, weightText);
+      const saved = await addPackageWithWeight(supabase, food.id, weightText, units.units);
       if (token !== run.current) return;
       if (!saved.ok) {
         setWeightError(saved.error);
@@ -158,7 +160,10 @@ export default function TodayScan({
       }
       setStatus({
         kind: 'ok',
-        text: t('today.scan.pantryAdded', { name: food.name, grams: number(saved.grams, 1) }),
+        text: t('today.scan.pantryAdded', {
+          name: food.name,
+          grams: units.formatMass(saved.grams),
+        }),
       });
       setScan({ phase: 'found', code, food });
     } catch {
@@ -181,9 +186,10 @@ export default function TodayScan({
       unit,
       mealChoice,
       now: new Date(),
+      units: units.units,
     });
     if (!built.ok) {
-      setStatus({ kind: 'error', text: t(built.error, { max: MAX_LOG_GRAMS }) });
+      setStatus({ kind: 'error', text: t(built.error, { max: units.formatMass(MAX_LOG_GRAMS) }) });
       return;
     }
     const token = run.current;
@@ -215,7 +221,12 @@ export default function TodayScan({
 
   // A found food: its name, Add to Pantry, and the Eaten form (amount, unit, Meal Time).
   function renderFound(food) {
-    const parsed = amountToGrams({ amount, unit, servingGrams: food.servingGrams });
+    const parsed = amountToGrams({
+      amount,
+      unit,
+      servingGrams: food.servingGrams,
+      units: units.units,
+    });
     const nutrition = parsed.ok ? entryNutrition(food, parsed.grams) : null;
     return (
       <>
@@ -239,7 +250,7 @@ export default function TodayScan({
             <label>
               {t('today.log.unit')}{' '}
               <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-                <option value="grams">{t('today.log.unitGrams')}</option>
+                <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
                 <option value="servings">{t('today.log.unitServings')}</option>
               </select>
             </label>
@@ -315,7 +326,7 @@ export default function TodayScan({
         <form onSubmit={handleSaveWeight}>
           <p role="status">{t('today.scan.askWeight', { name: scan.food.name })}</p>
           <label>
-            {t('today.scan.weightLabel')}{' '}
+            {t('today.scan.weightLabel', { unit: units.massUnit })}{' '}
             <input
               type="text"
               inputMode="decimal"
