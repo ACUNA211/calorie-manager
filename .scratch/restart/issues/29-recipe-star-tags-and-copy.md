@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 28 (Recipes page), 69 (Run the database tests locally)
+**Blocked by:** 28 (Recipes page), 69 (Run the database tests locally), 80 (Decide: Recipe servings, save and delete rules)
 
 **Status:** done (awaiting DB test run)
 
