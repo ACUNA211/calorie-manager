@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 05 (Households and Members), 69 (Run the database tests locally)
+**Blocked by:** 05 (Households and Members), 69 (Run the database tests locally), 82 (Decide: does "logging for" survive a reload?)
 
 **Status:** done (awaiting DB test run)
 

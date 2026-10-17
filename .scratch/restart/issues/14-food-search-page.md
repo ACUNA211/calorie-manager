@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 13 (Macros in the Food Library), 04 (English/Spanish switch)
+**Blocked by:** 13 (Macros in the Food Library), 04 (English/Spanish switch), 81 (Decide: show macros on USDA search results?)
 
 **Status:** done (awaiting review)
 

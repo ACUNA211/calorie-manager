@@ -11,3 +11,5 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 - [ ] The old artifact, skills and barcode test page are removed or archived
 - [ ] No food uses the `estimated` source (migrated or removed)
 - [ ] CONTEXT.md and the README describe only the new app
+
+- 2026-10-17 (dispatcher): include `skills/plan-week-cal` and `skills/rebalance-cal`, which still read Meal Time range columns that migration 013 removed.
