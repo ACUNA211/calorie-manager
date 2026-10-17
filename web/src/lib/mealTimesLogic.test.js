@@ -4,10 +4,59 @@ import {
   draftToRow,
   findOverlaps,
   minutesOf,
+  needsCalories,
+  normalizeSharerIds,
   normalizeTime,
   targetsFromRow,
   validateMealTime,
 } from './mealTimesLogic.js';
+
+describe('sharers of a Meal Time', () => {
+  it('always includes the creator and the editing Member, sorted and without repeats', () => {
+    expect(normalizeSharerIds([9, 4, 9], 7, 4)).toEqual([4, 7, 9]);
+  });
+
+  it('keeps the creator and the editor when the list is empty', () => {
+    expect(normalizeSharerIds([], 4, 4)).toEqual([4]);
+    expect(normalizeSharerIds(undefined, 7, 4)).toEqual([4, 7]);
+  });
+
+  it('drops ids that are not numbers', () => {
+    expect(normalizeSharerIds([null, '9'], 4, 4)).toEqual([4, 9]);
+  });
+});
+
+describe('needsCalories', () => {
+  it('a Set Meal Time needs its one number', () => {
+    expect(needsCalories({ kind: 'set', set_calories: 300, cal_min: null, cal_max: null })).toBe(
+      false
+    );
+    expect(needsCalories({ kind: 'set', set_calories: null, cal_min: 400, cal_max: 600 })).toBe(
+      true
+    );
+  });
+
+  it('a Planned Meal Time needs both ends of its range', () => {
+    expect(needsCalories({ kind: 'planned', set_calories: null, cal_min: 400, cal_max: 600 })).toBe(
+      false
+    );
+    expect(
+      needsCalories({ kind: 'planned', set_calories: null, cal_min: null, cal_max: 600 })
+    ).toBe(true);
+    expect(needsCalories({ kind: 'planned', set_calories: 300, cal_min: 400, cal_max: null })).toBe(
+      true
+    );
+  });
+
+  it('an If room Meal Time needs only its maximum', () => {
+    expect(
+      needsCalories({ kind: 'if_room', set_calories: null, cal_min: null, cal_max: 300 })
+    ).toBe(false);
+    expect(
+      needsCalories({ kind: 'if_room', set_calories: null, cal_min: null, cal_max: null })
+    ).toBe(true);
+  });
+});
 
 const target = { calorie_target: 2000, band_low_pct: 90, band_high_pct: 100 };
 

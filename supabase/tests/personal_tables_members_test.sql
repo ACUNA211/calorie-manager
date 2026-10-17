@@ -35,10 +35,13 @@ insert into public.members (household_id, user_id, display_name, role)
 select set_config('test.kid_m', (select id::text from public.members where display_name = 'Kid'), true);
 
 -- Meal Times: one each for Alice, Kid and Bob
-insert into public.meal_times (member_id, name, time_of_day, kind, cal_min, cal_max) values
-  (current_setting('test.alice_m')::bigint, 'Breakfast', '07:30', 'planned', 250, 450),
-  (current_setting('test.kid_m')::bigint, 'Lunch', '12:00', 'planned', 400, 700),
-  (current_setting('test.bob_m')::bigint, 'Breakfast', '07:30', 'planned', 250, 450);
+insert into public.meal_times (member_id, name, time_of_day, kind) values
+  (current_setting('test.alice_m')::bigint, 'Breakfast', '07:30', 'planned'),
+  (current_setting('test.kid_m')::bigint, 'Lunch', '12:00', 'planned'),
+  (current_setting('test.bob_m')::bigint, 'Breakfast', '07:30', 'planned');
+-- Each Meal Time is shared only with its creator here (ticket 22 moved the range to this table)
+insert into public.meal_time_members (meal_time_id, member_id, cal_min, cal_max)
+  select id, member_id, 250, 450 from public.meal_times;
 select set_config('test.alice_mt', (select id::text from public.meal_times where member_id = current_setting('test.alice_m')::bigint), true);
 select set_config('test.kid_mt', (select id::text from public.meal_times where member_id = current_setting('test.kid_m')::bigint), true);
 select set_config('test.bob_mt', (select id::text from public.meal_times where member_id = current_setting('test.bob_m')::bigint), true);
@@ -148,8 +151,8 @@ select throws_ok(
   'a Member cannot have a second settings row'
 );
 select throws_ok(
-  $$insert into public.meal_times (name, time_of_day, kind, set_calories)
-    values ('No owner', '08:00', 'set', 300)$$,
+  $$insert into public.meal_times (name, time_of_day, kind)
+    values ('No owner', '08:00', 'set')$$,
   '23502',
   null,
   'a Meal Time must have a Member'

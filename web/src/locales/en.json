@@ -109,6 +109,7 @@
     "empty": "No Meal Times yet. Add your first one below.",
     "addButton": "Add a Meal Time",
     "saveError": "Could not save. Try again.",
+    "shared": "Shared with {{names}}",
     "targets": {
       "summary": "Calorie Target {{target}}. Aim {{low}}–{{high}}% of it.",
       "none": "No Calorie Target yet, so the day aims are not shown.",
@@ -133,7 +134,8 @@
     },
     "calories": {
       "set": "{{calories}} kcal",
-      "range": "{{min}}–{{max}} kcal"
+      "range": "{{min}}–{{max}} kcal",
+      "missing": "Needs calories for this kind"
     },
     "totals": {
       "range": "{{floor}}–{{ceiling}}",
@@ -164,7 +166,12 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "confirmDelete": "Delete {{name}}? This cannot be undone.",
-      "confirmDeleteButton": "Yes, delete"
+      "confirmDeleteButton": "Yes, delete",
+      "sharers": "Shared with",
+      "sharersHint": "You and the creator are always in. A Member added here starts with this range. Each Member changes their own range on their own grid.",
+      "leave": "Stop sharing",
+      "confirmLeave": "Stop sharing {{name}}? The others keep it.",
+      "confirmLeaveButton": "Yes, stop sharing"
     },
     "errors": {
       "nameRequired": "Give the Meal Time a name.",

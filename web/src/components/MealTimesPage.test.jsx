@@ -6,6 +6,7 @@ import {
   deleteMealTime,
   loadMealTimes,
   loadMemberId,
+  loadMembers,
   loadTargets,
   saveMealTime,
   setWeekdays,
@@ -15,6 +16,7 @@ import { I18nProvider } from '../i18n/I18nProvider.jsx';
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/mealTimes.js', () => ({
   loadMemberId: vi.fn(),
+  loadMembers: vi.fn(),
   loadMealTimes: vi.fn(),
   loadTargets: vi.fn(),
   saveMealTime: vi.fn(),
@@ -23,6 +25,9 @@ vi.mock('../lib/mealTimes.js', () => ({
 }));
 
 const user = { id: 'user-1' };
+
+const alice = { id: 4, display_name: 'Alice', role: 'owner' };
+const kid = { id: 9, display_name: 'Kid', role: 'dependent' };
 
 const lunch = {
   id: 1,
@@ -33,6 +38,8 @@ const lunch = {
   cal_min: 400,
   cal_max: 600,
   set_calories: null,
+  createdBy: 4,
+  sharers: [{ id: 4, name: 'Alice' }],
 };
 const snack = {
   id: 2,
@@ -43,10 +50,13 @@ const snack = {
   cal_min: null,
   cal_max: 200,
   set_calories: null,
+  createdBy: 4,
+  sharers: [{ id: 4, name: 'Alice' }],
 };
 
 function setUpData(meals = [lunch, snack]) {
   loadMemberId.mockResolvedValue(4);
+  loadMembers.mockResolvedValue([alice, kid]);
   loadMealTimes.mockResolvedValue(meals);
   loadTargets.mockResolvedValue({ calorie_target: 2000, band_low_pct: 90, band_high_pct: 100 });
   setWeekdays.mockResolvedValue();
@@ -104,6 +114,30 @@ describe('MealTimesPage', () => {
     expect(
       await screen.findByText('Meal Times belong to a Member. Join or create a Household first.')
     ).toBeInTheDocument();
+  });
+
+  it('marks a Meal Time shared with other Members, with their names', async () => {
+    setUpData([
+      {
+        ...lunch,
+        sharers: [
+          { id: 4, name: 'Alice' },
+          { id: 9, name: 'Kid' },
+        ],
+      },
+      snack,
+    ]);
+    renderPage();
+
+    expect(await screen.findByText('Shared with Kid')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Shared with/)).toHaveLength(1);
+  });
+
+  it('says a row needs calories when its own numbers do not fit its kind', async () => {
+    setUpData([{ ...lunch, id: 3, name: 'Cake', kind: 'set', set_calories: null }, snack]);
+    renderPage();
+
+    expect(await screen.findByText(/Needs calories for this kind/)).toBeInTheDocument();
   });
 
   it('turns a day off at once, saving the Meal Time without that day', async () => {
@@ -168,7 +202,7 @@ describe('MealTimesPage', () => {
     expect(saveMealTime).not.toHaveBeenCalled();
   });
 
-  it('saves a new Planned Meal Time with its range', async () => {
+  it('saves a new Planned Meal Time with its range, shared with the creator only', async () => {
     setUpData();
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: 'Add a Meal Time' }));
@@ -186,7 +220,63 @@ describe('MealTimesPage', () => {
       kind: 'planned',
       calMin: '500',
       calMax: '700',
+      createdBy: 4,
+      sharerIds: [4],
     });
+  });
+
+  it('lets the editor add another Member to share a Meal Time', async () => {
+    setUpData([lunch]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Kid' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(saveMealTime).toHaveBeenCalled());
+    expect(saveMealTime.mock.calls[0][2]).toMatchObject({ id: 1, sharerIds: [4, 9] });
+  });
+
+  it('locks the creator and the editing Member in the sharing picker', async () => {
+    setUpData([
+      {
+        ...lunch,
+        createdBy: 9,
+        sharers: [
+          { id: 9, name: 'Kid' },
+          { id: 4, name: 'Alice' },
+        ],
+      },
+      snack,
+    ]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
+
+    const aliceBox = screen.getByRole('checkbox', { name: 'Alice' });
+    expect(aliceBox).toBeChecked();
+    expect(aliceBox).toBeDisabled();
+    const kidBox = screen.getByRole('checkbox', { name: 'Kid' });
+    expect(kidBox).toBeChecked();
+    expect(kidBox).toBeDisabled();
+  });
+
+  it('a Member who is not the creator only stops sharing the Meal Time', async () => {
+    setUpData([
+      {
+        ...lunch,
+        createdBy: 9,
+        sharers: [
+          { id: 9, name: 'Kid' },
+          { id: 4, name: 'Alice' },
+        ],
+      },
+      snack,
+    ]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Stop sharing' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Yes, stop sharing' }));
+
+    await waitFor(() => expect(deleteMealTime).toHaveBeenCalledWith(expect.anything(), 4, 1, 9));
   });
 
   it('deletes only after a second tap', async () => {
@@ -197,6 +287,6 @@ describe('MealTimesPage', () => {
     expect(deleteMealTime).not.toHaveBeenCalled();
 
     await userEvent.click(screen.getByRole('button', { name: 'Yes, delete' }));
-    await waitFor(() => expect(deleteMealTime).toHaveBeenCalledWith(expect.anything(), 4, 1));
+    await waitFor(() => expect(deleteMealTime).toHaveBeenCalledWith(expect.anything(), 4, 1, 4));
   });
 });

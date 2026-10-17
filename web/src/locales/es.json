@@ -109,6 +109,7 @@
     "empty": "Todavía no hay horarios de comida. Añade el primero abajo.",
     "addButton": "Añadir horario de comida",
     "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "shared": "Compartido con {{names}}",
     "targets": {
       "summary": "Objetivo de calorías {{target}}. Meta: {{low}}–{{high}}% de él.",
       "none": "Todavía no hay objetivo de calorías, así que no se muestran las metas del día.",
@@ -133,7 +134,8 @@
     },
     "calories": {
       "set": "{{calories}} kcal",
-      "range": "{{min}}–{{max}} kcal"
+      "range": "{{min}}–{{max}} kcal",
+      "missing": "Faltan calorías para este tipo"
     },
     "totals": {
       "range": "{{floor}}–{{ceiling}}",
@@ -164,7 +166,12 @@
       "cancel": "Cancelar",
       "delete": "Eliminar",
       "confirmDelete": "¿Eliminar {{name}}? No se puede deshacer.",
-      "confirmDeleteButton": "Sí, eliminar"
+      "confirmDeleteButton": "Sí, eliminar",
+      "sharers": "Compartido con",
+      "sharersHint": "Tú y quien lo creó siempre estáis. Un miembro añadido aquí empieza con este rango. Cada miembro cambia su propio rango en su propia cuadrícula.",
+      "leave": "Dejar de compartir",
+      "confirmLeave": "¿Dejar de compartir {{name}}? Los demás lo mantienen.",
+      "confirmLeaveButton": "Sí, dejar de compartir"
     },
     "errors": {
       "nameRequired": "Pon un nombre al horario de comida.",
