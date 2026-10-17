@@ -3,12 +3,17 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import HouseholdPage from './HouseholdPage.jsx';
 import { createHousehold, loadHousehold } from '../lib/households.js';
+import { createInvite } from '../lib/invites.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/households.js', () => ({
   loadHousehold: vi.fn(),
   createHousehold: vi.fn(),
+}));
+vi.mock('../lib/invites.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  createInvite: vi.fn(),
 }));
 
 const user = { id: 'user-1', email: 'sergio@example.com' };
@@ -92,5 +97,65 @@ describe('HouseholdPage', () => {
     render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load your Household.');
+  });
+});
+
+describe('HouseholdPage invite link', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('lets the Owner create an invite link and copies it', async () => {
+    loadHousehold.mockResolvedValue({
+      id: 7,
+      name: 'Acuna home',
+      myRole: 'owner',
+      members: [{ id: 1, display_name: 'Sergio', role: 'owner' }],
+    });
+    createInvite.mockResolvedValue({ token: 'abc123', expires_at: '2026-10-24T00:00:00Z' });
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Invite' }));
+
+    expect(createInvite).toHaveBeenCalledWith(expect.anything(), 7);
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/\?invite=abc123$/));
+    expect(await screen.findByRole('status')).toHaveTextContent('Invite link copied.');
+  });
+
+  it('shows the link to copy by hand when copying fails', async () => {
+    loadHousehold.mockResolvedValue({ id: 7, name: 'Acuna home', myRole: 'owner', members: [] });
+    createInvite.mockResolvedValue({ token: 'abc123', expires_at: '2026-10-24T00:00:00Z' });
+    const writeText = vi.fn(async () => {
+      throw new Error('denied');
+    });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Invite' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Could not copy automatically.');
+    expect(screen.getByRole('textbox', { name: 'Invite link' }).value).toMatch(/\?invite=abc123$/);
+  });
+
+  it('does not offer invites to a plain Member', async () => {
+    loadHousehold.mockResolvedValue({
+      id: 7,
+      name: 'Acuna home',
+      myRole: 'member',
+      members: [{ id: 2, display_name: 'Ana', role: 'member' }],
+    });
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    expect(await screen.findByRole('heading', { name: 'Acuna home' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Invite' })).not.toBeInTheDocument();
   });
 });

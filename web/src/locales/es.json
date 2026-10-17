@@ -43,5 +43,39 @@
     "label": "Sugerencia para instalar",
     "body": "Para usar Calorie Manager como una app, toca el botón Compartir de Safari y luego Añadir a pantalla de inicio.",
     "dismiss": "Entendido"
+  },
+  "invite": {
+    "owner": {
+      "button": "Invitar",
+      "creating": "Creando enlace…",
+      "copied": "Enlace de invitación copiado. Vence el {{date}}.",
+      "copyFailed": "No se pudo copiar automáticamente. Copia este enlace:",
+      "createError": "No se pudo crear el enlace de invitación.",
+      "linkLabel": "Enlace de invitación"
+    },
+    "landing": {
+      "checking": "Revisando tu invitación…",
+      "invitedTo": "Te invitaron a unirte al hogar {{household}} como miembro.",
+      "loadError": "No se pudo revisar este enlace de invitación. Inténtalo más tarde.",
+      "createAccount": "Crear una cuenta",
+      "haveAccount": "Ya tengo una cuenta",
+      "signUpSubmit": "Crear cuenta",
+      "signUpSubmitting": "Creando cuenta…",
+      "signUpFailed": "No se pudo crear la cuenta. Revisa tu correo y tu contraseña e inténtalo de nuevo.",
+      "confirmEmail": "Revisa tu correo para confirmar tu cuenta y luego abre otra vez este enlace de invitación.",
+      "signInSubmit": "Iniciar sesión",
+      "signInSubmitting": "Iniciando sesión…",
+      "nameLabel": "Tu nombre",
+      "join": "Unirme al hogar",
+      "joining": "Uniéndote…"
+    },
+    "errors": {
+      "notFound": "Este enlace de invitación no existe. Pide al propietario uno nuevo.",
+      "revoked": "Este enlace de invitación fue revocado. Pide al propietario uno nuevo.",
+      "used": "Este enlace de invitación ya se usó. Pide al propietario uno nuevo.",
+      "expired": "Este enlace de invitación venció. Pide al propietario uno nuevo.",
+      "alreadyInHousehold": "Ya perteneces a un hogar, así que no puedes unirte a este.",
+      "joinFailed": "No se pudo unir al hogar. Inténtalo de nuevo."
+    }
   }
 }

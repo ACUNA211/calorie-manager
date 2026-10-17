@@ -32,7 +32,7 @@ describe('loadHousehold', () => {
     const client = fakeClient({
       tables: {
         members: [
-          { data: { household_id: 7 }, error: null },
+          { data: { household_id: 7, role: 'owner' }, error: null },
           {
             data: [
               { id: 1, display_name: 'Sergio', role: 'owner' },
@@ -49,6 +49,7 @@ describe('loadHousehold', () => {
     expect(await loadHousehold(client, 'user-1')).toEqual({
       id: 7,
       name: 'Acuna home',
+      myRole: 'owner',
       members: [
         { id: 1, display_name: 'Sergio', role: 'owner' },
         { id: 2, display_name: 'Ana', role: 'member' },
