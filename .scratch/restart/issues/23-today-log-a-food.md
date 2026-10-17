@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 10 (Targets by hand), 14 (Food search page), 21 (Meal Times page), 69 (Run the database tests locally)
+**Blocked by:** 10 (Targets by hand), 14 (Food search page), 21 (Meal Times page), 69 (Run the database tests locally), 84 (Decide: Today logging rules)
 
 **Status:** done (awaiting DB test run)
 

@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 14 (Food search page), 15 (Research: translation API free tiers), 12 (AI cap counter), 69 (Run the database tests locally), 76 (Get API keys and run the research tests)
+**Blocked by:** 14 (Food search page), 15 (Research: translation API free tiers), 12 (AI cap counter), 69 (Run the database tests locally), 76 (Get API keys and run the research tests), 83 (Deploy the Edge Functions and set their secrets)
 
 **Status:** done (awaiting DB test run and translation key)
 
