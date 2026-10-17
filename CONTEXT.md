@@ -40,7 +40,7 @@ A spoken instruction ("tick off the milk") turned to text by the browser's own s
 _Avoid_: voice assistant, dictation
 
 **Pantry**:
-The food at home, shared by the Household, with exact amounts in grams or units. A scan adds one package at its label weight. Logging a Cook takes its ingredients off. Any item can be corrected ("used up", "about half").
+The food at home, shared by the Household, with exact amounts in grams or units. It goes up when a Shopping list line is ticked Bought (the planned amount) or a package is scanned in (its label weight, replacing the planned amount). It goes down when a Cook is marked made (all its ingredients) and when a Pantry food is eaten on its own (an apple is both a Pantry food and a Recipe ingredient). Any item can be corrected ("used up", "about half").
 _Avoid_: inventory, fridge, stock
 
 **Food Library**:
@@ -60,10 +60,14 @@ One batch of a Recipe made on a given day, its Portions placed at several Meal T
 _Avoid_: batch, meal prep (as a noun)
 
 **Portion**:
-How much of a Cook one Member eats at one Meal Time, and so how many calories and macros it gives.
+How much of a Cook one Member eats at one Meal Time, and so how many calories and macros it gives. A logged Portion comes out of its Cook, not the Pantry.
+
+**Leftovers**:
+Servings of a made Cook that no logged Portion has used yet. They stay until eaten or thrown out; a shrunk Portion in a Rebalance adds to them.
+_Avoid_: spare (as a noun)
 
 **Meal Plan**:
-The Household's plan for one week, Sunday to Saturday: Cooks and their Portions placed at Members' Meal Times. Drafted by the Agent on a Schedule, edited on the grid, and approved.
+The Household's plan for one week, Sunday to Saturday: Cooks and their Portions placed at Members' Meal Times. Drafted by the Agent on a Schedule, then changed on the grid by hand, by **Swap** (the Agent offers three other Recipes for one Cook) or by **Redraft** (a typed or spoken note for the whole week, such as "less chicken"), and approved. There is no planning chat.
 _Avoid_: plan (alone), menu, schedule
 
 **Calorie Log**:
@@ -71,7 +75,7 @@ A Member's record of what they actually ate, with calories and macros, each entr
 _Avoid_: diary, journal, tracker
 
 **Shopping list**:
-The Household's one list of things to buy, built from the approved Meal Plan minus what the Pantry already holds, plus anything added by hand. Ticking a line means "covered"; a bought line adds to the Pantry. (open: details carried over from the MVP)
+The Household's one list of things to buy, built from the approved Meal Plan: each line is what the Meal Plan needs minus what the Pantry holds. Anything else can be added by hand. A line is ticked **Bought** (adds its amount to the Pantry) or **Have it** (corrects the Pantry to say it's there).
 _Avoid_: grocery list
 
 **Rebalance**:
@@ -86,6 +90,9 @@ _Avoid_: settings, restrictions
 A job that runs on its own: the weekly Meal Plan draft (on a set day and time, then a notification), building the Shopping list when the Meal Plan is approved, reminders around each Meal Time, and reminders on cook days. Approval is always by hand. Each Member picks which reminders they get, delivered by Web Push.
 _Avoid_: cron, automation
 
+**Scan**:
+Reading a barcode with the phone camera. What it does fits the screen: on the Pantry it adds the package, on the Shopping list it ticks the line Bought, and on Today it shows the food with **Add to Pantry** and **Eaten** (logged at the current Meal Time). A food is looked up once and then kept in the Food Library.
+
 **AI cap**:
 A $5/month hard limit per AI provider, plus an in-app counter that stops AI calls when it is reached.
 
@@ -98,6 +105,8 @@ A $5/month hard limit per AI provider, plus an in-app counter that stops AI call
 - A **Rebalance** changes **Portions** in the current Meal Plan for one Member
 
 ## Flagged ambiguities
+
+- The Household's Members use Android, but iPhone is supported from day one (Web Push there needs the app on the Home Screen).
 
 - "Plan" was used for both the weekly meal plan and a calorie goal. Resolved: **Meal Plan** and **Targets**.
 - "Text to speech" for Voice commands means speech-to-text: the Member speaks, the app reads it.
