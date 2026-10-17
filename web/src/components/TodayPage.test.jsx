@@ -5,7 +5,14 @@ import TodayPage from './TodayPage.jsx';
 import { useActingMember } from '../lib/actingMember.jsx';
 import { loadMealTimes } from '../lib/mealTimes.js';
 import { loadTargets } from '../lib/targets.js';
-import { insertEntry, loadDay, libraryFoodFor } from '../lib/today.js';
+import {
+  deleteEntry,
+  insertEntry,
+  libraryFoodFor,
+  loadDay,
+  restoreEntry,
+  updateEntry,
+} from '../lib/today.js';
 import { searchFoods } from '../lib/foods.js';
 import { addDays, dateKey } from '../lib/todayLogic.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
@@ -25,6 +32,9 @@ vi.mock('../lib/today.js', () => ({
   loadDay: vi.fn(),
   insertEntry: vi.fn(),
   libraryFoodFor: vi.fn(),
+  updateEntry: vi.fn(),
+  deleteEntry: vi.fn(),
+  restoreEntry: vi.fn(),
 }));
 
 const breakfast = {
@@ -78,11 +88,15 @@ describe('TodayPage', () => {
           log_date: today,
           meal_time_id: 1,
           log_time: null,
+          food_id: 3,
           description: 'Toast',
+          servings: null,
+          grams: 60,
           kcal: 500,
           protein_g: 12,
           carbs_g: 60,
           fat_g: 4,
+          created_at: '2026-10-17T07:40:00+00:00',
         },
       ],
     };
@@ -219,5 +233,144 @@ describe('TodayPage', () => {
     await user.click(screen.getByRole('button', { name: 'Search' }));
 
     expect(await screen.findByText('Could not search your Food Library.')).toBeInTheDocument();
+  });
+
+  describe('editing, deleting and undo', () => {
+    const toastButton = () =>
+      within(screen.getByRole('region', { name: 'Meal Times' })).getByRole('button', {
+        name: 'Toast, 500 kcal',
+      });
+
+    it('saves a new amount from a tapped entry, and Undo puts the old values back', async () => {
+      const user = userEvent.setup();
+      updateEntry.mockImplementation(async (_client, id, patch) => ({
+        ...entriesByDay[today][0],
+        ...patch,
+        id,
+      }));
+      renderPage();
+      await screen.findByText(/500 of 2,000 kcal eaten/);
+
+      await user.click(toastButton());
+      const amount = screen.getByLabelText('Amount');
+      await user.clear(amount);
+      await user.type(amount, '120');
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(await screen.findByText('1,000 of 2,000 kcal eaten')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Entry changed.');
+      expect(screen.queryByRole('heading', { name: 'Edit entry' })).not.toBeInTheDocument();
+      expect(updateEntry).toHaveBeenCalledWith(expect.anything(), 5, {
+        grams: 120,
+        servings: null,
+        kcal: 1000,
+        protein_g: 24,
+        carbs_g: 120,
+        fat_g: 8,
+        meal_time_id: 1,
+        log_time: null,
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(await screen.findByText('500 of 2,000 kcal eaten')).toBeInTheDocument();
+      expect(updateEntry).toHaveBeenLastCalledWith(expect.anything(), 5, {
+        grams: 60,
+        servings: null,
+        kcal: 500,
+        protein_g: 12,
+        carbs_g: 60,
+        fat_g: 4,
+        meal_time_id: 1,
+        log_time: null,
+      });
+    });
+
+    it('deletes an entry, and Undo puts it back with the same values', async () => {
+      const user = userEvent.setup();
+      const before = entriesByDay[today][0];
+      deleteEntry.mockResolvedValue(undefined);
+      restoreEntry.mockImplementation(async (_client, row) => ({ ...row, id: 77 }));
+      renderPage();
+      await screen.findByText(/500 of 2,000 kcal eaten/);
+
+      await user.click(toastButton());
+      await user.click(screen.getByRole('button', { name: 'Delete entry' }));
+
+      expect(await screen.findByText('0 of 2,000 kcal eaten')).toBeInTheDocument();
+      expect(deleteEntry).toHaveBeenCalledWith(expect.anything(), 5);
+      expect(screen.getByRole('status')).toHaveTextContent('Entry deleted.');
+
+      await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(await screen.findByText('500 of 2,000 kcal eaten')).toBeInTheDocument();
+      expect(restoreEntry).toHaveBeenCalledWith(expect.anything(), {
+        member_id: 4,
+        log_date: today,
+        meal_time_id: 1,
+        log_time: null,
+        grams: 60,
+        servings: null,
+        kcal: 500,
+        protein_g: 12,
+        carbs_g: 60,
+        fat_g: 4,
+        food_id: 3,
+        description: 'Toast',
+        created_at: before.created_at,
+      });
+      expect(toastButton()).toBeInTheDocument();
+    });
+
+    it('logs a food, and Undo removes it again', async () => {
+      const user = userEvent.setup();
+      searchFoods.mockResolvedValue({ results: [oats], libraryFailed: false, usdaFailed: false });
+      insertEntry.mockImplementation(async (_client, row) => ({
+        id: 99,
+        log_date: row.log_date,
+        meal_time_id: row.meal_time_id,
+        log_time: row.log_time,
+        food_id: row.food_id,
+        description: row.description,
+        servings: row.servings,
+        grams: row.grams,
+        kcal: row.kcal,
+        protein_g: row.protein_g,
+        carbs_g: row.carbs_g,
+        fat_g: row.fat_g,
+      }));
+      libraryFoodFor.mockImplementation(async (_client, result) => result);
+      renderPage();
+      await screen.findByText(/500 of 2,000 kcal eaten/);
+
+      await user.click(screen.getByRole('button', { name: 'Log food' }));
+      await user.type(screen.getByLabelText('Search foods'), 'oats');
+      await user.click(screen.getByRole('button', { name: 'Search' }));
+      await user.click(await screen.findByRole('button', { name: 'Pick' }));
+      await user.click(screen.getByRole('button', { name: 'Log it' }));
+
+      expect(await screen.findByText('889 of 2,000 kcal eaten')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(await screen.findByText('500 of 2,000 kcal eaten')).toBeInTheDocument();
+      expect(deleteEntry).toHaveBeenCalledWith(expect.anything(), 99);
+    });
+
+    it('says so when Undo fails, and leaves the day as it is', async () => {
+      const user = userEvent.setup();
+      deleteEntry.mockResolvedValue(undefined);
+      restoreEntry.mockRejectedValue(new Error('denied'));
+      renderPage();
+      await screen.findByText(/500 of 2,000 kcal eaten/);
+
+      await user.click(toastButton());
+      await user.click(screen.getByRole('button', { name: 'Delete entry' }));
+      await user.click(await screen.findByRole('button', { name: 'Undo' }));
+
+      expect(
+        await screen.findByText('Could not undo that. Check the day and try again.')
+      ).toBeInTheDocument();
+      expect(screen.getByText('0 of 2,000 kcal eaten')).toBeInTheDocument();
+    });
   });
 });

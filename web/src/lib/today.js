@@ -47,3 +47,36 @@ export async function libraryFoodFor(client, result) {
   const foodId = await saveUsdaFood(client, result.fdcId);
   return loadFood(client, foodId);
 }
+
+// Changes the amount or Meal Time of one entry (a patch from editEntryPatch) and returns the
+// row as stored. Row-level security stops a Member changing another Member's entry; a row
+// it refuses comes back as an error, not as a silent no-op.
+export async function updateEntry(client, id, patch) {
+  const { data, error } = await client
+    .from('calorie_log')
+    .update(patch)
+    .eq('id', id)
+    .select(ENTRY_COLUMNS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Deletes one entry. Returns nothing; throws when no row was deleted (for example, when
+// row-level security refused it), so a failed delete is never shown as done.
+export async function deleteEntry(client, id) {
+  const { data, error } = await client.from('calorie_log').delete().eq('id', id).select('id');
+  if (error) throw error;
+  if (!data || data.length === 0) throw new Error('calorie_log row was not deleted');
+}
+
+// Puts a deleted entry back (a row from restoreRow) and returns it as stored.
+export async function restoreEntry(client, row) {
+  const { data, error } = await client
+    .from('calorie_log')
+    .insert(row)
+    .select(ENTRY_COLUMNS)
+    .single();
+  if (error) throw error;
+  return data;
+}

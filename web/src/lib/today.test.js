@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ENTRY_COLUMNS, insertEntry, libraryFoodFor, loadDay, loadFood } from './today.js';
+import {
+  ENTRY_COLUMNS,
+  deleteEntry,
+  insertEntry,
+  libraryFoodFor,
+  loadDay,
+  loadFood,
+  restoreEntry,
+  updateEntry,
+} from './today.js';
 import { FOOD_COLUMNS } from './foods.js';
 
 // A chainable fake of the Supabase query builder. Each call records itself, and the chain
@@ -7,7 +16,7 @@ import { FOOD_COLUMNS } from './foods.js';
 function fakeClient(result) {
   const calls = [];
   const builder = {};
-  for (const method of ['select', 'eq', 'order', 'insert']) {
+  for (const method of ['select', 'eq', 'order', 'insert', 'update', 'delete']) {
     builder[method] = vi.fn((...args) => {
       calls.push([method, ...args]);
       return builder;
@@ -142,5 +151,64 @@ describe('libraryFoodFor', () => {
     const food = await libraryFoodFor(client, { source: 'usda', fdcId: 1, name: 'Apple' });
     expect(client.rpc).toHaveBeenCalledWith('usda_save', { p_fdc_id: 1 });
     expect(food).toMatchObject({ id: 55, name: 'Apple', kcalPer100g: 52, source: 'library' });
+  });
+});
+
+describe('updateEntry', () => {
+  it('updates one row of the Calorie Log and returns it as stored', async () => {
+    const row = { id: 5, grams: 120, kcal: 1000 };
+    const client = fakeClient({ data: row, error: null });
+    await expect(updateEntry(client, 5, { grams: 120, kcal: 1000 })).resolves.toEqual(row);
+    expect(client.calls).toEqual([
+      ['from', 'calorie_log'],
+      ['update', { grams: 120, kcal: 1000 }],
+      ['eq', 'id', 5],
+      ['select', ENTRY_COLUMNS],
+      ['single'],
+    ]);
+  });
+
+  it('throws the database error, so a refused update is never shown as saved', async () => {
+    const error = new Error('denied');
+    const client = fakeClient({ data: null, error });
+    await expect(updateEntry(client, 5, { grams: 120 })).rejects.toBe(error);
+  });
+});
+
+describe('deleteEntry', () => {
+  it('deletes one row of the Calorie Log', async () => {
+    const client = fakeClient({ data: [{ id: 5 }], error: null });
+    await expect(deleteEntry(client, 5)).resolves.toBeUndefined();
+    expect(client.calls).toEqual([
+      ['from', 'calorie_log'],
+      ['delete'],
+      ['eq', 'id', 5],
+      ['select', 'id'],
+    ]);
+  });
+
+  it('throws when no row was deleted, for example when row-level security refused it', async () => {
+    const client = fakeClient({ data: [], error: null });
+    await expect(deleteEntry(client, 5)).rejects.toThrow('not deleted');
+  });
+
+  it('throws the database error', async () => {
+    const error = new Error('denied');
+    const client = fakeClient({ data: null, error });
+    await expect(deleteEntry(client, 5)).rejects.toBe(error);
+  });
+});
+
+describe('restoreEntry', () => {
+  it('inserts the restored row and returns it as stored', async () => {
+    const row = { member_id: 4, description: 'Toast', grams: 60 };
+    const client = fakeClient({ data: { id: 77, ...row }, error: null });
+    await expect(restoreEntry(client, row)).resolves.toEqual({ id: 77, ...row });
+    expect(client.calls).toEqual([
+      ['from', 'calorie_log'],
+      ['insert', row],
+      ['select', ENTRY_COLUMNS],
+      ['single'],
+    ]);
   });
 });

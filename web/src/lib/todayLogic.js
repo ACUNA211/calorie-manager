@@ -298,3 +298,96 @@ export function logProblem({ food, amount, unit, logDate, todayKey }) {
   if (entryNutrition(food, parsed.grams).kcal == null) return 'today.log.errors.noKcal';
   return null;
 }
+
+// ---- Editing and undo ------------------------------------------------------------------
+
+// The choice for "another time" in the Meal Time pickers (a Meal Time id is a number string).
+export const OTHER_TIME = 'other';
+
+// Entries in the order they were logged: created_at, then id. Undo puts a row back in place
+// with its original created_at, so it lands where it was.
+export function sortEntries(entries) {
+  return [...entries].sort((a, b) => {
+    const byTime = String(a.created_at ?? '').localeCompare(String(b.created_at ?? ''));
+    return byTime || Number(a.id) - Number(b.id);
+  });
+}
+
+// How an existing entry is shown in the edit form: in servings when it has them, else grams.
+// The serving size is worked out from the entry (grams divided by servings).
+export function entryUnits(entry) {
+  const grams = Number(entry.grams);
+  const servings = entry.servings == null ? null : Number(entry.servings);
+  if (servings > 0 && grams > 0) {
+    return { unit: 'servings', amount: String(servings), servingGrams: grams / servings };
+  }
+  return { unit: 'grams', amount: String(entry.grams ?? ''), servingGrams: null };
+}
+
+// The calories and macros of an entry at a new weight. The entry's own figures per gram are
+// scaled, so a missing macro stays missing. Figures are rounded to one decimal, as scaleToGrams.
+export function rescaleNutrition(entry, grams) {
+  const ratio = grams / Number(entry.grams);
+  const scale = (value) => (value == null ? null : Math.round(Number(value) * ratio * 10) / 10);
+  return {
+    kcal: scale(entry.kcal),
+    protein_g: scale(entry.protein_g),
+    carbs_g: scale(entry.carbs_g),
+    fat_g: scale(entry.fat_g),
+  };
+}
+
+// The change an edit makes to one entry: a new amount (recalculated), a new Meal Time or
+// another time. Moving to a Meal Time clears the clock time; moving to another time keeps the
+// entry's own clock time, or uses `nowTime` when it had none. Returns { ok, patch, changed }
+// or { ok: false, error } with a translation key.
+export function editEntryPatch({ entry, amount, unit, mealChoice, nowTime }) {
+  if (!(Number(entry.grams) > 0)) return { ok: false, error: 'today.edit.errors.noGrams' };
+  const parsed = amountToGrams({ amount, unit, servingGrams: entryUnits(entry).servingGrams });
+  if (!parsed.ok) return { ok: false, error: parsed.error };
+
+  const mealTimeId = mealChoice === OTHER_TIME ? null : Number(mealChoice);
+  const logTime = mealTimeId == null ? (entry.log_time ?? nowTime) : null;
+  const patch = {
+    grams: parsed.grams,
+    servings: parsed.servings,
+    ...rescaleNutrition(entry, parsed.grams),
+    meal_time_id: mealTimeId,
+    log_time: logTime,
+  };
+  const changed =
+    Number(entry.grams) !== parsed.grams ||
+    (entry.servings == null ? null : Number(entry.servings)) !== parsed.servings ||
+    (entry.meal_time_id == null ? null : Number(entry.meal_time_id)) !== mealTimeId ||
+    (entry.log_time ?? null) !== logTime;
+  return { ok: true, patch, changed };
+}
+
+// The stored values of an entry, written back to undo an edit.
+export function entryValues(entry) {
+  return {
+    grams: entry.grams,
+    servings: entry.servings ?? null,
+    kcal: entry.kcal,
+    protein_g: entry.protein_g ?? null,
+    carbs_g: entry.carbs_g ?? null,
+    fat_g: entry.fat_g ?? null,
+    meal_time_id: entry.meal_time_id ?? null,
+    log_time: entry.log_time ?? null,
+  };
+}
+
+// The Calorie Log row that puts a deleted entry back: the same food, day, Meal Time or clock
+// time, amounts and figures, with its original created_at so it keeps its place in the day.
+// The id is new, because the database generates ids and will not take one we pass in.
+export function restoreRow(entry, memberId) {
+  const row = {
+    member_id: memberId,
+    log_date: entry.log_date,
+    ...entryValues(entry),
+    food_id: entry.food_id ?? null,
+    description: entry.description,
+  };
+  if (entry.created_at) row.created_at = entry.created_at;
+  return row;
+}

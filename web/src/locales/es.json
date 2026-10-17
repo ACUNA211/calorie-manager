@@ -436,6 +436,25 @@
     "futureReadOnly": "Este día está en el futuro, así que solo se puede ver.",
     "logged": "Se registraron {{kcal}} kcal en {{meal}}.",
     "otherTime": "Otra hora",
+    "toast": {
+      "undo": "Deshacer",
+      "deleted": "Registro eliminado.",
+      "changed": "Registro cambiado."
+    },
+    "undo": {
+      "failed": "No se pudo deshacer. Revisa el día e inténtalo de nuevo."
+    },
+    "edit": {
+      "heading": "Editar registro",
+      "food": "Alimento: {{name}}",
+      "save": "Guardar cambios",
+      "delete": "Eliminar registro",
+      "errors": {
+        "noGrams": "Este registro no tiene cantidad que cambiar. Elimínalo y regístralo de nuevo.",
+        "saveError": "No se pudo guardar el cambio. Inténtalo de nuevo.",
+        "deleteError": "No se pudo eliminar el registro. Inténtalo de nuevo."
+      }
+    },
     "bar": {
       "eaten": "{{eaten}} de {{target}} kcal comidas",
       "left": "Quedan {{left}} kcal",
