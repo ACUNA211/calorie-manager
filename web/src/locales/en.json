@@ -592,5 +592,37 @@
         "saveError": "Could not log the food. Try again."
       }
     }
+  },
+  "week": {
+    "heading": "Week",
+    "loading": "Loading the week...",
+    "loadError": "Could not load this week. Try again.",
+    "noMember": "Logging needs a Member. Join or create a Household first.",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "range": "{{from}} to {{to}}",
+    "todayTag": "Today",
+    "noTarget": "Set a Calorie Target on the Targets page to see which days are under it.",
+    "summary": {
+      "under": "{{under}} of {{logged}} logged days under the Calorie Target",
+      "noLogged": "Nothing logged this week yet.",
+      "average": "Average {{kcal}} kcal per logged day",
+      "averageMacros": "Average per logged day: protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "missingMacros": "Macro figures are missing on {{count}} logged day(s), so their totals may be low."
+    },
+    "day": {
+      "empty": "Nothing logged",
+      "kcal": "{{kcal}} of {{target}} kcal",
+      "kcalNoTarget": "{{kcal}} kcal",
+      "macros": "Protein {{protein}} g, carbs {{carbs}} g, fat {{fat}} g",
+      "missingMacros": "Some figures are missing"
+    },
+    "status": {
+      "inBand": "In the Planning band",
+      "aboveBand": "Above the band, still under the Target",
+      "under": "Under the Planning band",
+      "over": "Over the Calorie Target",
+      "noTarget": "No Calorie Target yet"
+    }
   }
 }

@@ -34,12 +34,12 @@ const LOADING = { status: 'loading', entries: [] };
 // opens it for editing or deleting. Every log, change and delete shows a toast with Undo for
 // a few seconds; only the latest change can be undone. Future days are read-only. Data is
 // keyed by Member and day, so an old answer never shows for a new choice.
-export default function TodayPage() {
+export default function TodayPage({ day: openDay = null }) {
   const { t, formatNumber } = useI18n();
   const { actingMemberId } = useActingMember();
   // Today is fixed when the screen opens; the day arrows move from it.
   const [todayKey] = useState(() => dateKey(new Date()));
-  const [day, setDay] = useState(todayKey);
+  const [day, setDay] = useState(openDay?.key ?? todayKey);
   const [setup, setSetup] = useState({ memberId: null, status: 'loading' });
   const [dayState, setDayState] = useState({ key: null, status: 'loading', entries: [] });
   const [logOpen, setLogOpen] = useState(false);
@@ -47,6 +47,9 @@ export default function TodayPage() {
   // The toast: { id, text, undo } where undo is an async function, or null for a message only.
   const [toast, setToast] = useState(null);
   const toastIds = useRef(0);
+  useEffect(() => {
+    if (openDay) document.getElementById('today-heading')?.scrollIntoView?.({ block: 'start' });
+  }, [openDay]);
 
   useEffect(() => {
     if (actingMemberId == null) return undefined;

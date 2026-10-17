@@ -6,6 +6,7 @@ import HouseholdPage from './components/HouseholdPage.jsx';
 import TargetsPage from './components/TargetsPage.jsx';
 import MealTimesPage from './components/MealTimesPage.jsx';
 import TodayPage from './components/TodayPage.jsx';
+import WeekPage from './components/WeekPage.jsx';
 import FoodsPage from './components/FoodsPage.jsx';
 import RecipesPage from './components/RecipesPage.jsx';
 import PantryPage from './components/PantryPage.jsx';
@@ -20,6 +21,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [checked, setChecked] = useState(false);
   const [inviteToken, setInviteToken] = useState(() => readInviteToken(window.location.search));
+  const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -59,7 +61,8 @@ export default function App() {
     body = (
       <>
         <Home user={session.user} />
-        <TodayPage user={session.user} />
+        <TodayPage key={selectedDay?.n ?? 0} user={session.user} day={selectedDay} />
+        <WeekPage user={session.user} onOpenDay={(key) => setSelectedDay({ key, n: Date.now() })} />
         <HouseholdPage user={session.user} />
         <TargetsPage user={session.user} />
         <MealTimesPage user={session.user} />
