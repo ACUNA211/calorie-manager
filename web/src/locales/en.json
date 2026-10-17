@@ -768,5 +768,17 @@
       "saveError": "Could not save your sharing setting. Try again.",
       "noMember": "Join or create a Household first."
     }
+  },
+  "units": {
+    "heading": "Display units",
+    "label": "Units",
+    "help": "Amounts are stored in grams and kilograms. This only changes how they are shown and typed.",
+    "us": "US (oz, lb)",
+    "metric": "Metric (g, kg)",
+    "saved": "Units saved.",
+    "saveError": "Could not save the units. Try again.",
+    "errors": {
+      "mass": "Type an amount, such as 150 or 5.5. A bare number is in your units; you can also add g, kg, oz or lb."
+    }
   }
 }

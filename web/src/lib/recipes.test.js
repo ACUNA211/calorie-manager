@@ -223,7 +223,7 @@ describe('validateRecipe', () => {
     expect(validateRecipe({ ...filled(), cookedWeight: '1200' }).values.cookedWeightG).toBe(1200);
     expect(validateRecipe({ ...filled(), cookedWeight: '' }).values.cookedWeightG).toBeNull();
     expect(validateRecipe({ ...filled(), cookedWeight: '-3' }).errors.cookedWeight).toBe(
-      'recipes.errors.number'
+      'units.errors.mass'
     );
   });
 
@@ -237,7 +237,7 @@ describe('validateRecipe', () => {
     expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.gramsRequired');
 
     draft = setIngredientGrams(draft, key, '0');
-    expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.notPositive');
+    expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('units.errors.mass');
 
     draft = { ...draft, ingredients: [{ key, food: null, grams: '100' }] };
     expect(validateRecipe(draft).errors[`ingredient:${key}`]).toBe('recipes.errors.noFood');

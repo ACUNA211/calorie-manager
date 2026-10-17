@@ -22,6 +22,7 @@ import {
   weekdayOf,
 } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 import DayBar from './DayBar.jsx';
 import TodayMeals from './TodayMeals.jsx';
 import LogFoodPanel from './LogFoodPanel.jsx';
@@ -38,6 +39,7 @@ const LOADING = { status: 'loading', entries: [] };
 // keyed by Member and day, so an old answer never shows for a new choice.
 export default function TodayPage({ day: openDay = null }) {
   const { t, formatNumber } = useI18n();
+  const units = useUnits();
   const { actingMemberId } = useActingMember();
   // Today is fixed when the screen opens; the day arrows move from it.
   const [todayKey] = useState(() => dateKey(new Date()));
@@ -218,7 +220,7 @@ export default function TodayPage({ day: openDay = null }) {
       ? t('today.scan.pantryFailed')
       : eaten.taken > 0
         ? t('today.scan.tookPantry', {
-            grams: formatNumber(eaten.taken, { maximumFractionDigits: 1 }),
+            grams: units.formatMass(eaten.taken),
           })
         : t('today.scan.notInPantry');
     const kcal = formatNumber(eaten.entry.kcal, { maximumFractionDigits: 0 });

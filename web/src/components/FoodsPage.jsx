@@ -11,6 +11,7 @@ import {
 import { searchTokens } from '../lib/norm.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
+import { useUnits } from '../lib/useUnits.jsx';
 import ScanPanel from './ScanPanel.jsx';
 import OffCredit from './OffCredit.jsx';
 import LabelForm from './LabelForm.jsx';
@@ -32,6 +33,7 @@ const NUTRIENT_ROWS = [
 // per serving, and save a USDA result into the Food Library.
 export default function FoodsPage() {
   const { t, locale } = useI18n();
+  const units = useUnits();
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState({
     status: 'idle',
@@ -204,9 +206,13 @@ export default function FoodsPage() {
     );
   }
 
-  const formatValue = (value, unitKey) => {
+  // A nutrient value in the Member's units. The per-100 g column is scaled to the display basis
+  // (per 100 g in metric, per 1 oz in US); grams show as g or oz, milligrams and kcal as numbers.
+  const formatValue = (value, unitKey, scaleToBasis = false) => {
     if (value === null || value === undefined) return t('foods.notReported');
-    return t(unitKey, { value: formatNumber(value, locale, { maximumFractionDigits: 1 }) });
+    const amount = scaleToBasis ? units.perBasis(value) : Number(value);
+    if (unitKey === 'foods.grams') return units.formatMass(amount);
+    return t(unitKey, { value: formatNumber(amount, locale, { maximumFractionDigits: 1 }) });
   };
 
   function renderNutrition(result) {
@@ -218,7 +224,7 @@ export default function FoodsPage() {
         <table>
           <thead>
             <tr>
-              <th scope="col">{t('foods.per100g')}</th>
+              <th scope="col">{t('foods.per100g', { basis: units.basisLabel })}</th>
               {hasPerServing && <th scope="col">{t('foods.perServing')}</th>}
             </tr>
           </thead>
@@ -227,7 +233,11 @@ export default function FoodsPage() {
               <tr key={key}>
                 <th scope="row">{t(labelKey)}</th>
                 <td>
-                  {formatValue(key === 'kcal' ? view.per100g.kcal : view.per100g[key], unitKey)}
+                  {formatValue(
+                    key === 'kcal' ? view.per100g.kcal : view.per100g[key],
+                    unitKey,
+                    true
+                  )}
                 </td>
                 {hasPerServing && (
                   <td>
@@ -244,8 +254,8 @@ export default function FoodsPage() {
         {hasPerServing ? (
           <p>
             {t('foods.servingLine', {
-              label: view.perServing.label || t('foods.grams', { value: view.perServing.grams }),
-              grams: formatNumber(view.perServing.grams, locale, { maximumFractionDigits: 1 }),
+              label: view.perServing.label || units.formatMass(view.perServing.grams),
+              grams: units.formatMass(view.perServing.grams),
             })}
           </p>
         ) : (

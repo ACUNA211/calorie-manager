@@ -9,7 +9,7 @@ import { insertEntry, insertQueuedEntry, libraryFoodFor, loadDay } from '../lib/
 import { searchFoods } from '../lib/foods.js';
 import { FOOD_CACHE_KEY, QUEUE_KEY } from '../lib/offlineQueue.js';
 import { dateKey } from '../lib/todayLogic.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 // Offline logging on the Today screen (ticket #34). The database is a fake: loadDay returns
 // what is saved, insertEntry is the online save, and insertQueuedEntry is the resend.
@@ -70,7 +70,7 @@ function setOnline(value) {
 
 function renderPage() {
   useActingMember.mockReturnValue({ actingMemberId: 4, actingName: 'Alice' });
-  return render(<TodayPage />, { wrapper: I18nProvider });
+  return render(<TodayPage />, { wrapper: MetricProvider });
 }
 
 function storedQueue() {

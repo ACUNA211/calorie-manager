@@ -30,9 +30,14 @@ describe('parseGrams', () => {
   });
 
   it('refuses text that is not a number of grams', () => {
-    for (const text of ['abc', '-5', '1.25', '1.2.3', '12g']) {
+    for (const text of ['abc', '-5', '1.25', '12.50', '1.2.3']) {
       expect(parseGrams(text), text).toEqual({ ok: false, error: 'pantry.errors.amountInvalid' });
     }
+  });
+
+  it('reads a unit name typed with the amount', () => {
+    expect(parseGrams('12g')).toEqual({ ok: true, value: 12 });
+    expect(parseGrams('5.5 oz', 'metric')).toEqual({ ok: true, value: 155.9 });
   });
 
   it('refuses more than the Pantry can hold for one food', () => {

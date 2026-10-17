@@ -4,6 +4,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase.js';
 import { loadHousehold } from './households.js';
+import { DEFAULT_UNITS, normalizeUnits } from './units.js';
 
 // The people the signed-in adult can log for: themselves first, then each Dependent.
 // household is the shape loadHousehold returns (or null).
@@ -33,6 +34,7 @@ const NO_ACTING = {
   actingName: null,
   actingIsDependent: false,
   options: [],
+  actingUnits: DEFAULT_UNITS,
   setActingMemberId: () => {},
   refresh: async () => {},
 };
@@ -97,10 +99,13 @@ export function ActingMemberProvider({ children }) {
     const chosen = choice.userId === userId ? choice.memberId : null;
     const actingMemberId = resolveActingId(options, chosen);
     const acting = options.find((option) => option.id === actingMemberId) ?? null;
+    const actingRow = household?.members.find((member) => member.id === actingMemberId);
     return {
       actingMemberId,
       actingName: acting ? acting.name : null,
       actingIsDependent: acting !== null && !acting.isSelf,
+      // The display units of the Member being acted as (ticket #11). US when unknown.
+      actingUnits: normalizeUnits(actingRow?.display_units),
       options,
       setActingMemberId: (memberId) => setChoice({ userId, memberId }),
       refresh,

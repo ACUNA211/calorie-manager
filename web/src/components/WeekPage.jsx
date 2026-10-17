@@ -6,6 +6,7 @@ import { loadWeek } from '../lib/week.js';
 import { buildWeek, shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic.js';
 import { dateKey, parseDateKey, targetView } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 import WeightPanel from './WeightPanel.jsx';
 import HouseholdDays from './HouseholdDays.jsx';
 
@@ -17,6 +18,7 @@ const LOADING = { key: null, status: 'loading', entries: [] };
 // calls onOpenDay with its key, so Today opens on that day. Week arrows move 7 days.
 export default function WeekPage({ onOpenDay }) {
   const { t, formatDate, formatNumber } = useI18n();
+  const units = useUnits();
   const { actingMemberId } = useActingMember();
   // Today is fixed when the screen opens; the week arrows move from its week.
   const [todayKey] = useState(() => dateKey(new Date()));
@@ -126,9 +128,9 @@ export default function WeekPage({ onOpenDay }) {
           <p>{t('week.summary.average', { kcal: number(summary.average.kcal) })}</p>
           <p>
             {t('week.summary.averageMacros', {
-              protein: number(summary.average.protein, 1),
-              carbs: number(summary.average.carbs, 1),
-              fat: number(summary.average.fat, 1),
+              protein: units.formatMass(summary.average.protein),
+              carbs: units.formatMass(summary.average.carbs),
+              fat: units.formatMass(summary.average.fat),
             })}
           </p>
         </>
@@ -167,6 +169,7 @@ export default function WeekPage({ onOpenDay }) {
 // One logged day: calories against the Calorie Target, its band status, and its macros.
 function DayDetail({ day, number }) {
   const { t } = useI18n();
+  const units = useUnits();
   const target = day.bar.target;
   return (
     <span>
@@ -182,9 +185,9 @@ function DayDetail({ day, number }) {
       <span>
         {' '}
         {t('week.day.macros', {
-          protein: number(day.totals.protein, 1),
-          carbs: number(day.totals.carbs, 1),
-          fat: number(day.totals.fat, 1),
+          protein: units.formatMass(day.totals.protein),
+          carbs: units.formatMass(day.totals.carbs),
+          fat: units.formatMass(day.totals.fat),
         })}
       </span>
       {day.totals.missingMacros > 0 ? <span> {t('week.day.missingMacros')}</span> : null}

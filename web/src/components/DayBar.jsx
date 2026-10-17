@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatDate } from '../i18n/format.js';
 import { parseDateKey } from '../lib/todayLogic.js';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // The day's arrows and bar: calories eaten against the Calorie Target and the Planning band,
 // then protein, carbs and fat against their Targets. `bar` and `macros` come from todayLogic.
@@ -66,25 +67,25 @@ export default function DayBar({ dateKey, todayKey, bar, macros, onPrevious, onN
 
 // One macro: what has been eaten, against its Target when there is one.
 function MacroLine({ name, status, kind }) {
-  const { t, formatNumber } = useI18n();
-  const grams = (value) => formatNumber(value, { maximumFractionDigits: 1 });
+  const { t } = useI18n();
+  const { formatMass: mass } = useUnits();
 
   let detail;
   let state;
   if (status.status === 'noTarget') {
-    detail = t('today.macro.eaten', { eaten: grams(status.eaten) });
+    detail = t('today.macro.eaten', { eaten: mass(status.eaten) });
     state = t('today.macro.noTarget');
   } else if (kind === 'protein') {
-    detail = t('today.macro.floor', { eaten: grams(status.eaten), floor: grams(status.floor) });
+    detail = t('today.macro.floor', { eaten: mass(status.eaten), floor: mass(status.floor) });
     state =
       status.status === 'met'
         ? t('today.macro.met')
-        : t('today.macro.toGo', { left: grams(status.left) });
+        : t('today.macro.toGo', { left: mass(status.left) });
   } else {
     detail = t('today.macro.range', {
-      eaten: grams(status.eaten),
-      low: grams(status.low),
-      high: grams(status.high),
+      eaten: mass(status.eaten),
+      low: mass(status.low),
+      high: mass(status.high),
     });
     state = t(`today.macro.${status.status}`);
   }

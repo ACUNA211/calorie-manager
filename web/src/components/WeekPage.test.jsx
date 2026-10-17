@@ -6,7 +6,7 @@ import { useActingMember } from '../lib/actingMember.jsx';
 import { loadTargets } from '../lib/targets.js';
 import { loadWeek } from '../lib/week.js';
 import { loadWeight } from '../lib/weight.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/sharing.js', () => ({
@@ -44,7 +44,7 @@ const SUNDAY_START = '2026-10-11';
 
 function renderPage({ memberId = 4, onOpenDay = vi.fn() } = {}) {
   useActingMember.mockReturnValue({ actingMemberId: memberId, actingName: 'Alice' });
-  render(<WeekPage onOpenDay={onOpenDay} />, { wrapper: I18nProvider });
+  render(<WeekPage onOpenDay={onOpenDay} />, { wrapper: MetricProvider });
   return { onOpenDay };
 }
 
@@ -188,7 +188,7 @@ describe('WeekPage', () => {
 
   it('asks for a Member when none is acted for', () => {
     useActingMember.mockReturnValue({ actingMemberId: null, actingName: null });
-    render(<WeekPage onOpenDay={vi.fn()} />, { wrapper: I18nProvider });
+    render(<WeekPage onOpenDay={vi.fn()} />, { wrapper: MetricProvider });
 
     expect(
       within(screen.getByRole('region', { name: 'Week' })).getByText(

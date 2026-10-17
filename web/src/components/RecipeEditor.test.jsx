@@ -9,7 +9,7 @@ import {
   saveRecipe,
   searchFoods,
 } from '../lib/recipes.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/recipes.js', async (importOriginal) => ({
@@ -48,7 +48,7 @@ const existing = {
 function renderEditor(props = {}) {
   const onClose = vi.fn();
   render(<RecipeEditor recipe={null} onClose={onClose} {...props} />, {
-    wrapper: I18nProvider,
+    wrapper: MetricProvider,
   });
   return { onClose };
 }
@@ -83,7 +83,7 @@ describe('RecipeEditor', () => {
     await userEvent.type(screen.getByLabelText('Makes how many servings'), '2');
 
     await addFood('ri');
-    await userEvent.type(screen.getByLabelText('Grams of Rice'), '200');
+    await userEvent.type(screen.getByLabelText('Amount of Rice (g)'), '200');
 
     // 200 g of rice is 260 kcal, shared over 2 servings.
     expect(await screen.findByText('130 kcal')).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('RecipeEditor', () => {
     await userEvent.type(screen.getByLabelText('Makes how many servings'), '2');
     await userEvent.type(screen.getByLabelText('Notes'), 'Use day-old rice.');
     await addFood('ri');
-    await userEvent.type(screen.getByLabelText('Grams of Rice'), '200');
+    await userEvent.type(screen.getByLabelText('Amount of Rice (g)'), '200');
     await userEvent.click(screen.getByRole('button', { name: 'Save Recipe' }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));

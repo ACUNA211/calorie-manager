@@ -12,6 +12,7 @@ import {
 } from '../lib/todayLogic.js';
 import { normalizeTime } from '../lib/mealTimesLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // Edit one Calorie Log entry: its amount (recalculated), its Meal Time or another time, or
 // delete it. onSaved gets the stored row and the entry as it was; onDeleted gets the entry.
@@ -19,7 +20,8 @@ import { useI18n } from '../i18n/I18nProvider.jsx';
 export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCancel }) {
   const { t, formatNumber } = useI18n();
   const number = (value, digits = 0) => formatNumber(value, { maximumFractionDigits: digits });
-  const initial = entryUnits(entry);
+  const units = useUnits();
+  const initial = entryUnits(entry, units.units);
   const [amount, setAmount] = useState(initial.amount);
   const [unit, setUnit] = useState(initial.unit);
   const [mealChoice, setMealChoice] = useState(() =>
@@ -28,7 +30,12 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const parsed = amountToGrams({ amount, unit, servingGrams: initial.servingGrams });
+  const parsed = amountToGrams({
+    amount,
+    unit,
+    servingGrams: initial.servingGrams,
+    units: units.units,
+  });
   const preview = parsed.ok ? rescaleNutrition(entry, parsed.grams) : null;
 
   async function handleSave(event) {
@@ -40,9 +47,10 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
       unit,
       mealChoice,
       nowTime: clockTime(new Date()),
+      units: units.units,
     });
     if (!result.ok) {
-      setError(t(result.error, { max: MAX_LOG_GRAMS }));
+      setError(t(result.error, { max: units.formatMass(MAX_LOG_GRAMS) }));
       return;
     }
     if (!result.changed) {
@@ -94,7 +102,7 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
           <label>
             {t('today.log.unit')}{' '}
             <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-              <option value="grams">{t('today.log.unitGrams')}</option>
+              <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
               <option value="servings">{t('today.log.unitServings')}</option>
             </select>
           </label>
@@ -121,9 +129,9 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
             <p>
               {preview.protein_g != null && preview.carbs_g != null && preview.fat_g != null
                 ? t('today.log.previewMacros', {
-                    protein: number(preview.protein_g, 1),
-                    carbs: number(preview.carbs_g, 1),
-                    fat: number(preview.fat_g, 1),
+                    protein: units.formatMass(preview.protein_g),
+                    carbs: units.formatMass(preview.carbs_g),
+                    fat: units.formatMass(preview.fat_g),
                   })
                 : t('today.log.previewNoMacros')}
             </p>

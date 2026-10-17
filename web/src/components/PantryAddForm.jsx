@@ -4,11 +4,14 @@ import { searchFoods } from '../lib/foods.js';
 import { addToPantry, foodIdFor } from '../lib/pantry.js';
 import { validateAddAmount } from '../lib/pantryLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
-// Search a food (Food Library first, then USDA), enter grams, and add it to the Pantry.
+// Search a food (Food Library first, then USDA), enter an amount in the Member's units, and add
+// it to the Pantry.
 // Adding a food already in the Pantry adds to its amount (the database keeps one row).
 export default function PantryAddForm({ onAdded }) {
   const { t } = useI18n();
+  const units = useUnits();
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState({
     status: 'idle',
@@ -42,7 +45,7 @@ export default function PantryAddForm({ onAdded }) {
   }
 
   async function handleAdd(result) {
-    const parsed = validateAddAmount(amounts[result.key] ?? '');
+    const parsed = validateAddAmount(amounts[result.key] ?? '', units.units);
     if (!parsed.ok) {
       setAdd({ key: result.key, status: 'error', error: parsed.error, name: null });
       return;
@@ -96,7 +99,7 @@ export default function PantryAddForm({ onAdded }) {
                       )}
                     </p>
                     <label>
-                      {t('pantry.add.amountLabel', { name: result.name })}
+                      {t('pantry.add.amountLabel', { name: result.name, unit: units.massUnit })}
                       <input
                         type="text"
                         inputMode="decimal"

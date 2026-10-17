@@ -18,7 +18,7 @@ export async function loadHousehold(client, userId) {
     client.from('households').select('id, name').eq('id', me.household_id).single(),
     client
       .from('members')
-      .select('id, display_name, role')
+      .select('id, display_name, role, display_units')
       .eq('household_id', me.household_id)
       .order('created_at', { ascending: true }),
   ]);

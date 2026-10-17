@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TodayScan from './TodayScan.jsx';
 import { supabase } from '../lib/supabase.js';
 import { lookupGtin } from '../lib/foods.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 // Scan on Today (ticket #27). The camera is replaced by a button that reads a code, the lookup
 // is mocked, and the database is a fake that records each call.
@@ -106,7 +106,7 @@ function renderScan(props = {}) {
       onEaten={onEaten}
       {...props}
     />,
-    { wrapper: I18nProvider }
+    { wrapper: MetricProvider }
   );
   return { onEaten };
 }

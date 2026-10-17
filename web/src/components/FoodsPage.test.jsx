@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import FoodsPage from './FoodsPage.jsx';
 import { supabase } from '../lib/supabase.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn(), functions: { invoke: vi.fn() } },
@@ -98,7 +98,7 @@ function fakeBackend({
 }
 
 function renderScreen() {
-  return render(<FoodsPage />, { wrapper: I18nProvider });
+  return render(<FoodsPage />, { wrapper: MetricProvider });
 }
 
 async function typeQuery(text, label = 'Search foods') {

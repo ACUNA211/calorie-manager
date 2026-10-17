@@ -2,18 +2,18 @@
 // conversion, the 7-day moving average and the chart geometry for the trend line. No React and
 // no Supabase here. Weight is stored in kilograms to one decimal (migration 030).
 //
-// Display units: the screens show kilograms for now. Ticket 11 (display units) will replace
-// the display of kg with the shared formatter and the Member's unit choice; until then the
-// conversion helpers below are only used by tests.
+// Display units (ticket #11): the stored kilograms are shown in kg or lb by the Member's
+// setting, through units.js and useUnits(). The kg and lb conversions below use units.js.
 
 import { addDays, isDateKey, isFutureDay } from './todayLogic.js';
 import { weekEndKey } from './weekLogic.js';
+import * as unitsLib from './units.js';
 
 export const MIN_KG = 20;
 export const MAX_KG = 400;
 export const TREND_WEEKS = 12;
 export const AVERAGE_DAYS = 7;
-export const KG_PER_LB = 0.45359237;
+export const KG_PER_LB = unitsLib.KG_PER_POUND;
 
 const oneDecimal = (value) => Math.round(value * 10) / 10;
 
@@ -23,22 +23,23 @@ export function roundKg(kg) {
 }
 
 export function kgToLb(kg) {
-  return kg / KG_PER_LB;
+  return unitsLib.kgToLb(kg);
 }
 
 export function lbToKg(lb) {
-  return roundKg(lb * KG_PER_LB);
+  return roundKg(unitsLib.lbToKg(lb));
 }
 
-// Reads a weight typed in kilograms, such as "72.5" or "72,5". Whole numbers are fine, one
-// decimal at most. Returns { ok, value } with the value in kg, or { ok: false, error } where
-// error is a translation key.
-export function parseWeight(text) {
+// Reads a weight typed in kilograms (units 'metric', the default) or pounds ('us'), such as
+// "72.5" or "72,5". Whole numbers are fine, one decimal at most. Returns { ok, value } with the
+// value in kg, or { ok: false, error } where error is a translation key.
+export function parseWeight(text, units = 'metric') {
   const trimmed = String(text ?? '')
     .trim()
     .replace(',', '.');
   if (!/^\d{1,3}(\.\d)?$/.test(trimmed)) return { ok: false, error: 'weight.errors.number' };
-  const kg = Number(trimmed);
+  const typed = Number(trimmed);
+  const kg = unitsLib.normalizeUnits(units) === unitsLib.US ? lbToKg(typed) : typed;
   if (kg < MIN_KG || kg > MAX_KG) return { ok: false, error: 'weight.errors.range' };
   return { ok: true, value: roundKg(kg) };
 }
@@ -46,11 +47,11 @@ export function parseWeight(text) {
 // Checks one weight entry before it is saved. A weight can be logged for today or an earlier
 // day, never a future one. Returns { ok, values } with the columns to save, or { ok: false,
 // field, error } where error is a translation key.
-export function checkWeightEntry({ date, weight, todayKey }) {
+export function checkWeightEntry({ date, weight, todayKey, units = 'metric' }) {
   if (!isDateKey(date)) return { ok: false, field: 'date', error: 'weight.errors.date' };
   if (isFutureDay(date, todayKey))
     return { ok: false, field: 'date', error: 'weight.errors.future' };
-  const parsed = parseWeight(weight);
+  const parsed = parseWeight(weight, units);
   if (!parsed.ok) return { ok: false, field: 'weight', error: parsed.error };
   return { ok: true, values: { log_date: date, kg: parsed.value } };
 }

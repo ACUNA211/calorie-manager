@@ -4,7 +4,7 @@ import { lookupGtin } from '../lib/foods.js';
 import { addToPantry, foodIdFor, loadFoodPackage, setPackageGrams } from '../lib/pantry.js';
 import { packageGrams, validateAddAmount } from '../lib/pantryLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
-import { formatNumber } from '../i18n/format.js';
+import { useUnits } from '../lib/useUnits.jsx';
 import ScanPanel from './ScanPanel.jsx';
 
 // Scan a package into the Pantry (ticket #26). The barcode goes through the same lookup as
@@ -15,7 +15,8 @@ import ScanPanel from './ScanPanel.jsx';
 // askWeight, savingWeight, adding, added. `run` counts opens and closes, so a lookup that
 // finishes after the panel was closed is dropped.
 export default function PantryScan({ onAdded }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const units = useUnits();
   const [scan, setScan] = useState(null);
   const [weightText, setWeightText] = useState('');
   const [weightError, setWeightError] = useState(null);
@@ -100,7 +101,7 @@ export default function PantryScan({ onAdded }) {
   // the food, so the next scan of this food adds without asking.
   async function saveWeight(event) {
     event.preventDefault();
-    const parsed = validateAddAmount(weightText);
+    const parsed = validateAddAmount(weightText, units.units);
     if (!parsed.ok) {
       setWeightError(parsed.error);
       return;
@@ -126,7 +127,7 @@ export default function PantryScan({ onAdded }) {
       <form onSubmit={saveWeight}>
         <p role="status">{t('pantry.scan.askWeight', { name: scan.name })}</p>
         <label>
-          {t('pantry.scan.weightLabel', { name: scan.name })}
+          {t('pantry.scan.weightLabel', { name: scan.name, unit: units.massUnit })}
           <input
             type="text"
             inputMode="decimal"
@@ -167,7 +168,7 @@ export default function PantryScan({ onAdded }) {
           <p role="status">
             {t('pantry.scan.added', {
               name: scan.name,
-              grams: formatNumber(scan.grams, locale, { maximumFractionDigits: 1 }),
+              grams: units.formatMass(scan.grams),
             })}
           </p>
           <button type="button" onClick={openCamera}>

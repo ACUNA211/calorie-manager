@@ -1,15 +1,16 @@
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 import { parseDateKey } from '../lib/todayLogic.js';
 
 // The 12-week weight trend as a plain inline SVG line: each logged day is a dot and the 7-day
 // average is a line through them. layout comes from trendLayout (weightLogic.js), which also
 // sets the SVG size; trend gives the first and last day for the labels. No chart library.
 export default function WeightTrend({ trend, layout }) {
-  const { t, formatNumber, formatDate } = useI18n();
+  const { t, formatDate } = useI18n();
+  const units = useUnits();
 
   if (!layout) return <p>{t('weight.trend.empty')}</p>;
 
-  const number = (value) => formatNumber(value, { maximumFractionDigits: 1 });
   const dateLabel = (key) => formatDate(parseDateKey(key));
 
   return (
@@ -38,7 +39,12 @@ export default function WeightTrend({ trend, layout }) {
       <p>
         {t('weight.trend.span', { from: dateLabel(trend.startKey), to: dateLabel(trend.endKey) })}
       </p>
-      <p>{t('weight.trend.range', { low: number(layout.low), high: number(layout.high) })}</p>
+      <p>
+        {t('weight.trend.range', {
+          low: units.formatWeight(layout.low),
+          high: units.formatWeight(layout.high),
+        })}
+      </p>
       <p>
         <span aria-hidden="true">● </span>
         <span>{t('weight.trend.legendDaily')}</span>

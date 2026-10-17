@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EditEntryPanel from './EditEntryPanel.jsx';
 import { deleteEntry, updateEntry } from '../lib/today.js';
-import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/today.js', () => ({
@@ -38,7 +38,7 @@ function renderPanel(props = {}) {
     onCancel: vi.fn(),
   };
   render(<EditEntryPanel entry={toast} meals={[breakfast, dinner]} {...handlers} {...props} />, {
-    wrapper: I18nProvider,
+    wrapper: MetricProvider,
   });
   return handlers;
 }

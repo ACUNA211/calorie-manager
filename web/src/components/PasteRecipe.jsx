@@ -14,6 +14,7 @@ import {
 } from '../lib/pasteRecipe.js';
 import PasteRecipeReview from './PasteRecipeReview.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // Paste a Recipe: the Member pastes recipe text, one AI call reads it, the ingredients are
 // matched to foods, and the Member checks the matches. Nothing is saved here.
@@ -21,6 +22,7 @@ import { useI18n } from '../i18n/I18nProvider.jsx';
 // onCancel() goes back to the Recipes list.
 export default function PasteRecipe({ onDone, onManual, onCancel }) {
   const { t } = useI18n();
+  const units = useUnits();
   const ids = useId();
   // input | working | review | cap | failed
   const [phase, setPhase] = useState('input');
@@ -40,7 +42,7 @@ export default function PasteRecipe({ onDone, onManual, onCancel }) {
     setPhase('working');
     try {
       const parsed = await parseRecipeText(supabase, trimmed);
-      const matched = await matchRecipeLines(supabase, parsed.ingredients);
+      const matched = await matchRecipeLines(supabase, parsed.ingredients, undefined, units.units);
       setHeader({
         name: parsed.name,
         servings: parsed.servings === null ? '' : String(parsed.servings),
@@ -90,7 +92,7 @@ export default function PasteRecipe({ onDone, onManual, onCancel }) {
         header={header}
         onHeader={setHeader}
         rows={rows}
-        onFood={(key, food) => updateRow(key, (row) => rowWithFood(row, food))}
+        onFood={(key, food) => updateRow(key, (row) => rowWithFood(row, food, units.units))}
         onGrams={(key, grams) => updateRow(key, (row) => rowWithGrams(row, grams))}
         onRemove={(key) => setRows((current) => current.filter((row) => row.key !== key))}
         onSearch={handleSearch}

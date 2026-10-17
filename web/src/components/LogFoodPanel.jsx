@@ -15,6 +15,7 @@ import {
 import { normalizeTime } from '../lib/mealTimesLogic.js';
 import { isNetworkError, makeClientId } from '../lib/offlineQueue.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import { useUnits } from '../lib/useUnits.jsx';
 
 // Marks the "another time" choice in the Meal Time picker.
 const OTHER = 'other';
@@ -43,11 +44,12 @@ export default function LogFoodPanel({
 }) {
   const { t, formatNumber } = useI18n();
   const number = (value, digits = 0) => formatNumber(value, { maximumFractionDigits: digits });
+  const units = useUnits();
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState(EMPTY_SEARCH);
   const searchRun = useRef(0);
   const [selected, setSelected] = useState(null);
-  const [amount, setAmount] = useState('100');
+  const [amount, setAmount] = useState(() => units.toInputMass(100));
   const [unit, setUnit] = useState('grams');
   // The nearest Meal Time to the clock when the panel opens; "another time" when none applies.
   const [nearestId] = useState(() => defaultMealTimeId(meals, weekday, new Date()));
@@ -98,24 +100,36 @@ export default function LogFoodPanel({
       setAmount('1');
     } else {
       setUnit('grams');
-      setAmount('100');
+      setAmount(units.toInputMass(100));
     }
   }
 
   const parsed = selected
-    ? amountToGrams({ amount, unit, servingGrams: selected.servingGrams })
+    ? amountToGrams({ amount, unit, servingGrams: selected.servingGrams, units: units.units })
     : null;
   const nutrition = parsed?.ok ? entryNutrition(selected, parsed.grams) : null;
 
   async function handleLog(event) {
     event.preventDefault();
     if (busy) return;
-    const problem = logProblem({ food: selected, amount, unit, logDate, todayKey });
+    const problem = logProblem({
+      food: selected,
+      amount,
+      unit,
+      logDate,
+      todayKey,
+      units: units.units,
+    });
     if (problem) {
-      setError(t(problem, { max: MAX_LOG_GRAMS }));
+      setError(t(problem, { max: units.formatMass(MAX_LOG_GRAMS) }));
       return;
     }
-    const amounts = amountToGrams({ amount, unit, servingGrams: selected.servingGrams });
+    const amounts = amountToGrams({
+      amount,
+      unit,
+      servingGrams: selected.servingGrams,
+      units: units.units,
+    });
     // A USDA food is saved to the Food Library before it is logged, which needs a connection.
     if (!offline.online && selected.source !== 'library') {
       setError(t('today.offline.usdaSaveNeedsConnection'));
@@ -249,13 +263,13 @@ export default function LogFoodPanel({
             <label>
               {t('today.log.unit')}{' '}
               <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-                <option value="grams">{t('today.log.unitGrams')}</option>
+                <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
                 <option value="servings">{t('today.log.unitServings')}</option>
               </select>
             </label>
           ) : null}
           {selected.servingGrams > 0 ? (
-            <p>{t('today.log.servingHint', { grams: number(selected.servingGrams, 1) })}</p>
+            <p>{t('today.log.servingHint', { grams: units.formatMass(selected.servingGrams) })}</p>
           ) : null}
           <p>
             <label>
@@ -280,9 +294,9 @@ export default function LogFoodPanel({
               <p>
                 {nutrition.protein != null && nutrition.carbs != null && nutrition.fat != null
                   ? t('today.log.previewMacros', {
-                      protein: number(nutrition.protein, 1),
-                      carbs: number(nutrition.carbs, 1),
-                      fat: number(nutrition.fat, 1),
+                      protein: units.formatMass(nutrition.protein),
+                      carbs: units.formatMass(nutrition.carbs),
+                      fat: units.formatMass(nutrition.fat),
                     })
                   : t('today.log.previewNoMacros')}
               </p>

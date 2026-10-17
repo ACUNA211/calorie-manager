@@ -20,6 +20,17 @@ export function nextKey() {
   return `ingredient-${keyCounter}`;
 }
 
+import { parseMassKeeping, toInputMass } from './units.js';
+
+// A gram field (an ingredient's amount or the cooked weight), read in the Member's units.
+// Empty gives null (not given). The stored grams are kept when the text is still as shown.
+export function parseGramsField(text, units, stored) {
+  if (String(text ?? '').trim() === '') return { ok: true, value: null };
+  const parsed = parseMassKeeping(text, units, stored);
+  if (!parsed.ok) return { ok: false, error: 'units.errors.mass' };
+  return { ok: true, value: parsed.grams };
+}
+
 // A plain positive-number field: "250", "2.5". Empty gives null (not given).
 // Anything else (negative, "1,5", "2 cups") is an error, so the caller can say so.
 export function parseAmount(text) {
@@ -63,20 +74,25 @@ export function toggleMealTime(draft, mealTimeId, on) {
 }
 
 // A stored Recipe (as loaded by loadRecipes) becomes an editor draft.
-export function draftFromRecipe(recipe) {
+// The grams shown in the editor are in the Member's units; storedGrams keeps the exact stored
+// value while the text is unchanged.
+export function draftFromRecipe(recipe, units = 'metric') {
+  const cooked = recipe.cooked_weight_g == null ? null : Number(recipe.cooked_weight_g);
   return {
     id: recipe.id,
     name: recipe.name,
     starred: Boolean(recipe.starred),
     servings: String(recipe.servings),
-    cookedWeight: recipe.cooked_weight_g == null ? '' : String(recipe.cooked_weight_g),
+    cookedWeight: toInputMass(cooked, units),
+    storedCookedWeight: cooked,
     notes: recipe.notes ?? '',
     mealTimeIds: uniqueIds((recipe.meal_time_tags ?? []).map((tag) => tag.id)),
     ingredients: (recipe.ingredients ?? []).map((item) => ({
       key: nextKey(),
       id: item.id,
       food: item.food,
-      grams: String(item.grams),
+      grams: toInputMass(item.grams, units),
+      storedGrams: Number(item.grams),
     })),
   };
 }
@@ -102,7 +118,7 @@ export function setIngredientGrams(draft, key, grams) {
 
 // Checks the whole draft. Returns { ok, values, errors }: values is what to save, and errors
 // maps a field (or "ingredient:<key>") to a translation key.
-export function validateRecipe(draft) {
+export function validateRecipe(draft, units = 'metric') {
   const errors = {};
   const values = {
     id: draft.id ?? null,
@@ -124,7 +140,7 @@ export function validateRecipe(draft) {
   else if (servings.value > SERVINGS_MAX) errors.servings = 'recipes.errors.tooLarge';
   else values.servings = servings.value;
 
-  const cooked = parseAmount(draft.cookedWeight);
+  const cooked = parseGramsField(draft.cookedWeight, units, draft.storedCookedWeight);
   if (!cooked.ok) errors.cookedWeight = cooked.error;
   else if (cooked.value !== null && cooked.value > GRAMS_MAX)
     errors.cookedWeight = 'recipes.errors.tooLarge';
@@ -135,7 +151,7 @@ export function validateRecipe(draft) {
 
   if (draft.ingredients.length === 0) errors.ingredients = 'recipes.errors.noIngredients';
   for (const item of draft.ingredients) {
-    const grams = parseAmount(item.grams);
+    const grams = parseGramsField(item.grams, units, item.storedGrams);
     if (!item.food?.id) {
       errors[`ingredient:${item.key}`] = 'recipes.errors.noFood';
     } else if (!grams.ok) {
@@ -154,10 +170,10 @@ export function validateRecipe(draft) {
 
 // The ingredients of a draft as { grams, food } for recipeTotals, skipping lines whose
 // grams are not a usable number yet, so the preview updates as the Member types.
-export function previewIngredients(draft) {
+export function previewIngredients(draft, units = 'metric') {
   return draft.ingredients
     .map((item) => {
-      const grams = parseAmount(item.grams);
+      const grams = parseGramsField(item.grams, units, item.storedGrams);
       return grams.ok && grams.value !== null && item.food
         ? { grams: grams.value, food: item.food }
         : null;

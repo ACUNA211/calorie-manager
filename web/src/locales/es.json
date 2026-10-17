@@ -768,5 +768,17 @@
       "saveError": "No se pudo guardar tu configuración de compartir. Inténtalo de nuevo.",
       "noMember": "Únete o crea un hogar primero."
     }
+  },
+  "units": {
+    "heading": "Unidades de medida",
+    "label": "Unidades",
+    "help": "Las cantidades se guardan en gramos y kilos. Esto solo cambia cómo se muestran y cómo se escriben.",
+    "us": "EE. UU. (oz, lb)",
+    "metric": "Métricas (g, kg)",
+    "saved": "Unidades guardadas.",
+    "saveError": "No se pudieron guardar las unidades. Inténtalo de nuevo.",
+    "errors": {
+      "mass": "Escribe una cantidad, por ejemplo 150 o 5,5. Un número sin unidad va en tus unidades; también puedes añadir g, kg, oz o lb."
+    }
   }
 }
