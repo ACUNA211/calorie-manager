@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** None (can start immediately)
+**Blocked by:** 76 (Get API keys and run the research tests)
 
 **Status:** partly done: waiting on API keys
 

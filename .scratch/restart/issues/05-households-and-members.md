@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 02 (App skeleton and sign-in)
+**Blocked by:** 02 (App skeleton and sign-in), 69 (Run the database tests locally)
 
 **Status:** done (awaiting DB test run)
 

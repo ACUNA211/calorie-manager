@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 05 (Households and Members)
+**Blocked by:** 05 (Households and Members), 69 (Run the database tests locally), 71 (Decide: how sign-ups work with invites)
 
 **Status:** done (awaiting DB test run)
 

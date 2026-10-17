@@ -24,6 +24,8 @@ A Household PWA: barcode Scan into one shared Pantry, a Household Recipe library
 
 68 tickets in `issues/`, numbered in dependency order: 01–36 release 1, 37–56 release 2, 57–63 release 3, 64–68 release 4. The frontier (no blockers): 01, 02, 15, 35, 36. What's built vs this plan: [research/built-vs-restart.md](research/built-vs-restart.md).
 
+Your tasks: 69–79 are things only you can do (run the database tests, deploy, phone checks, API keys, decisions, review). Each is `Status: ready-for-human` and is listed in the Blocked by line of the agent tickets it holds up, so a ticket isn't closed until its human task is done. Start with the ones that have no blockers: 69, 70, 71, 72, 77, 79.
+
 ## Grilling decisions (2026-10-17)
 
 Rounds 1–5 are recorded in CONTEXT.md and the ADRs above. Round 6: no safety rails; exercise later; Recipes are ingredients plus notes; the draft runs once a week, Friday 6pm by default, changeable.

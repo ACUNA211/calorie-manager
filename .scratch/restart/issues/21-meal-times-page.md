@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 09 (Move personal tables to Members)
+**Blocked by:** 09 (Move personal tables to Members), 72 (Decide: when do two Meal Times overlap?)
 
 **Status:** done (awaiting review)
 

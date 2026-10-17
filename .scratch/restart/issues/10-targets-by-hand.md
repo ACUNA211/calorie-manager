@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 09 (Move personal tables to Members)
+**Blocked by:** 09 (Move personal tables to Members), 69 (Run the database tests locally)
 
 **Status:** done (awaiting review)
 

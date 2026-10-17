@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 08 (Move shared tables into the Household)
+**Blocked by:** 08 (Move shared tables into the Household), 69 (Run the database tests locally)
 
 **Status:** done (awaiting DB test run)
 

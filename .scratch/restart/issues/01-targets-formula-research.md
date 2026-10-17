@@ -2,7 +2,7 @@
 
 **What to build:** Find the best-supported way to turn the Intake form's answers into suggested Targets (calories, protein floor, carb and fat ranges) for each Member. Use deep research against primary sources (peer-reviewed studies, position statements, Dietary Reference Intakes). Write the report to `.scratch/restart/research/`.
 
-**Blocked by:** None (can start immediately)
+**Blocked by:** 70 (Decide: a minimum in suggested Targets?)
 
 **Status:** done (awaiting review)
 

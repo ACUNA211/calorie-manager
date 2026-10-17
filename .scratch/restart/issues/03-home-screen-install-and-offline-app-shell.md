@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 02 (App skeleton and sign-in)
+**Blocked by:** 02 (App skeleton and sign-in), 74 (Phone check: install and offline)
 
 **Status:** done (awaiting device check)
 
