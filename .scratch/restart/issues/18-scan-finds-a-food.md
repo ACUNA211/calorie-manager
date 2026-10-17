@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 14 (Food search page), 17 (Barcode phone test), 75 (Phone check: barcode reads)
+**Blocked by:** 14 (Food search page), 17 (Barcode phone test), 75 (Phone check: barcode reads), 81 (Decide: show macros on USDA search results?)
 
 **Status:** done (awaiting phone test)
 
