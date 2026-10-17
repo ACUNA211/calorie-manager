@@ -7,6 +7,7 @@ import TargetsPage from './components/TargetsPage.jsx';
 import MealTimesPage from './components/MealTimesPage.jsx';
 import FoodsPage from './components/FoodsPage.jsx';
 import RecipesPage from './components/RecipesPage.jsx';
+import PantryPage from './components/PantryPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
@@ -62,6 +63,7 @@ export default function App() {
         <MealTimesPage user={session.user} />
         <FoodsPage />
         <RecipesPage />
+        <PantryPage user={session.user} />
       </>
     );
 

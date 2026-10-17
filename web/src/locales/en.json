@@ -365,5 +365,54 @@
   "loggingFor": {
     "label": "Logging for",
     "you": "{{name}} (you)"
+  },
+  "pantry": {
+    "heading": "Pantry",
+    "intro": "Food at home, shared by everyone in your Household. Amounts are in grams for now; units come later.",
+    "loading": "Loading your Pantry…",
+    "loadError": "Could not load your Pantry.",
+    "empty": "Nothing in the Pantry yet. Search for a food above to add it.",
+    "grams": "{{value}} g",
+    "sections": {
+      "produce": "Produce",
+      "meatSeafood": "Meat & seafood",
+      "dairyEggs": "Dairy & eggs",
+      "bakery": "Bakery & tortillas",
+      "frozen": "Frozen",
+      "cannedDry": "Canned & dry goods",
+      "pantry": "Pantry staples",
+      "drinks": "Drinks",
+      "snacks": "Snacks",
+      "other": "Other"
+    },
+    "add": {
+      "heading": "Add to the Pantry",
+      "searchLabel": "Search foods to add",
+      "search": "Search",
+      "searching": "Searching…",
+      "noResults": "No foods match \"{{query}}\".",
+      "libraryLoadError": "Could not search your Food Library.",
+      "usdaLoadError": "Could not search USDA foods.",
+      "inLibrary": "In your Food Library",
+      "fromUsda": "USDA",
+      "amountLabel": "Grams of {{name}}",
+      "addButton": "Add {{name}}",
+      "adding": "Adding…",
+      "added": "Added {{name}} to the Pantry.",
+      "error": "Could not add this food. Try again."
+    },
+    "correct": {
+      "usedUp": "Used up",
+      "half": "About half",
+      "setLabel": "Type the grams of {{name}} left",
+      "setButton": "Set amount",
+      "error": "Could not change this amount. Try again."
+    },
+    "errors": {
+      "amountRequired": "Type an amount in grams.",
+      "amountInvalid": "Use a number of grams, with at most one decimal place (such as 150 or 62.5).",
+      "amountTooHigh": "The most the Pantry holds for one food is 100000 g.",
+      "amountZero": "Type more than 0 g to add a food."
+    }
   }
 }
