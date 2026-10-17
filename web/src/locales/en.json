@@ -429,7 +429,15 @@
     "scanError": "Could not look up this barcode. Check your connection and try again.",
     "scanAgain": "Scan again",
     "scanClose": "Close scanner",
-    "searchByName": "Search by name"
+    "searchByName": "Search by name",
+    "fromOff": "Open Food Facts, added to your scan result only (not to the Food Library)",
+    "scanOffBusy": "Open Food Facts is busy right now. Try this barcode again in a minute, or search by name.",
+    "scanOffError": "Open Food Facts could not be reached. Check your connection and try again, or search by name."
+  },
+  "off": {
+    "creditBefore": "Data from",
+    "creditName": "Open Food Facts",
+    "creditAfter": ", available under the Open Database License."
   },
   "loggingFor": {
     "label": "Logging for",

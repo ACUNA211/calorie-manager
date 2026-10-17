@@ -429,7 +429,15 @@
     "scanError": "No se pudo buscar este código de barras. Revisa tu conexión e inténtalo de nuevo.",
     "scanAgain": "Escanear otra vez",
     "scanClose": "Cerrar el escáner",
-    "searchByName": "Buscar por nombre"
+    "searchByName": "Buscar por nombre",
+    "fromOff": "Open Food Facts, solo en el resultado del escaneo (no en la biblioteca de alimentos)",
+    "scanOffBusy": "Open Food Facts está ocupado ahora. Prueba este código de barras otra vez en un minuto, o busca por nombre.",
+    "scanOffError": "No se pudo conectar con Open Food Facts. Revisa tu conexión y prueba otra vez, o busca por nombre."
+  },
+  "off": {
+    "creditBefore": "Datos de",
+    "creditName": "Open Food Facts",
+    "creditAfter": ", disponibles bajo la Open Database License."
   },
   "loggingFor": {
     "label": "Registrando para",
