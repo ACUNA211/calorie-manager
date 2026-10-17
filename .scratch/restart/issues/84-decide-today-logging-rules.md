@@ -17,12 +17,17 @@ Ticket 34 (Offline logging) adds one more; answer it in ticket 34's Comments:
 
 6. **A refused queued entry.** When the server refuses an entry that was logged offline, it shows an error with Try again and Discard, and the entries queued after it wait (kept in order). Keep that, or skip it and send the rest?
 
+Ticket 27 (Today scan buttons) adds one more; answer it in ticket 27's Comments:
+
+7. **"Eaten" offline.** Eaten logs the food and takes it off the Pantry, so it needs a connection (the Pantry change isn't queued). Is that fine, or should Eaten work offline too (queue the Pantry change as well)?
+
 **Blocked by:** None (can start immediately)
 
 **Status:** ready-for-human
 
-**Unblocks:** 23, 24, 34
+**Unblocks:** 23, 24, 27, 34
 
 - [ ] Four answers written in ticket 23's Comments
 - [ ] Answer 5 written in ticket 24's Comments
 - [ ] Answer 6 written in ticket 34's Comments
+- [ ] Answer 7 written in ticket 27's Comments

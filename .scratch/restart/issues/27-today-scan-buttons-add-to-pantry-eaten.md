@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 23 (Today: log a food), 25 (Pantry page), 18 (Scan finds a food), 75 (Phone check: barcode reads), 69 (Run the database tests locally)
+**Blocked by:** 23 (Today: log a food), 25 (Pantry page), 18 (Scan finds a food), 75 (Phone check: barcode reads), 69 (Run the database tests locally), 84 (Decide: Today logging rules)
 
 **Status:** done (awaiting phone test)
 
