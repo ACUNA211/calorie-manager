@@ -218,6 +218,24 @@
     "noMatches": "Ninguna receta coincide con la búsqueda.",
     "addButton": "Añadir una receta",
     "starred": "Con estrella",
+    "filters": {
+      "starredOnly": "Solo con estrella"
+    },
+    "tags": {
+      "label": "Encaja con: {{names}}",
+      "unavailable": "un horario que no puedes ver",
+      "heading": "Horarios con los que encaja",
+      "hint": "Una pista para planificar, no una regla. Marca los horarios con los que encaja esta receta.",
+      "none": "Añade primero un horario para etiquetar recetas."
+    },
+    "copy": {
+      "button": "Copiar como variante",
+      "hint": "Copia la receta guardada con sus ingredientes y horarios. La copia no lleva estrella, y cambiar una de las dos recetas no toca la otra.",
+      "suffix": " (variante)",
+      "original": "Variante de {{name}}",
+      "originalMissing": "Variante de una receta que ya no está",
+      "error": "No se pudo copiar la receta. Inténtalo de nuevo."
+    },
     "makes": "Rinde {{count}} porciones",
     "perServing": "{{kcal}} kcal por porción",
     "unknown": "Desconocido",

@@ -2,14 +2,22 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RecipesPage from './RecipesPage.jsx';
-import { loadRecipes, saveRecipe, deleteRecipe, searchFoods } from '../lib/recipes.js';
+import {
+  loadMealTimeOptions,
+  loadRecipes,
+  saveRecipe,
+  deleteRecipe,
+  searchFoods,
+} from '../lib/recipes.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/recipes.js', async (importOriginal) => ({
   ...(await importOriginal()),
   loadRecipes: vi.fn(),
+  loadMealTimeOptions: vi.fn(),
   saveRecipe: vi.fn(),
+  copyRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
   searchFoods: vi.fn(),
 }));
@@ -54,6 +62,7 @@ function renderPage() {
 describe('RecipesPage', () => {
   beforeEach(() => {
     loadRecipes.mockResolvedValue([chili, toast]);
+    loadMealTimeOptions.mockResolvedValue([]);
     saveRecipe.mockResolvedValue(3);
     deleteRecipe.mockResolvedValue();
     searchFoods.mockResolvedValue([]);
@@ -99,6 +108,42 @@ describe('RecipesPage', () => {
     await userEvent.type(screen.getByLabelText('Search Recipes'), 'zzz');
 
     expect(screen.getByText('No Recipes match that search.')).toBeInTheDocument();
+  });
+
+  it('shows only starred Recipes when the starred filter is on', async () => {
+    renderPage();
+    await screen.findByRole('button', { name: /Chili/ });
+
+    await userEvent.click(screen.getByLabelText('Starred only'));
+
+    expect(screen.getByRole('button', { name: /Chili/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Toast/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the Meal Times a Recipe is tagged with, and the original of a copy', async () => {
+    loadRecipes.mockResolvedValue([
+      {
+        ...chili,
+        meal_time_tags: [
+          { id: 1, name: 'Dinner' },
+          { id: 4, name: null },
+        ],
+      },
+      {
+        ...chili,
+        id: 9,
+        name: 'Chili (variation)',
+        starred: false,
+        copied_from: 1,
+        meal_time_tags: [],
+      },
+    ]);
+    renderPage();
+
+    expect(
+      await screen.findByText('Suits: Dinner, a Meal Time you cannot see')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Variation of Chili')).toBeInTheDocument();
   });
 
   it('shows the empty state when the Household has no Recipes', async () => {

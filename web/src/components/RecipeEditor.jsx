@@ -1,25 +1,30 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import {
   addIngredient,
+  copyRecipe,
   deleteRecipe,
   draftFromRecipe,
   emptyRecipeDraft,
+  loadMealTimeOptions,
   parseAmount,
   previewIngredients,
   removeIngredient,
   saveRecipe,
   setIngredientGrams,
+  toggleMealTime,
   validateRecipe,
+  variationName,
 } from '../lib/recipes.js';
 import { gramsPerServing, recipeTotals } from '../lib/recipeTotals.js';
 import RecipeIngredientsField from './RecipeIngredientsField.jsx';
 import RecipeTotals from './RecipeTotals.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
-// Creates a Recipe (recipe = null) or edits one. onClose(changed) runs after a save or a
-// delete (changed true) or a cancel (false), so the list can reload.
-export default function RecipeEditor({ recipe, onClose }) {
+// Creates a Recipe (recipe = null) or edits one. onClose(changed) runs after a save, a
+// delete or a copy (changed true) or a cancel (false), so the list can reload.
+// originalName is the name of the Recipe this one was copied from, when it is known.
+export default function RecipeEditor({ recipe, originalName = null, onClose }) {
   const { t, formatNumber } = useI18n();
   const ids = useId();
   const [draft, setDraft] = useState(() => (recipe ? draftFromRecipe(recipe) : emptyRecipeDraft()));
@@ -27,6 +32,31 @@ export default function RecipeEditor({ recipe, onClose }) {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [mealTimeOptions, setMealTimeOptions] = useState([]);
+
+  // The Meal Times the caller can read, for the tag checkboxes. A failure leaves the list
+  // empty, and any tags already on the Recipe still show (below).
+  useEffect(() => {
+    let active = true;
+    loadMealTimeOptions(supabase)
+      .then((options) => {
+        if (active) setMealTimeOptions(options);
+      })
+      .catch(() => {
+        if (active) setMealTimeOptions([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Every option, plus any tag on the Recipe that the caller cannot read (kept on save).
+  const tagOptions = [...mealTimeOptions];
+  for (const tag of recipe?.meal_time_tags ?? []) {
+    if (!tagOptions.some((option) => option.id === tag.id)) {
+      tagOptions.push({ id: tag.id, name: tag.name });
+    }
+  }
 
   const servings = parseAmount(draft.servings).value;
   const cooked = parseAmount(draft.cookedWeight).value;
@@ -61,6 +91,19 @@ export default function RecipeEditor({ recipe, onClose }) {
       setNotice(t('recipes.deleteError'));
       setBusy(false);
       setConfirmDelete(false);
+    }
+  }
+
+  // Copies the saved Recipe (not unsaved edits in this form) as a variation.
+  async function handleCopy() {
+    setBusy(true);
+    setNotice('');
+    try {
+      await copyRecipe(supabase, recipe.id, variationName(recipe.name, t('recipes.copy.suffix')));
+      onClose(true);
+    } catch {
+      setNotice(t('recipes.copy.error'));
+      setBusy(false);
     }
   }
 
@@ -171,6 +214,30 @@ export default function RecipeEditor({ recipe, onClose }) {
           )}
         </div>
 
+        <fieldset>
+          <legend>{t('recipes.tags.heading')}</legend>
+          <p>{t('recipes.tags.hint')}</p>
+          {tagOptions.length === 0 ? (
+            <p>{t('recipes.tags.none')}</p>
+          ) : (
+            tagOptions.map((option) => (
+              <div key={option.id}>
+                <input
+                  id={fieldId(`tag-${option.id}`)}
+                  type="checkbox"
+                  checked={draft.mealTimeIds.includes(option.id)}
+                  onChange={(event) =>
+                    setDraft(toggleMealTime(draft, option.id, event.target.checked))
+                  }
+                />{' '}
+                <label htmlFor={fieldId(`tag-${option.id}`)}>
+                  {option.name ?? t('recipes.tags.unavailable')}
+                </label>
+              </div>
+            ))
+          )}
+        </fieldset>
+
         {notice && <p role="alert">{notice}</p>}
 
         <div>
@@ -182,6 +249,19 @@ export default function RecipeEditor({ recipe, onClose }) {
           </button>
         </div>
       </form>
+
+      {recipe && (
+        <div>
+          {originalName && <p>{t('recipes.copy.original', { name: originalName })}</p>}
+          {recipe.copied_from != null && !originalName && (
+            <p>{t('recipes.copy.originalMissing')}</p>
+          )}
+          <p>{t('recipes.copy.hint')}</p>
+          <button type="button" onClick={handleCopy} disabled={busy}>
+            {t('recipes.copy.button')}
+          </button>
+        </div>
+      )}
 
       {draft.id && (
         <div>

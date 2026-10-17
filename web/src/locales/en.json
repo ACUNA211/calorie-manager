@@ -218,6 +218,24 @@
     "noMatches": "No Recipes match that search.",
     "addButton": "Add a Recipe",
     "starred": "Starred",
+    "filters": {
+      "starredOnly": "Starred only"
+    },
+    "tags": {
+      "label": "Suits: {{names}}",
+      "unavailable": "a Meal Time you cannot see",
+      "heading": "Meal Times it suits",
+      "hint": "A hint for planning, not a rule. Tick the Meal Times this Recipe suits.",
+      "none": "Add a Meal Time first to tag Recipes."
+    },
+    "copy": {
+      "button": "Copy as a variation",
+      "hint": "Copies the saved Recipe with its ingredients and Meal Time tags. The copy is not starred, and changing either Recipe leaves the other alone.",
+      "suffix": " (variation)",
+      "original": "Variation of {{name}}",
+      "originalMissing": "Variation of a Recipe that is no longer here",
+      "error": "Could not copy the Recipe. Try again."
+    },
     "makes": "Makes {{count}} servings",
     "perServing": "{{kcal}} kcal per serving",
     "unknown": "Unknown",

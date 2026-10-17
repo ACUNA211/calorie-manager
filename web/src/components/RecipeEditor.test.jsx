@@ -2,14 +2,22 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RecipeEditor from './RecipeEditor.jsx';
-import { deleteRecipe, saveRecipe, searchFoods } from '../lib/recipes.js';
+import {
+  copyRecipe,
+  deleteRecipe,
+  loadMealTimeOptions,
+  saveRecipe,
+  searchFoods,
+} from '../lib/recipes.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/recipes.js', async (importOriginal) => ({
   ...(await importOriginal()),
   loadRecipes: vi.fn(),
+  loadMealTimeOptions: vi.fn(),
   saveRecipe: vi.fn(),
+  copyRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
   searchFoods: vi.fn(),
 }));
@@ -52,11 +60,16 @@ async function addFood(name) {
   await userEvent.click(await screen.findByRole('button', { name: `Add ${rice.name}` }));
 }
 
+const breakfast = { id: 1, name: 'Breakfast' };
+const dinner = { id: 2, name: 'Dinner' };
+
 describe('RecipeEditor', () => {
   beforeEach(() => {
     saveRecipe.mockResolvedValue(9);
+    copyRecipe.mockResolvedValue(20);
     deleteRecipe.mockResolvedValue();
     searchFoods.mockResolvedValue([]);
+    loadMealTimeOptions.mockResolvedValue([breakfast, dinner]);
   });
 
   afterEach(() => {
@@ -114,8 +127,65 @@ describe('RecipeEditor', () => {
       servings: 2,
       cookedWeightG: null,
       notes: 'Use day-old rice.',
+      mealTimeIds: [],
       ingredients: [{ foodId: 7, grams: 200 }],
     });
+  });
+
+  it('saves the Meal Times ticked as tags, as a hint', async () => {
+    const { onClose } = renderEditor({ recipe: existing });
+    await screen.findByLabelText('Dinner');
+
+    await userEvent.click(screen.getByLabelText('Dinner'));
+    await userEvent.click(screen.getByRole('button', { name: 'Save Recipe' }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));
+    expect(saveRecipe.mock.calls[0][1].mealTimeIds).toEqual([2]);
+  });
+
+  it('keeps a tag whose Meal Time the Member cannot see, and says so', async () => {
+    const { onClose } = renderEditor({
+      recipe: {
+        ...existing,
+        meal_time_tags: [{ id: 7, name: null }],
+      },
+    });
+
+    expect(await screen.findByLabelText('a Meal Time you cannot see')).toBeChecked();
+    await userEvent.click(screen.getByRole('button', { name: 'Save Recipe' }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));
+    expect(saveRecipe.mock.calls[0][1].mealTimeIds).toEqual([7]);
+  });
+
+  it('copies the saved Recipe as a variation, then closes with changed', async () => {
+    const { onClose } = renderEditor({ recipe: existing });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy as a variation' }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));
+    expect(copyRecipe).toHaveBeenCalledWith(expect.anything(), 5, 'Fried rice (variation)');
+    expect(saveRecipe).not.toHaveBeenCalled();
+  });
+
+  it('shows the copy error and stays open when copying fails', async () => {
+    copyRecipe.mockRejectedValue(new Error('network'));
+    const { onClose } = renderEditor({ recipe: existing });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy as a variation' }));
+
+    expect(await screen.findByText('Could not copy the Recipe. Try again.')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('names the original of a copy', () => {
+    renderEditor({ recipe: { ...existing, copied_from: 3 }, originalName: 'Fried rice' });
+    expect(screen.getByText('Variation of Fried rice')).toBeInTheDocument();
+  });
+
+  it('does not offer a copy for a new Recipe', () => {
+    renderEditor();
+    expect(screen.queryByRole('button', { name: 'Copy as a variation' })).not.toBeInTheDocument();
   });
 
   it('shows the save error and stays open when saving fails', async () => {
