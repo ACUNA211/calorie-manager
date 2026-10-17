@@ -1,13 +1,10 @@
-# Which formula and calculator should the Intake form use?
+# 01: Research: which formula and calculator should the Intake form use?
 
-Type: research
-Status: open
-Assignee:
-Blocked by:
+**What to build:** Find the best-supported way to turn the Intake form's answers into suggested Targets (calories, protein floor, carb and fat ranges) for each Member. Use deep research against primary sources (peer-reviewed studies, position statements, Dietary Reference Intakes). Write the report to `.scratch/restart/research/`.
 
-## Question
+**Blocked by:** None (can start immediately)
 
-Find the best-supported way to turn the Intake form's answers into suggested Targets (calories, protein floor, carb and fat ranges) for each Member. Use deep research against primary sources (peer-reviewed studies, position statements, Dietary Reference Intakes).
+**Status:** ready-for-agent
 
 ## What to cover
 
@@ -20,8 +17,8 @@ Find the best-supported way to turn the Intake form's answers into suggested Tar
 
 ## Done when
 
-- A cited recommendation for the formula, the form's questions and the safety limits, with the uncertainty of each step stated
-- The Targets entry in CONTEXT.md can be written from it
+- [ ] A cited recommendation for the formula, the form's questions and the safety limits, with the uncertainty of each step stated
+- [ ] The Targets entry in CONTEXT.md can be written from it
 
 ## Comments
 
