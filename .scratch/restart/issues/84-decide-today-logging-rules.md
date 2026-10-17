@@ -9,10 +9,15 @@
 3. Future days can be viewed but not logged.
 4. Entry values are rounded to one decimal.
 
+Ticket 24 (edit, delete, undo) added one more; answer it in ticket 24's Comments:
+
+5. **Undo after delete gives a new id.** Undo puts back every value (date, Meal Time, time, amount, calories, macros, food, original created time) but the row gets a new id, because `calorie_log.id` is "generated always". Is that fine, or must it keep the same id (needs a migration)?
+
 **Blocked by:** None (can start immediately)
 
 **Status:** ready-for-human
 
-**Unblocks:** 23
+**Unblocks:** 23, 24
 
 - [ ] Four answers written in ticket 23's Comments
+- [ ] Answer 5 written in ticket 24's Comments
