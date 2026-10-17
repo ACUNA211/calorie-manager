@@ -1,0 +1,22 @@
+{
+  "$comment": "The JSON shape each model must return. One entry per slot id in the week. Set meal times are not slots and must not appear.",
+  "type": "object",
+  "required": ["weekStart", "plan"],
+  "properties": {
+    "weekStart": { "type": "string", "pattern": "^\d{4}-\d{2}-\d{2}$" },
+    "plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slot", "recipeId", "portion"],
+        "properties": {
+          "slot": { "type": "string", "description": "Slot id from the prompt, e.g. Mon-lunch" },
+          "recipeId": { "type": ["string", "null"], "description": "Recipe id from that slot's candidates, or null for an empty If room slot" },
+          "portion": { "type": "number", "minimum": 0, "maximum": 4, "description": "Servings in quarter steps; 0 when recipeId is null" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

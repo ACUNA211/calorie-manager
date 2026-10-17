@@ -1,0 +1,18 @@
+[
+  { "id": "R01", "name": "Overnight oats (1 jar)", "caloriesPerServing": 400, "suits": ["breakfast"], "tags": ["dairy", "oats"] },
+  { "id": "R02", "name": "Eggs and toast", "caloriesPerServing": 420, "suits": ["breakfast"], "tags": ["egg", "gluten"] },
+  { "id": "R03", "name": "Banana oatmeal", "caloriesPerServing": 360, "suits": ["breakfast"], "tags": ["oats"] },
+  { "id": "R04", "name": "Turkey avocado sandwich", "caloriesPerServing": 600, "suits": ["lunch", "weekend-lunch"], "tags": ["turkey", "gluten"] },
+  { "id": "R05", "name": "Apple with peanut butter", "caloriesPerServing": 200, "suits": ["snack"], "tags": ["peanut"] },
+  { "id": "R06", "name": "Greek yogurt cup (170 g)", "caloriesPerServing": 150, "suits": ["snack"], "tags": ["dairy"] },
+  { "id": "R07", "name": "Dark chocolate (28 g)", "caloriesPerServing": 150, "suits": ["snack", "dessert"], "tags": [] },
+  { "id": "R08", "name": "Beef and bean chili (makes 4)", "caloriesPerServing": 600, "suits": ["lunch", "weekend-lunch", "dinner"], "tags": ["beef", "legume"] },
+  { "id": "R09", "name": "Chicken rice bowl (makes 3)", "caloriesPerServing": 650, "suits": ["lunch", "weekend-lunch", "dinner"], "tags": ["chicken"] },
+  { "id": "R10", "name": "Turkey tomato pasta (makes 2)", "caloriesPerServing": 700, "suits": ["lunch", "dinner"], "tags": ["turkey", "gluten"] },
+  { "id": "R11", "name": "Sheet pan salmon and potatoes", "caloriesPerServing": 550, "suits": ["dinner"], "tags": ["fish"] },
+  { "id": "R12", "name": "Naan pizza", "caloriesPerServing": 700, "suits": ["dinner"], "tags": ["gluten", "dairy"] },
+  { "id": "R13", "name": "Fish tacos (3 tacos)", "caloriesPerServing": 700, "suits": ["dinner"], "tags": ["fish"] },
+  { "id": "R14", "name": "Chicken fajita rice bowl (makes 3)", "caloriesPerServing": 615, "suits": ["lunch", "weekend-lunch", "dinner"], "tags": ["chicken"] },
+  { "id": "R15", "name": "Turkey spinach pasta (makes 3)", "caloriesPerServing": 680, "suits": ["lunch", "weekend-lunch", "dinner"], "tags": ["turkey", "gluten"] },
+  { "id": "R16", "name": "Microwave popcorn (2 mini bags)", "caloriesPerServing": 200, "suits": ["snack"], "tags": [] }
+]

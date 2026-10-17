@@ -1,0 +1,22 @@
+You are drafting one week of Meal Plan for a Household. The week runs Sunday to Saturday, starting {{WEEK_START}}.
+
+Rules, checked by code after you answer:
+1. Calorie Target is a ceiling of {{CALORIE_TARGET}} kcal per day. No day may exceed it.
+2. Planning band: every day (Set meals + every filled slot) must total between {{BAND_LOW}} and {{BAND_HIGH}} kcal.
+3. Planned slots must be filled. Choose one Recipe id from that slot's candidate list and a portion.
+4. If room slots may be left empty (recipeId null, portion 0). Fill them only when the day is short of the band or they help land it in the band.
+5. Each filled slot's calories = portion x caloriesPerServing. It must fall inside the slot's range shown in the slot line.
+6. Portion must be one of 0.25, 0.5, 0.75, 1, 1.25, ... up to 4.
+7. Use only the candidate Recipe ids listed for each slot. Do not invent ids. Do not list Set meals; they are already counted.
+8. Cook in batches: repeat the same Recipe across the week where it fits, rather than a new Recipe every meal. Aim for about 3-5 different Recipes in the week.
+9. Hard rules have already been applied to the candidate lists. Do not add anything.
+
+Set meals already counted (do not plan these):
+{{SET_MEALS}}
+
+Slots (id | date and time | kind and range | candidates, with kcal per serving):
+{{SLOTS}}
+
+Answer with only a JSON object, no commentary, in exactly this shape:
+{"weekStart":"{{WEEK_START}}","plan":[{"slot":"Sun-breakfast","recipeId":"R02","portion":1}, ...]}
+Include one entry for every slot id above, in any order. For an empty If room slot use {"slot":"Sun-snack","recipeId":null,"portion":0}.

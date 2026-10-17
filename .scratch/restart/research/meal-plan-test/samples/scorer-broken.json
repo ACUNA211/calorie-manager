@@ -1,0 +1,148 @@
+{
+  "weekStart": "2026-10-18",
+  "ruleBreaks": 15,
+  "slotBreaks": 9,
+  "dayBreaks": 6,
+  "bandDistanceKcal": 2303,
+  "daysInBand": 1,
+  "byKind": {
+    "missing_slot": 1,
+    "unfilled_planned": 1,
+    "unknown_recipe": 1,
+    "not_candidate": 1,
+    "invalid_portion": 1,
+    "extra_slot": 1,
+    "touched_set": 1,
+    "range": 2,
+    "under_band": 4,
+    "over_target": 2
+  },
+  "days": [
+    {
+      "day": "Sun",
+      "date": "2026-10-18",
+      "total": 1400,
+      "status": "under band",
+      "distanceKcal": 400
+    },
+    {
+      "day": "Mon",
+      "date": "2026-10-19",
+      "total": 2063,
+      "status": "over ceiling",
+      "distanceKcal": 63
+    },
+    {
+      "day": "Tue",
+      "date": "2026-10-20",
+      "total": 1960,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Wed",
+      "date": "2026-10-21",
+      "total": 1220,
+      "status": "under band",
+      "distanceKcal": 580
+    },
+    {
+      "day": "Thu",
+      "date": "2026-10-22",
+      "total": 2215,
+      "status": "over ceiling",
+      "distanceKcal": 215
+    },
+    {
+      "day": "Fri",
+      "date": "2026-10-23",
+      "total": 1185,
+      "status": "under band",
+      "distanceKcal": 615
+    },
+    {
+      "day": "Sat",
+      "date": "2026-10-24",
+      "total": 1370,
+      "status": "under band",
+      "distanceKcal": 430
+    }
+  ],
+  "breaks": [
+    {
+      "kind": "extra_slot",
+      "slot": "Sun-lunch",
+      "detail": "slot id does not exist this week"
+    },
+    {
+      "kind": "touched_set",
+      "slot": "Tue-work-lunch",
+      "detail": "Set meal was given an entry"
+    },
+    {
+      "kind": "unfilled_planned",
+      "slot": "Sun-breakfast",
+      "detail": "Planned slot left empty"
+    },
+    {
+      "kind": "range",
+      "slot": "Mon-lunch",
+      "detail": "813 kcal outside 500-650"
+    },
+    {
+      "kind": "unknown_recipe",
+      "slot": "Wed-dinner",
+      "detail": "id R99 is not in the Recipe library"
+    },
+    {
+      "kind": "not_candidate",
+      "slot": "Thu-breakfast",
+      "detail": "R10 was not a candidate for this slot"
+    },
+    {
+      "kind": "range",
+      "slot": "Thu-breakfast",
+      "detail": "700 kcal outside 350-450"
+    },
+    {
+      "kind": "invalid_portion",
+      "slot": "Fri-dinner",
+      "detail": "portion 0.3 is not a quarter step from 0.25 to 4"
+    },
+    {
+      "kind": "missing_slot",
+      "slot": "Sat-weekend-lunch",
+      "detail": "no entry for Planned slot"
+    },
+    {
+      "kind": "under_band",
+      "slot": "Sun",
+      "detail": "1400 kcal is under the 1800-2000 band"
+    },
+    {
+      "kind": "over_target",
+      "slot": "Mon",
+      "detail": "2063 kcal is over the 2000 Calorie Target"
+    },
+    {
+      "kind": "under_band",
+      "slot": "Wed",
+      "detail": "1220 kcal is under the 1800-2000 band"
+    },
+    {
+      "kind": "over_target",
+      "slot": "Thu",
+      "detail": "2215 kcal is over the 2000 Calorie Target"
+    },
+    {
+      "kind": "under_band",
+      "slot": "Fri",
+      "detail": "1185 kcal is under the 1800-2000 band"
+    },
+    {
+      "kind": "under_band",
+      "slot": "Sat",
+      "detail": "1370 kcal is under the 1800-2000 band"
+    }
+  ]
+}
