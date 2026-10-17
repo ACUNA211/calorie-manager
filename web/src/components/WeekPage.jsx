@@ -7,6 +7,7 @@ import { buildWeek, shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic
 import { dateKey, parseDateKey, targetView } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import WeightPanel from './WeightPanel.jsx';
+import HouseholdDays from './HouseholdDays.jsx';
 
 const LOADING = { key: null, status: 'loading', entries: [] };
 
@@ -157,6 +158,7 @@ export default function WeekPage({ onOpenDay }) {
         })}
       </ol>
 
+      <HouseholdDays start={start} todayKey={todayKey} />
       <WeightPanel memberId={actingMemberId} weekStart={start} todayKey={todayKey} />
     </section>
   );

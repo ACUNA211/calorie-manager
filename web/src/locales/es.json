@@ -745,5 +745,28 @@
     },
     "entry": "{{date}}: {{kg}} kg",
     "span": "del {{from}} al {{to}}"
+  },
+  "sharing": {
+    "daysHeading": "Otros miembros esta semana",
+    "noAdults": "Todavía no hay otros miembros adultos en tu hogar.",
+    "loading": "Cargando los días de los otros miembros...",
+    "loadError": "No se pudieron cargar los días de los otros miembros. Inténtalo de nuevo.",
+    "status": {
+      "onTrack": "En objetivo",
+      "over": "Por encima",
+      "nothing": "Nada registrado",
+      "noTarget": "Sin objetivo de calorías"
+    },
+    "sharedAll": "Compartiendo todo",
+    "kcal": "{{kcal}} kcal",
+    "setting": {
+      "heading": "Compartir",
+      "label": "Compartir todo con los otros miembros adultos",
+      "help": "Desactivado: los otros adultos solo ven si cada uno de tus días estuvo en objetivo o por encima. Activado: también ven tu semana, tu registro de calorías, tus objetivos y tu peso. Los dependientes siempre son visibles para cada adulto.",
+      "loading": "Cargando tu configuración de compartir...",
+      "loadError": "No se pudo cargar tu configuración de compartir. Inténtalo de nuevo.",
+      "saveError": "No se pudo guardar tu configuración de compartir. Inténtalo de nuevo.",
+      "noMember": "Únete o crea un hogar primero."
+    }
   }
 }

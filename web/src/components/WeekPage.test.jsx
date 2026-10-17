@@ -9,6 +9,12 @@ import { loadWeight } from '../lib/weight.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
+vi.mock('../lib/sharing.js', () => ({
+  currentUserId: vi.fn(async () => null),
+  loadHouseholdWeeks: vi.fn(async () => []),
+  loadOwnSharing: vi.fn(async () => null),
+  setShareEverything: vi.fn(),
+}));
 vi.mock('../lib/actingMember.jsx', () => ({ useActingMember: vi.fn() }));
 vi.mock('../lib/targets.js', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -173,9 +179,11 @@ describe('WeekPage', () => {
     // Eighty-four days, from 26 July to 17 October, with the seven days before them fetched too.
     expect(loadWeight).toHaveBeenCalledWith({}, 4, '2026-07-20', '2026-10-17');
     expect(
-      screen.getByRole('img', { name: 'Weight over the last 12 weeks, with a 7-day average' })
+      await screen.findByRole('img', {
+        name: 'Weight over the last 12 weeks, with a 7-day average',
+      })
     ).toBeInTheDocument();
-    expect(screen.getByText('Lowest 72.1 kg, highest 72.5 kg')).toBeInTheDocument();
+    expect(await screen.findByText('Lowest 72.1 kg, highest 72.5 kg')).toBeInTheDocument();
   });
 
   it('asks for a Member when none is acted for', () => {

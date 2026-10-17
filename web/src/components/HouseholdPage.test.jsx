@@ -13,6 +13,12 @@ import { createInvite } from '../lib/invites.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
+vi.mock('../lib/sharing.js', () => ({
+  currentUserId: vi.fn(async () => null),
+  loadHouseholdWeeks: vi.fn(async () => []),
+  loadOwnSharing: vi.fn(async () => null),
+  setShareEverything: vi.fn(),
+}));
 vi.mock('../lib/households.js', async (importOriginal) => ({
   ...(await importOriginal()),
   loadHousehold: vi.fn(),

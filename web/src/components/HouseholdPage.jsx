@@ -12,6 +12,7 @@ import { buildInviteUrl, createInvite } from '../lib/invites.js';
 import { useActingMember } from '../lib/actingMember.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import AiSpendPanel from './AiSpendPanel.jsx';
+import SharingSetting from './SharingSetting.jsx';
 
 export default function HouseholdPage({ user }) {
   const { t } = useI18n();
@@ -51,7 +52,12 @@ export default function HouseholdPage({ user }) {
     );
   }
 
-  return <MemberList household={state.household} onChanged={reloadHousehold} />;
+  return (
+    <>
+      <MemberList household={state.household} onChanged={reloadHousehold} />
+      <SharingSetting />
+    </>
+  );
 }
 
 function MemberList({ household, onChanged }) {

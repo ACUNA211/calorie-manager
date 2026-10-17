@@ -745,5 +745,28 @@
     },
     "entry": "{{date}}: {{kg}} kg",
     "span": "{{from}} to {{to}}"
+  },
+  "sharing": {
+    "daysHeading": "Other Members this week",
+    "noAdults": "No other adult Members in your Household yet.",
+    "loading": "Loading the other Members' days...",
+    "loadError": "Could not load the other Members' days. Try again.",
+    "status": {
+      "onTrack": "On track",
+      "over": "Over",
+      "nothing": "Nothing logged",
+      "noTarget": "No Calorie Target"
+    },
+    "sharedAll": "Sharing everything",
+    "kcal": "{{kcal}} kcal",
+    "setting": {
+      "heading": "Sharing",
+      "label": "Share everything with the other adult Members",
+      "help": "Off: other adults see only whether each of your days was on track or over. On: they also see your Week view, Calorie Log, Targets and weight. Dependents are always visible to every adult.",
+      "loading": "Loading your sharing setting...",
+      "loadError": "Could not load your sharing setting. Try again.",
+      "saveError": "Could not save your sharing setting. Try again.",
+      "noMember": "Join or create a Household first."
+    }
   }
 }
