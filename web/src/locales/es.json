@@ -208,5 +208,36 @@
       "alreadyInHousehold": "Ya perteneces a un hogar, así que no puedes unirte a este.",
       "joinFailed": "No se pudo unir al hogar. Inténtalo de nuevo."
     }
+  },
+  "foods": {
+    "heading": "Alimentos",
+    "searchLabel": "Buscar alimentos",
+    "searchHint": "Escribe un alimento. Primero se busca en tu biblioteca de alimentos y luego en USDA.",
+    "searching": "Buscando…",
+    "noResults": "Ningún alimento coincide con «{{query}}».",
+    "libraryLoadError": "No se pudo buscar en tu biblioteca de alimentos.",
+    "usdaLoadError": "No se pudo buscar en USDA. Se muestran los resultados de tu biblioteca.",
+    "inLibrary": "En tu biblioteca de alimentos",
+    "fromUsda": "USDA",
+    "per100g": "Por 100 g",
+    "perServing": "Por porción",
+    "servingLine": "Porción: {{label}} ({{grams}} g)",
+    "noServing": "No se conoce el tamaño de la porción.",
+    "macrosAfterSave": "La proteína, los carbohidratos y la grasa se muestran después de guardar este alimento.",
+    "kcal": "Calorías",
+    "protein": "Proteína",
+    "carbs": "Carbohidratos",
+    "fat": "Grasa",
+    "fibre": "Fibra",
+    "sugars": "Azúcares",
+    "sodium": "Sodio",
+    "grams": "{{value}} g",
+    "milligrams": "{{value}} mg",
+    "kcalValue": "{{value}} kcal",
+    "notReported": "sin dato",
+    "save": "Guardar en la biblioteca de alimentos",
+    "saving": "Guardando…",
+    "saved": "Guardado en tu biblioteca de alimentos.",
+    "saveError": "No se pudo guardar este alimento. Inténtalo de nuevo."
   }
 }

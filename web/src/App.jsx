@@ -5,6 +5,7 @@ import Home from './components/Home.jsx';
 import HouseholdPage from './components/HouseholdPage.jsx';
 import TargetsPage from './components/TargetsPage.jsx';
 import MealTimesPage from './components/MealTimesPage.jsx';
+import FoodsPage from './components/FoodsPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
@@ -57,6 +58,7 @@ export default function App() {
         <HouseholdPage user={session.user} />
         <TargetsPage user={session.user} />
         <MealTimesPage user={session.user} />
+        <FoodsPage />
       </>
     );
 

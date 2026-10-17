@@ -208,5 +208,36 @@
       "alreadyInHousehold": "You already belong to a Household, so you cannot join this one.",
       "joinFailed": "Could not join the Household. Try again."
     }
+  },
+  "foods": {
+    "heading": "Foods",
+    "searchLabel": "Search foods",
+    "searchHint": "Type a food. Your Food Library is searched first, then USDA.",
+    "searching": "Searching…",
+    "noResults": "No foods match \"{{query}}\".",
+    "libraryLoadError": "Could not search your Food Library.",
+    "usdaLoadError": "Could not search USDA. Your Food Library results are shown.",
+    "inLibrary": "In your Food Library",
+    "fromUsda": "USDA",
+    "per100g": "Per 100 g",
+    "perServing": "Per serving",
+    "servingLine": "Serving: {{label}} ({{grams}} g)",
+    "noServing": "No serving size known.",
+    "macrosAfterSave": "Protein, carbs and fat show after you save this food.",
+    "kcal": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "fibre": "Fibre",
+    "sugars": "Sugars",
+    "sodium": "Sodium",
+    "grams": "{{value}} g",
+    "milligrams": "{{value}} mg",
+    "kcalValue": "{{value}} kcal",
+    "notReported": "not reported",
+    "save": "Save to Food Library",
+    "saving": "Saving…",
+    "saved": "Saved to your Food Library.",
+    "saveError": "Could not save this food. Try again."
   }
 }
