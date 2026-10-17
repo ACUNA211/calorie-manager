@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
-import { nutritionFor, saveUsdaFood, searchFoods } from '../lib/foods.js';
+import {
+  displayName,
+  nutritionFor,
+  saveFoodNames,
+  saveUsdaFoodAndTranslate,
+  searchFoods,
+} from '../lib/foods.js';
 import { searchTokens } from '../lib/norm.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
@@ -32,6 +38,8 @@ export default function FoodsPage() {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const [saveState, setSaveState] = useState({ key: null, status: null });
+  // The Food Library food whose names are being edited: { key, id, name, nameEs, status }
+  const [editing, setEditing] = useState(null);
 
   const text = query.trim();
   // Punctuation alone (no words to search for) runs no search.
@@ -62,17 +70,81 @@ export default function FoodsPage() {
   // Results only count while they answer the current text.
   const ready = searchable && search.status === 'ready' && search.query === text ? search : null;
 
+  // Clears the results so the list shows "Searching" until the refreshed search lands.
+  function refreshAfterChange() {
+    setSearch((current) => ({ ...current, query: '' }));
+    setRefreshKey((key) => key + 1);
+  }
+
   async function handleSave(result) {
     setSaveState({ key: result.key, status: 'saving' });
     try {
-      await saveUsdaFood(supabase, result.fdcId);
+      // The Spanish name is filled after the save; a failed translation keeps the food saved.
+      await saveUsdaFoodAndTranslate(supabase, result.fdcId);
       setSaveState({ key: null, status: 'saved' });
-      // Clear the results so the list shows "Searching" until the refreshed search lands.
-      setSearch((current) => ({ ...current, query: '' }));
-      setRefreshKey((key) => key + 1);
+      refreshAfterChange();
     } catch {
       setSaveState({ key: result.key, status: 'error' });
     }
+  }
+
+  function startEditing(result) {
+    setEditing({
+      key: result.key,
+      id: result.id,
+      name: result.name,
+      nameEs: result.nameEs || '',
+      status: null,
+    });
+  }
+
+  async function handleSaveNames(event) {
+    event.preventDefault();
+    if (editing.name.trim() === '') {
+      setEditing({ ...editing, status: 'empty' });
+      return;
+    }
+    setEditing({ ...editing, status: 'saving' });
+    try {
+      await saveFoodNames(supabase, editing.id, { name: editing.name, nameEs: editing.nameEs });
+      setEditing(null);
+      setSaveState({ key: null, status: 'namesSaved' });
+      refreshAfterChange();
+    } catch {
+      setEditing((current) => (current ? { ...current, status: 'error' } : current));
+    }
+  }
+
+  function renderNameForm() {
+    const busy = editing.status === 'saving';
+    return (
+      <form onSubmit={handleSaveNames} aria-label={t('foods.editNamesLabel')}>
+        <label>
+          {t('foods.englishName')}
+          <input
+            type="text"
+            value={editing.name}
+            onChange={(event) => setEditing({ ...editing, name: event.target.value })}
+          />
+        </label>
+        <label>
+          {t('foods.spanishName')}
+          <input
+            type="text"
+            value={editing.nameEs}
+            onChange={(event) => setEditing({ ...editing, nameEs: event.target.value })}
+          />
+        </label>
+        <button type="submit" disabled={busy}>
+          {busy ? t('foods.saving') : t('foods.saveNames')}
+        </button>
+        <button type="button" onClick={() => setEditing(null)}>
+          {t('foods.cancel')}
+        </button>
+        {editing.status === 'empty' && <p role="alert">{t('foods.nameRequired')}</p>}
+        {editing.status === 'error' && <p role="alert">{t('foods.namesSaveError')}</p>}
+      </form>
+    );
   }
 
   const formatValue = (value, unitKey) => {
@@ -142,7 +214,7 @@ export default function FoodsPage() {
               return (
                 <li key={result.key}>
                   <h3>
-                    {result.name}
+                    {displayName(result, locale)}
                     {result.brand ? ` · ${result.brand}` : ''}
                   </h3>
                   <p>{t(result.source === 'library' ? 'foods.inLibrary' : 'foods.fromUsda')}</p>
@@ -155,6 +227,14 @@ export default function FoodsPage() {
                       {failed && <p role="alert">{t('foods.saveError')}</p>}
                     </>
                   )}
+                  {result.source === 'library' &&
+                    (editing && editing.key === result.key ? (
+                      renderNameForm()
+                    ) : (
+                      <button type="button" onClick={() => startEditing(result)}>
+                        {t('foods.editNames')}
+                      </button>
+                    ))}
                 </li>
               );
             })}
@@ -179,6 +259,7 @@ export default function FoodsPage() {
       </form>
       <p>{t('foods.searchHint')}</p>
       {saveState.status === 'saved' && <p role="status">{t('foods.saved')}</p>}
+      {saveState.status === 'namesSaved' && <p role="status">{t('foods.namesSaved')}</p>}
       {body}
     </section>
   );

@@ -5,6 +5,7 @@ describe('norm', () => {
   it('lower-cases and removes accents', () => {
     expect(norm('Jalapeño')).toBe('jalapeno');
     expect(norm('CAFÉ con Leche')).toBe('cafe con leche');
+    expect(norm('Ñandú')).toBe('nandu');
   });
 
   it('turns punctuation and other symbols into spaces', () => {

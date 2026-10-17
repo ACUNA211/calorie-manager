@@ -8,7 +8,10 @@
 import { norm, searchTokens } from './norm.js';
 
 export const FOOD_COLUMNS =
-  'id, name, brand, source, source_id, kcal_per_100g, servings, protein_g, carbs_g, fat_g, fibre_g, sugars_g, sodium_mg';
+  'id, name, name_es, name_es_edited_by_member, brand, source, source_id, kcal_per_100g, servings, protein_g, carbs_g, fat_g, fibre_g, sugars_g, sodium_mg';
+// Migration 017: the Spanish name is filled by translate-food-name. Its Edge Function
+// name is here so the page and the function agree.
+export const TRANSLATE_FUNCTION = 'translate-food-name';
 export const USDA_RESULT_LIMIT = 12;
 // The Food Library is searched in the app (accents folded), so every row of this
 // Household is read. Above this many foods, search misses the rest; see the ticket notes.
@@ -37,6 +40,8 @@ export function libraryResult(row) {
     id: row.id,
     usdaId: row.source === 'usda' && row.source_id ? String(row.source_id) : null,
     name: row.name,
+    nameEs: row.name_es || null,
+    nameEsEdited: row.name_es_edited_by_member === true,
     brand: row.brand || null,
     kcalPer100g: numberOrNull(row.kcal_per_100g),
     macros,
@@ -54,6 +59,8 @@ export function usdaResult(hit) {
     fdcId: Number(hit.fdc_id),
     usdaId: String(hit.fdc_id),
     name: hit.name,
+    nameEs: null,
+    nameEsEdited: false,
     brand: hit.brand || null,
     kcalPer100g: numberOrNull(hit.kcal_per_100g),
     macros: null,
@@ -62,14 +69,20 @@ export function usdaResult(hit) {
   };
 }
 
-// True when every search word appears in the folded name or brand.
+// The English and Spanish names (when there is one) and the brand, folded for search.
+function searchableNames(result) {
+  return [result.name, result.nameEs, result.brand].filter(Boolean).map((text) => norm(text));
+}
+
+// True when every search word appears in the folded English name, Spanish name or brand.
+// Each word may match a different one of them ("manzana" finds "Apples, raw").
 export function matchesTokens(result, tokens) {
-  const haystack = norm(`${result.name} ${result.brand || ''}`);
+  const haystack = searchableNames(result).join(' ');
   return tokens.every((token) => haystack.includes(token));
 }
 
-// Library matches for a query, best first: a name starting with the first word ranks
-// above a word found later; ties go alphabetically by name.
+// Library matches for a query, best first: a name (English or Spanish) starting with the
+// first word ranks above a word found later; ties go alphabetically by English name.
 export function rankLibrary(results, query) {
   const tokens = searchTokens(query);
   if (tokens.length === 0) return [];
@@ -77,10 +90,19 @@ export function rankLibrary(results, query) {
     .filter((result) => matchesTokens(result, tokens))
     .map((result) => ({
       result,
-      score: norm(result.name).startsWith(tokens[0]) ? 2 : 0,
+      score: [norm(result.name), result.nameEs ? norm(result.nameEs) : ''].some((name) =>
+        name.startsWith(tokens[0])
+      )
+        ? 2
+        : 0,
     }))
     .sort((a, b) => b.score - a.score || a.result.name.localeCompare(b.result.name))
     .map(({ result }) => result);
+}
+
+// The name a screen shows: the Spanish name on a Spanish screen when there is one.
+export function displayName(result, locale) {
+  return locale === 'es' && result.nameEs ? result.nameEs : result.name;
 }
 
 // Library results first, then USDA results. A USDA hit already saved to the Food Library
@@ -167,4 +189,41 @@ export async function saveUsdaFood(client, fdcId) {
   const { data, error } = await client.rpc('usda_save', { p_fdc_id: fdcId });
   if (error) throw error;
   return data;
+}
+
+// Asks translate-food-name for the Spanish name of a saved food. The function answers with
+// a status ('translated', 'failed', 'limit_reached' or 'kept') and never fails the save.
+export async function translateFoodName(client, foodId) {
+  const { data, error } = await client.functions.invoke(TRANSLATE_FUNCTION, {
+    body: { food_id: Number(foodId) },
+  });
+  if (error) throw error;
+  return data ?? { status: 'failed' };
+}
+
+// Saves a USDA food, then asks for its Spanish name. A failed translation leaves the food
+// saved with no Spanish name; the answer says what happened.
+export async function saveUsdaFoodAndTranslate(client, fdcId) {
+  const id = await saveUsdaFood(client, fdcId);
+  let spanish;
+  try {
+    spanish = (await translateFoodName(client, id)).status;
+  } catch {
+    spanish = 'failed';
+  }
+  return { id, spanish };
+}
+
+// A Member's edit of the English and Spanish names of a Food Library food. An empty Spanish
+// name clears it. The database marks the Spanish name as the Member's when it changes, so the
+// translator never overwrites it.
+export async function saveFoodNames(client, foodId, { name, nameEs }) {
+  const englishName = String(name ?? '').trim();
+  if (englishName === '') throw new Error('The English name cannot be empty');
+  const spanishName = String(nameEs ?? '').trim();
+  const { error } = await client
+    .from('foods')
+    .update({ name: englishName, name_es: spanishName === '' ? null : spanishName })
+    .eq('id', Number(foodId));
+  if (error) throw error;
 }

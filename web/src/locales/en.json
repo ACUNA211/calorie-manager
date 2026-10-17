@@ -360,7 +360,16 @@
     "save": "Save to Food Library",
     "saving": "Saving…",
     "saved": "Saved to your Food Library.",
-    "saveError": "Could not save this food. Try again."
+    "saveError": "Could not save this food. Try again.",
+    "editNames": "Edit names",
+    "editNamesLabel": "Edit food names",
+    "englishName": "English name",
+    "spanishName": "Spanish name",
+    "saveNames": "Save names",
+    "cancel": "Cancel",
+    "namesSaved": "Names saved.",
+    "nameRequired": "The English name cannot be empty.",
+    "namesSaveError": "Could not save the names. Try again."
   },
   "loggingFor": {
     "label": "Logging for",

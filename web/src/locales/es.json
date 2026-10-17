@@ -360,7 +360,16 @@
     "save": "Guardar en la biblioteca de alimentos",
     "saving": "Guardando…",
     "saved": "Guardado en tu biblioteca de alimentos.",
-    "saveError": "No se pudo guardar este alimento. Inténtalo de nuevo."
+    "saveError": "No se pudo guardar este alimento. Inténtalo de nuevo.",
+    "editNames": "Editar nombres",
+    "editNamesLabel": "Editar nombres del alimento",
+    "englishName": "Nombre en inglés",
+    "spanishName": "Nombre en español",
+    "saveNames": "Guardar nombres",
+    "cancel": "Cancelar",
+    "namesSaved": "Nombres guardados.",
+    "nameRequired": "El nombre en inglés no puede estar vacío.",
+    "namesSaveError": "No se pudieron guardar los nombres. Inténtalo de nuevo."
   },
   "loggingFor": {
     "label": "Registrando para",
