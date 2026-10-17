@@ -4,6 +4,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App.jsx';
 import { supabase } from './lib/supabase.js';
 
+// The Household page is covered by its own tests; here it just loads as empty.
+vi.mock('./lib/households.js', () => ({
+  loadHousehold: vi.fn(async () => null),
+  createHousehold: vi.fn(),
+}));
+
 // Replace the real Supabase client with a small in-memory fake so the test
 // never talks to the network.
 vi.mock('./lib/supabase.js', () => {
