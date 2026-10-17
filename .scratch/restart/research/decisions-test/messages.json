@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "created": "2026-10-17",
+  "ticket": "35",
+  "purpose": "50 labelled messages (25 English, 25 Spanish; 25 Rebalance, 25 Voice command) for testing Jev, OpenAI Decisions and Cloudflare Clef with typed questions.",
+  "question_sets": {
+    "rebalance": [
+      {
+        "name": "over_by",
+        "type": "score",
+        "instructions": "How far over its calorie target is the Member's day, according to what they said? Level 0 = just a bit over (under about 10%), 1 = somewhat over (about 10-25%), 2 = clearly over (about 25-50%), 3 = far over (about 50-100%), 4 = way over (more than double, or they say so)",
+        "levels": [
+          { "label": "Just a bit over" },
+          { "label": "Somewhat over" },
+          { "label": "Clearly over" },
+          { "label": "Far over" },
+          { "label": "Way over" }
+        ]
+      },
+      {
+        "name": "meal",
+        "type": "choice",
+        "instructions": "Which Meal Time did the Member overeat at?",
+        "choices": [
+          { "value": "breakfast" },
+          { "value": "lunch" },
+          { "value": "dinner" },
+          { "value": "snack" },
+          { "value": "other" }
+        ]
+      },
+      {
+        "name": "fix",
+        "type": "choice",
+        "instructions": "What kind of fix does the Member want? lighter_later_today = shrink a later meal today; lighter_tomorrow = shrink tomorrow's meals; drop_if_room_meal = drop an If room meal; no_preference = they did not ask for a particular fix",
+        "choices": [
+          { "value": "lighter_later_today", "description": "Shrink a later meal today." },
+          { "value": "lighter_tomorrow", "description": "Shrink tomorrow's meals." },
+          { "value": "drop_if_room_meal", "description": "Drop an If room meal." },
+          { "value": "no_preference", "description": "No particular fix asked for." }
+        ]
+      },
+      {
+        "name": "gave_number",
+        "type": "yes_no",
+        "instructions": "Did the Member state a specific calorie number?"
+      }
+    ],
+    "voice": [
+      {
+        "name": "action",
+        "type": "choice",
+        "instructions": "Which action does the spoken command most likely ask for?",
+        "choices": [
+          { "value": "tick_shopping_line", "description": "Tick a Shopping list line Bought." },
+          { "value": "add_shopping_item", "description": "Add an item to the Shopping list." },
+          { "value": "log_planned_portion", "description": "Log a planned Portion at a Meal Time." },
+          { "value": "log_other", "description": "Log something else that was eaten or drunk." },
+          { "value": "mark_pantry_used", "description": "Mark a Pantry item used up or partly used." },
+          { "value": "start_rebalance", "description": "Start a Rebalance after the day went over." }
+        ]
+      },
+      {
+        "name": "has_amount",
+        "type": "yes_no",
+        "instructions": "Does the command contain an amount or quantity (a number, a weight, a fraction or a count)?"
+      }
+    ]
+  },
+  "messages": [
+    { "id": "R-EN-01", "lang": "en", "kind": "rebalance", "text": "Big lunch at a wedding, way over today.", "expected": { "over_by": 4, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-EN-02", "lang": "en", "kind": "rebalance", "text": "I had two slices of pizza for dinner, about 150 calories over.", "expected": { "over_by": 0, "meal": "dinner", "fix": "no_preference", "gave_number": true } },
+    { "id": "R-EN-03", "lang": "en", "kind": "rebalance", "text": "Ate the whole bag of chips after work, I'm clearly over. Make tomorrow lighter.", "expected": { "over_by": 2, "meal": "snack", "fix": "lighter_tomorrow", "gave_number": false } },
+    { "id": "R-EN-04", "lang": "en", "kind": "rebalance", "text": "Breakfast was a huge pancake stack, a bit over. Can you fix lunch?", "expected": { "over_by": 0, "meal": "breakfast", "fix": "lighter_later_today", "gave_number": false } },
+    { "id": "R-EN-05", "lang": "en", "kind": "rebalance", "text": "I went over by about 600 calories at dinner. Please cut something tomorrow.", "expected": { "over_by": 3, "meal": "dinner", "fix": "lighter_tomorrow", "gave_number": true } },
+    { "id": "R-EN-06", "lang": "en", "kind": "rebalance", "text": "Had one extra cookie at lunch, barely over.", "expected": { "over_by": 0, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-EN-07", "lang": "en", "kind": "rebalance", "text": "Way too much pasta at dinner, far over.", "expected": { "over_by": 3, "meal": "dinner", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-EN-08", "lang": "en", "kind": "rebalance", "text": "Snacked on nuts all afternoon, about 400 over. The rest of today should be light.", "expected": { "over_by": 2, "meal": "snack", "fix": "lighter_later_today", "gave_number": true } },
+    { "id": "R-EN-09", "lang": "en", "kind": "rebalance", "text": "Lunch at the office was double what I planned, over by quite a lot.", "expected": { "over_by": 3, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-EN-10", "lang": "en", "kind": "rebalance", "text": "Went out for brunch and ordered everything, way over. Skip the snack if there's room.", "expected": { "over_by": 4, "meal": "lunch", "fix": "drop_if_room_meal", "gave_number": false } },
+    { "id": "R-EN-11", "lang": "en", "kind": "rebalance", "text": "Over by 300 calories this morning, make lunch smaller.", "expected": { "over_by": 1, "meal": "breakfast", "fix": "lighter_later_today", "gave_number": true } },
+    { "id": "R-EN-12", "lang": "en", "kind": "rebalance", "text": "Had a pint of ice cream, a bit over. Nothing else needed.", "expected": { "over_by": 0, "meal": "snack", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-EN-13", "lang": "en", "kind": "rebalance", "text": "I ate about 900 calories extra at dinner. Please fix tomorrow.", "expected": { "over_by": 4, "meal": "dinner", "fix": "lighter_tomorrow", "gave_number": true } },
+
+    { "id": "V-EN-01", "lang": "en", "kind": "voice", "text": "Tick off the milk.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+    { "id": "V-EN-02", "lang": "en", "kind": "voice", "text": "Add eggs to the shopping list, a dozen.", "expected": { "action": "add_shopping_item", "has_amount": true } },
+    { "id": "V-EN-03", "lang": "en", "kind": "voice", "text": "Log the chicken salad for lunch.", "expected": { "action": "log_planned_portion", "has_amount": false } },
+    { "id": "V-EN-04", "lang": "en", "kind": "voice", "text": "I had a coffee with milk at the café.", "expected": { "action": "log_other", "has_amount": false } },
+    { "id": "V-EN-05", "lang": "en", "kind": "voice", "text": "Mark the rice as used up.", "expected": { "action": "mark_pantry_used", "has_amount": false } },
+    { "id": "V-EN-06", "lang": "en", "kind": "voice", "text": "We used about half the olive oil.", "expected": { "action": "mark_pantry_used", "has_amount": true } },
+    { "id": "V-EN-07", "lang": "en", "kind": "voice", "text": "Add two bananas to the list.", "expected": { "action": "add_shopping_item", "has_amount": true } },
+    { "id": "V-EN-08", "lang": "en", "kind": "voice", "text": "Tick the bread, I bought it.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+    { "id": "V-EN-09", "lang": "en", "kind": "voice", "text": "I'm over today, start a rebalance.", "expected": { "action": "start_rebalance", "has_amount": false } },
+    { "id": "V-EN-10", "lang": "en", "kind": "voice", "text": "Log 200 grams of yogurt as a snack.", "expected": { "action": "log_other", "has_amount": true } },
+    { "id": "V-EN-11", "lang": "en", "kind": "voice", "text": "Log the planned Greek yogurt for breakfast.", "expected": { "action": "log_planned_portion", "has_amount": false } },
+    { "id": "V-EN-12", "lang": "en", "kind": "voice", "text": "Tick off the cereal.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+
+    { "id": "R-ES-01", "lang": "es", "kind": "rebalance", "text": "Comí un almuerzo enorme en una boda, me pasé muchísimo hoy.", "expected": { "over_by": 4, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-ES-02", "lang": "es", "kind": "rebalance", "text": "Cené dos porciones de pizza, unas 150 calorías de más.", "expected": { "over_by": 0, "meal": "dinner", "fix": "no_preference", "gave_number": true } },
+    { "id": "R-ES-03", "lang": "es", "kind": "rebalance", "text": "Me comí toda la bolsa de papas después del trabajo, me pasé bastante. Haz mañana más ligero.", "expected": { "over_by": 2, "meal": "snack", "fix": "lighter_tomorrow", "gave_number": false } },
+    { "id": "R-ES-04", "lang": "es", "kind": "rebalance", "text": "El desayuno fue un montón de tortitas, un poco de más. ¿Arreglas el almuerzo?", "expected": { "over_by": 0, "meal": "breakfast", "fix": "lighter_later_today", "gave_number": false } },
+    { "id": "R-ES-05", "lang": "es", "kind": "rebalance", "text": "Me pasé unas 600 calorías en la cena. Corta algo mañana.", "expected": { "over_by": 3, "meal": "dinner", "fix": "lighter_tomorrow", "gave_number": true } },
+    { "id": "R-ES-06", "lang": "es", "kind": "rebalance", "text": "Me comí una galletita extra en el almuerzo, casi nada.", "expected": { "over_by": 0, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-ES-07", "lang": "es", "kind": "rebalance", "text": "Demasiada pasta en la cena, me pasé lejos.", "expected": { "over_by": 3, "meal": "dinner", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-ES-08", "lang": "es", "kind": "rebalance", "text": "Piqué frutos secos toda la tarde, unas 400 de más. El resto del día, ligero.", "expected": { "over_by": 2, "meal": "snack", "fix": "lighter_later_today", "gave_number": true } },
+    { "id": "R-ES-09", "lang": "es", "kind": "rebalance", "text": "El almuerzo en la oficina fue el doble de lo que planeé.", "expected": { "over_by": 3, "meal": "lunch", "fix": "no_preference", "gave_number": false } },
+    { "id": "R-ES-10", "lang": "es", "kind": "rebalance", "text": "Fui a brunch y pedí de todo, me pasé mucho. Quita la merienda si hay espacio.", "expected": { "over_by": 4, "meal": "lunch", "fix": "drop_if_room_meal", "gave_number": false } },
+    { "id": "R-ES-11", "lang": "es", "kind": "rebalance", "text": "Esta mañana me pasé unas 300 calorías. Haz el almuerzo más pequeño.", "expected": { "over_by": 1, "meal": "breakfast", "fix": "lighter_later_today", "gave_number": true } },
+    { "id": "R-ES-12", "lang": "es", "kind": "rebalance", "text": "Me tomé un helado grande, un poco de más. Nada más hace falta.", "expected": { "over_by": 0, "meal": "snack", "fix": "no_preference", "gave_number": false } },
+
+    { "id": "V-ES-01", "lang": "es", "kind": "voice", "text": "Marca la leche como comprada.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+    { "id": "V-ES-02", "lang": "es", "kind": "voice", "text": "Añade huevos a la lista de compras, una docena.", "expected": { "action": "add_shopping_item", "has_amount": true } },
+    { "id": "V-ES-03", "lang": "es", "kind": "voice", "text": "Registra la ensalada de pollo del almuerzo.", "expected": { "action": "log_planned_portion", "has_amount": false } },
+    { "id": "V-ES-04", "lang": "es", "kind": "voice", "text": "Me tomé un café con leche en la cafetería.", "expected": { "action": "log_other", "has_amount": false } },
+    { "id": "V-ES-05", "lang": "es", "kind": "voice", "text": "Marca el arroz como terminado.", "expected": { "action": "mark_pantry_used", "has_amount": false } },
+    { "id": "V-ES-06", "lang": "es", "kind": "voice", "text": "Usamos como la mitad del aceite de oliva.", "expected": { "action": "mark_pantry_used", "has_amount": true } },
+    { "id": "V-ES-07", "lang": "es", "kind": "voice", "text": "Agrega dos plátanos a la lista.", "expected": { "action": "add_shopping_item", "has_amount": true } },
+    { "id": "V-ES-08", "lang": "es", "kind": "voice", "text": "Tacha el pan, ya lo compré.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+    { "id": "V-ES-09", "lang": "es", "kind": "voice", "text": "Me pasé hoy, empieza un reajuste de calorías.", "expected": { "action": "start_rebalance", "has_amount": false } },
+    { "id": "V-ES-10", "lang": "es", "kind": "voice", "text": "Registra 200 gramos de yogur como merienda.", "expected": { "action": "log_other", "has_amount": true } },
+    { "id": "V-ES-11", "lang": "es", "kind": "voice", "text": "Registra el yogur griego planeado para el desayuno.", "expected": { "action": "log_planned_portion", "has_amount": false } },
+    { "id": "V-ES-12", "lang": "es", "kind": "voice", "text": "Tacha los cereales de la lista.", "expected": { "action": "tick_shopping_line", "has_amount": false } },
+    { "id": "V-ES-13", "lang": "es", "kind": "voice", "text": "Añade tres lechugas.", "expected": { "action": "add_shopping_item", "has_amount": true } }
+  ]
+}
