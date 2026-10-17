@@ -6,9 +6,13 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 09 (Move personal tables to Members)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] A Member can add, edit and delete Meal Times and toggle weekdays
-- [ ] Set needs one calorie number; Planned and If room need a range
-- [ ] Day totals show under each weekday against the Target and band
-- [ ] Overlapping times on the same day ask whether the new one replaces the other
+- [x] A Member can add, edit and delete Meal Times and toggle weekdays
+- [x] Set needs one calorie number; Planned and If room need a range
+- [x] Day totals show under each weekday against the Target and band
+- [x] Overlapping times on the same day ask whether the new one replaces the other
+
+## Comments
+
+- 2026-10-17: Built the week grid in web/src/components/MealTimesPage.jsx, with pure rules in web/src/lib/mealTimesLogic.js and Supabase access in web/src/lib/mealTimes.js. Tested with Vitest (validation, day totals, overlap, a mocked client and the page). Lint, build, tests and format:check pass. Not run against a live database; no migration needed (007 already gives meal_times member_id and RLS). Overlap uses 45 minutes, as agreed in the mvp-reset prototype, not the exact same time this ticket first said. Target and band are shown read-only; ticket 10 edits them. Spanish kind names (Fijo, Planificado, Si hay espacio) are my choice, for review.

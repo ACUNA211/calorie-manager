@@ -100,5 +100,79 @@
       "bandRange": "Escribe un porcentaje de 50 a 100.",
       "bandOrder": "El mínimo de la franja no puede ser mayor que su máximo."
     }
+  },
+  "mealTimes": {
+    "heading": "Horarios de comida",
+    "loading": "Cargando tus horarios de comida…",
+    "loadError": "No se pudieron cargar tus horarios de comida.",
+    "noMember": "Los horarios de comida pertenecen a un miembro. Únete o crea un hogar primero.",
+    "empty": "Todavía no hay horarios de comida. Añade el primero abajo.",
+    "addButton": "Añadir horario de comida",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "targets": {
+      "summary": "Objetivo de calorías {{target}}. Meta: {{low}}–{{high}}% de él.",
+      "none": "Todavía no hay objetivo de calorías, así que no se muestran las metas del día.",
+      "readOnly": "Cambia el objetivo y la franja en la pantalla de Objetivos."
+    },
+    "grid": {
+      "timeHeader": "Horario",
+      "totalsHeader": "Total del día",
+      "on": "Sí",
+      "off": "No",
+      "toggleLabel": "{{name}} el {{day}}"
+    },
+    "kinds": {
+      "set": "Fijo",
+      "planned": "Planificado",
+      "if_room": "Si hay espacio"
+    },
+    "kindHints": {
+      "set": "Ya decidido. Sus calorías se apartan primero.",
+      "planned": "El Agente lo llena dentro de su rango.",
+      "if_room": "Solo se llena mientras queden calorías. Rebalance puede quitarlo."
+    },
+    "calories": {
+      "set": "{{calories}} kcal",
+      "range": "{{min}}–{{max}} kcal"
+    },
+    "totals": {
+      "range": "{{floor}}–{{ceiling}}",
+      "aim": "Meta {{low}}–{{high}}",
+      "over": "Los mínimos superan el objetivo",
+      "short": "Los máximos no llegan a la meta",
+      "noTarget": "Pon un objetivo de calorías para ver la meta",
+      "ok": "Puede caer dentro de la meta"
+    },
+    "clash": {
+      "heading": "Horarios que chocan",
+      "question": "{{name}} está a menos de {{minutes}} minutos de {{other}} los {{days}}. ¿Quitar {{days}} de {{other}}?",
+      "replace": "Sí, reemplazar ahí",
+      "keepBoth": "Mantener ambos",
+      "cancel": "Cancelar"
+    },
+    "form": {
+      "addHeading": "Nuevo horario de comida",
+      "editHeading": "Editar {{name}}",
+      "name": "Nombre",
+      "time": "Hora",
+      "kind": "Tipo",
+      "days": "Días",
+      "setCalories": "Calorías",
+      "minCalories": "Calorías mínimas",
+      "maxCalories": "Calorías máximas",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar {{name}}? No se puede deshacer.",
+      "confirmDeleteButton": "Sí, eliminar"
+    },
+    "errors": {
+      "nameRequired": "Pon un nombre al horario de comida.",
+      "timeRequired": "Pon una hora al horario de comida.",
+      "kindRequired": "Elige un tipo.",
+      "setCaloriesRequired": "Un horario Fijo necesita un número de calorías.",
+      "rangeRequired": "Planificado y Si hay espacio necesitan un mínimo y un máximo.",
+      "rangeOrder": "El mínimo no puede ser mayor que el máximo."
+    }
   }
 }

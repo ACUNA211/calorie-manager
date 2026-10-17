@@ -100,5 +100,79 @@
       "bandRange": "Enter a percent from 50 to 100.",
       "bandOrder": "The band's low end cannot be above its high end."
     }
+  },
+  "mealTimes": {
+    "heading": "Meal Times",
+    "loading": "Loading your Meal Times…",
+    "loadError": "Could not load your Meal Times.",
+    "noMember": "Meal Times belong to a Member. Join or create a Household first.",
+    "empty": "No Meal Times yet. Add your first one below.",
+    "addButton": "Add a Meal Time",
+    "saveError": "Could not save. Try again.",
+    "targets": {
+      "summary": "Calorie Target {{target}}. Aim {{low}}–{{high}}% of it.",
+      "none": "No Calorie Target yet, so the day aims are not shown.",
+      "readOnly": "Change the Target and the band on the Targets screen."
+    },
+    "grid": {
+      "timeHeader": "Meal Time",
+      "totalsHeader": "Day total",
+      "on": "On",
+      "off": "Off",
+      "toggleLabel": "{{name}} on {{day}}"
+    },
+    "kinds": {
+      "set": "Set",
+      "planned": "Planned",
+      "if_room": "If room"
+    },
+    "kindHints": {
+      "set": "Already decided. Its calories are set aside first.",
+      "planned": "The Agent fills it inside its range.",
+      "if_room": "Filled only while calories are left. Rebalance may drop it."
+    },
+    "calories": {
+      "set": "{{calories}} kcal",
+      "range": "{{min}}–{{max}} kcal"
+    },
+    "totals": {
+      "range": "{{floor}}–{{ceiling}}",
+      "aim": "Aim {{low}}–{{high}}",
+      "over": "Minimums go over the Target",
+      "short": "Maximums cannot reach the aim",
+      "noTarget": "Set a Calorie Target to see the aim",
+      "ok": "Can land in the aim"
+    },
+    "clash": {
+      "heading": "Times that clash",
+      "question": "{{name}} is within {{minutes}} minutes of {{other}} on {{days}}. Take {{days}} off {{other}}?",
+      "replace": "Yes, replace there",
+      "keepBoth": "Keep both",
+      "cancel": "Cancel"
+    },
+    "form": {
+      "addHeading": "New Meal Time",
+      "editHeading": "Edit {{name}}",
+      "name": "Name",
+      "time": "Time",
+      "kind": "Kind",
+      "days": "Days",
+      "setCalories": "Calories",
+      "minCalories": "Min calories",
+      "maxCalories": "Max calories",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "confirmDelete": "Delete {{name}}? This cannot be undone.",
+      "confirmDeleteButton": "Yes, delete"
+    },
+    "errors": {
+      "nameRequired": "Give the Meal Time a name.",
+      "timeRequired": "Give the Meal Time a time.",
+      "kindRequired": "Choose a kind.",
+      "setCaloriesRequired": "A Set Meal Time needs one calorie number.",
+      "rangeRequired": "Planned and If room need a minimum and a maximum.",
+      "rangeOrder": "The minimum cannot be more than the maximum."
+    }
   }
 }
