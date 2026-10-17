@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 31 (Week view), 69 (Run the database tests locally)
+**Blocked by:** 31 (Week view), 69 (Run the database tests locally), 87 (Decide: what does "share everything" show?)
 
 **Status:** done (awaiting DB test run)
 
