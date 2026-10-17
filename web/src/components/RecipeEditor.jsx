@@ -21,13 +21,22 @@ import RecipeIngredientsField from './RecipeIngredientsField.jsx';
 import RecipeTotals from './RecipeTotals.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
-// Creates a Recipe (recipe = null) or edits one. onClose(changed) runs after a save, a
-// delete or a copy (changed true) or a cancel (false), so the list can reload.
+// Creates a Recipe (recipe = null) or edits one. initialDraft opens a new Recipe on a draft
+// (a pasted Recipe, not yet saved). onClose(changed) runs after a save, a delete or a copy
+// (changed true) or a cancel (false), so the list can reload.
 // originalName is the name of the Recipe this one was copied from, when it is known.
-export default function RecipeEditor({ recipe, originalName = null, onClose }) {
+export default function RecipeEditor({
+  recipe,
+  initialDraft = null,
+  originalName = null,
+  onClose,
+}) {
   const { t, formatNumber } = useI18n();
   const ids = useId();
-  const [draft, setDraft] = useState(() => (recipe ? draftFromRecipe(recipe) : emptyRecipeDraft()));
+  const [draft, setDraft] = useState(() => {
+    if (recipe) return draftFromRecipe(recipe);
+    return initialDraft ?? emptyRecipeDraft();
+  });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);

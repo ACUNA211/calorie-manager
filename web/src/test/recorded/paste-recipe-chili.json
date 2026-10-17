@@ -1,0 +1,18 @@
+{
+  "_note": "Hand-written in the Anthropic Messages API response shape for tests (ticket #30). Not captured from a live call; re-record after the key is set.",
+  "id": "msg_recorded_chili_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"name\":\"Quick Bean Chili\",\"servings\":4,\"notes\":\"Simmer 20 minutes. Freezes well.\",\"ingredients\":[{\"text\":\"1 cup dry black beans, rinsed\",\"name\":\"black beans, dry\",\"amount\":1,\"unit\":\"cup\"},{\"text\":\"2 eggs\",\"name\":\"eggs\",\"amount\":2,\"unit\":\"each\"},{\"text\":\"2 tbsp olive oil\",\"name\":\"olive oil\",\"amount\":2,\"unit\":\"tbsp\"},{\"text\":\"1 tsp cumin\",\"name\":\"cumin\",\"amount\":1,\"unit\":\"tsp\"},{\"text\":\"500 g ground beef\",\"name\":\"ground beef\",\"amount\":500,\"unit\":\"g\"},{\"text\":\"salt to taste\",\"name\":\"salt\",\"amount\":null,\"unit\":null}]}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 412,
+    "output_tokens": 236
+  }
+}

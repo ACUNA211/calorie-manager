@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js';
 import { loadRecipes } from '../lib/recipes.js';
 import { recipeTotals } from '../lib/recipeTotals.js';
 import RecipeEditor from './RecipeEditor.jsx';
+import PasteRecipe from './PasteRecipe.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
 // The Meal Time names a Recipe is tagged with, one line, or '' when it has none.
@@ -26,7 +27,8 @@ function matchesSearch(recipe, text) {
 }
 
 // The Household's Recipes (shared by row-level security), with a search and an editor.
-// Editing state: null shows the list; { recipe: null } creates; { recipe } edits.
+// Editing state: null shows the list; { recipe: null } creates; { recipe } edits;
+// { paste: true } pastes a Recipe; { recipe: null, draft } opens the editor on a pasted draft.
 export default function RecipesPage() {
   const { t, formatNumber } = useI18n();
   const [state, setState] = useState({ status: 'loading', recipes: [] });
@@ -63,11 +65,26 @@ export default function RecipesPage() {
     if (changed) refresh();
   }
 
+  if (editing?.paste) {
+    return (
+      <PasteRecipe
+        onDone={(draft) => setEditing({ recipe: null, draft })}
+        onManual={() => setEditing({ recipe: null })}
+        onCancel={() => setEditing(null)}
+      />
+    );
+  }
+
   if (editing) {
     const original = editing.recipe?.copied_from;
     const originalName = state.recipes.find((recipe) => recipe.id === original)?.name ?? null;
     return (
-      <RecipeEditor recipe={editing.recipe} originalName={originalName} onClose={handleClose} />
+      <RecipeEditor
+        recipe={editing.recipe}
+        draft={editing.draft ?? null}
+        originalName={originalName}
+        onClose={handleClose}
+      />
     );
   }
 
@@ -82,7 +99,6 @@ export default function RecipesPage() {
   return (
     <section aria-labelledby="recipes-heading">
       <h2 id="recipes-heading">{t('recipes.heading')}</h2>
-
       {state.recipes.length === 0 ? (
         <p>{t('recipes.empty')}</p>
       ) : (
@@ -141,9 +157,11 @@ export default function RecipesPage() {
           </ul>
         </>
       )}
-
       <button type="button" onClick={() => setEditing({ recipe: null })}>
         {t('recipes.addButton')}
+      </button>{' '}
+      <button type="button" onClick={() => setEditing({ paste: true })}>
+        {t('recipes.paste.button')}
       </button>
     </section>
   );
