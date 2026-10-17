@@ -22,4 +22,12 @@ A Household PWA: barcode Scan into one shared Pantry, a Household Recipe library
 
 ## Grilling decisions (2026-10-17)
 
-Rounds 1–5 are recorded in CONTEXT.md and the ADRs above. Open: round 6 (safety rails, exercise, cooking steps, success test, draft day).
+Rounds 1–5 are recorded in CONTEXT.md and the ADRs above. Round 6: no safety rails; exercise later; Recipes are ingredients plus notes; the draft runs once a week, Friday 6pm by default, changeable.
+
+## Later phases
+
+- Exercise and burned calories (maybe a Health Connect sync)
+- Cooking steps and a cooking mode
+- Grocery prices and budget tracking
+- Agent-suggested new Recipes
+- Expiry dates on Pantry items

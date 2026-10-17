@@ -48,7 +48,7 @@ The foods the app knows calories and macros for, stored per 100 g with serving s
 _Avoid_: food list, database
 
 **Recipe**:
-A named meal made of ingredients with amounts in grams. Its calories and macros come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback). It can be starred, tagged with the Meal Times it suits, and copied as a variation. The library belongs to the Household. A Recipe is typed in, or pasted as text or a link and parsed by one cheap AI call, then confirmed; a starter set may be imported from USDA MyPlate Kitchen. Its nutrition always comes from Food Library matches, never from the AI.
+A named meal made of ingredients with amounts in grams. Its calories and macros come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback). It has ingredients and one free-text notes field (no cooking steps or cooking mode yet). It can be starred, tagged with the Meal Times it suits, and copied as a variation. The library belongs to the Household. A Recipe is typed in, or pasted as text or a link and parsed by one cheap AI call, then confirmed; a starter set may be imported from USDA MyPlate Kitchen. Its nutrition always comes from Food Library matches, never from the AI.
 _Avoid_: dish
 
 **Meal Time**:
@@ -87,7 +87,7 @@ What the Agent plans from. Household Preferences: cuisines, cooking time on week
 _Avoid_: settings, restrictions
 
 **Schedule**:
-A job that runs on its own: the weekly Meal Plan draft (on a set day and time, then a notification), building the Shopping list when the Meal Plan is approved, reminders around each Meal Time, and reminders on cook days. Approval is always by hand. Each Member picks which reminders they get, delivered by Web Push.
+A job that runs on its own: the weekly Meal Plan draft (once a week, Friday 6pm by default, changeable by the Owner, then a notification), building the Shopping list when the Meal Plan is approved, reminders around each Meal Time, and reminders on cook days. Approval is always by hand. Each Member picks which reminders they get, delivered by Web Push.
 _Avoid_: cron, automation
 
 **Scan**:
@@ -106,6 +106,7 @@ A $5/month hard limit per AI provider, plus an in-app counter that stops AI call
 - Every screen is in English or Spanish, switched per Member, with all text kept in translation files so more languages can follow. Each Member picks display units (metric or US); everything is stored in grams, and the Shopping list uses the units stores sell in.
 - The Shopping list and logging work offline and sync later; planning, Scan lookups and Voice commands need a connection.
 - Grocery prices are out of the first version; Preferences keep only a budget feel.
+- No safety rails (no low-Target warning or support links). Exercise and burned calories are a later phase; the Calorie Target covers activity.
 
 ## Relationships
 
