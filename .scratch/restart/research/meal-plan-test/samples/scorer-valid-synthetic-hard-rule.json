@@ -1,0 +1,85 @@
+{
+  "weekStart": "2026-10-18",
+  "ruleBreaks": 4,
+  "slotBreaks": 4,
+  "dayBreaks": 0,
+  "bandDistanceKcal": 0,
+  "daysInBand": 7,
+  "byKind": {
+    "not_candidate": 2,
+    "hard_rule": 2
+  },
+  "days": [
+    {
+      "day": "Sun",
+      "date": "2026-10-18",
+      "total": 1820,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Mon",
+      "date": "2026-10-19",
+      "total": 1900,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Tue",
+      "date": "2026-10-20",
+      "total": 1960,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Wed",
+      "date": "2026-10-21",
+      "total": 1900,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Thu",
+      "date": "2026-10-22",
+      "total": 1915,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Fri",
+      "date": "2026-10-23",
+      "total": 1885,
+      "status": "in band",
+      "distanceKcal": 0
+    },
+    {
+      "day": "Sat",
+      "date": "2026-10-24",
+      "total": 1880,
+      "status": "in band",
+      "distanceKcal": 0
+    }
+  ],
+  "breaks": [
+    {
+      "kind": "not_candidate",
+      "slot": "Sun-dinner",
+      "detail": "R08 was not a candidate for this slot"
+    },
+    {
+      "kind": "hard_rule",
+      "slot": "Sun-dinner",
+      "detail": "R08 breaks a Hard rule for someone eating this slot"
+    },
+    {
+      "kind": "not_candidate",
+      "slot": "Sat-dinner",
+      "detail": "R08 was not a candidate for this slot"
+    },
+    {
+      "kind": "hard_rule",
+      "slot": "Sat-dinner",
+      "detail": "R08 breaks a Hard rule for someone eating this slot"
+    }
+  ]
+}

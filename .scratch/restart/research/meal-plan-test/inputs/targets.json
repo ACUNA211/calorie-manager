@@ -1,0 +1,7 @@
+{
+  "household": "household-test-1",
+  "members": ["member-1"],
+  "note": "Only one Member's data is in the source files. Add members (their Targets and Meal Times) before testing a 2-4 Member Household.",
+  "calorieTarget": 2000,
+  "planningBand": { "low": 0.9, "high": 1.0 }
+}

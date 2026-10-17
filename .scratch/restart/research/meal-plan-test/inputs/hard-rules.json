@@ -1,0 +1,6 @@
+{
+  "note": "No Hard rules are recorded in the source files. forbiddenTags are matched against each Recipe's tags. Fill these from the Preferences page when it exists.",
+  "members": {
+    "member-1": { "forbiddenTags": [] }
+  }
+}

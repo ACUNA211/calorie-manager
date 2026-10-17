@@ -6,7 +6,9 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** partly done: waiting on API keys
+
+**Comments:** 2026-10-17: test kit built in research/meal-plan-test/ (inputs, pre-filter, prompt, output shape, scorer, runner). Scorer checked on a valid and a broken hand-written draft (0 and 15 rule breaks). No live model runs: waiting on ANTHROPIC_API_KEY, GOOGLE_API_KEY and OPENAI_API_KEY, and on the Gemini and gpt-6-luna model ids. Design and pending list in research/meal-plan-model-test.md.
 
 - [ ] A report in `.scratch/restart/research/` with scores, token counts and cost per plan per model
 - [ ] A model pick for ticket 42, with the prompt and JSON shape used

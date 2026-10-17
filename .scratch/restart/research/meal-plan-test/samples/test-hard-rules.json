@@ -1,0 +1,6 @@
+{
+  "note": "SYNTHETIC rule set, for checking that the scorer catches Hard rules only. Not a real Household rule.",
+  "members": {
+    "member-1": { "forbiddenTags": ["beef"] }
+  }
+}

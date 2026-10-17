@@ -1,0 +1,9 @@
+[
+  { "id": "breakfast", "name": "Breakfast", "time": "07:30", "days": ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], "kind": "Planned", "min": 350, "max": 450 },
+  { "id": "lunch", "name": "Lunch", "time": "12:00", "days": ["Mon","Wed","Thu","Fri"], "kind": "Planned", "min": 500, "max": 650 },
+  { "id": "work-lunch", "name": "Work lunch", "time": "12:00", "days": ["Tue"], "kind": "Set", "calories": 900 },
+  { "id": "weekend-lunch", "name": "Weekend lunch", "time": "12:30", "days": ["Sat","Sun"], "kind": "Planned", "min": 450, "max": 650 },
+  { "id": "snack", "name": "Snack", "time": "15:30", "days": ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], "kind": "If room", "min": 100, "max": 250 },
+  { "id": "dinner", "name": "Dinner", "time": "18:30", "days": ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], "kind": "Planned", "min": 550, "max": 800 },
+  { "id": "dessert", "name": "Dessert", "time": "20:30", "days": ["Fri","Sat"], "kind": "If room", "min": 150, "max": 300 }
+]
