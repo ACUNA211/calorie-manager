@@ -591,6 +591,17 @@
         "usdaSave": "Could not add this USDA food to your Food Library. Try again.",
         "saveError": "Could not log the food. Try again."
       }
+    },
+    "offline": {
+      "banner": "No connection. Entries are saved on this phone and sent when you are back online.",
+      "usdaNeedsConnection": "Searching USDA needs a connection. Foods this phone has seen are shown.",
+      "usdaSaveNeedsConnection": "A USDA food needs a connection to be added. Pick a food from your Food Library instead.",
+      "notSynced": "Not synced",
+      "failed": "Not synced: the server refused this entry.",
+      "retry": "Try again",
+      "discard": "Discard",
+      "queuedToast": "Saved on this phone: {{kcal}} kcal to {{meal}}. It will sync when you are back online.",
+      "storageError": "Could not keep this entry on the phone. Try again when you are online."
     }
   }
 }

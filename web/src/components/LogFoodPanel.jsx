@@ -13,17 +13,34 @@ import {
   logProblem,
 } from '../lib/todayLogic.js';
 import { normalizeTime } from '../lib/mealTimesLogic.js';
+import { isNetworkError, makeClientId } from '../lib/offlineQueue.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
 // Marks the "another time" choice in the Meal Time picker.
 const OTHER = 'other';
 
-const EMPTY_SEARCH = { status: 'idle', results: [], libraryFailed: false, usdaFailed: false };
+const EMPTY_SEARCH = {
+  status: 'idle',
+  results: [],
+  libraryFailed: false,
+  usdaFailed: false,
+  offlineSearch: false,
+};
 
 // Log food: search the Food Library and USDA, pick a food, enter an amount and a Meal Time,
 // then save it as a Calorie Log entry. A USDA food is saved to the Food Library first, so
-// the entry has its macros. onLogged receives the stored row.
-export default function LogFoodPanel({ memberId, logDate, todayKey, meals, weekday, onLogged }) {
+// the entry has its macros. onLogged receives the stored row, or the queued row (with
+// `pending`) when there is no connection (ticket #34). `offline` comes from useOfflineLog: it
+// says whether the phone is online, searches the foods kept on the phone, and queues entries.
+export default function LogFoodPanel({
+  memberId,
+  logDate,
+  todayKey,
+  meals,
+  weekday,
+  onLogged,
+  offline,
+}) {
   const { t, formatNumber } = useI18n();
   const number = (value, digits = 0) => formatNumber(value, { maximumFractionDigits: digits });
   const [query, setQuery] = useState('');
@@ -50,13 +67,25 @@ export default function LogFoodPanel({ memberId, logDate, todayKey, meals, weekd
     const run = searchRun.current + 1;
     searchRun.current = run;
     setSearch((current) => ({ ...current, status: 'searching' }));
+    if (!offline.online) {
+      // No connection: only the foods this phone has seen online. USDA needs a connection.
+      setSearch({
+        ...EMPTY_SEARCH,
+        status: 'ready',
+        results: offline.searchOffline(text),
+        offlineSearch: true,
+      });
+      return;
+    }
     const outcome = await searchFoods(supabase, text);
     if (run !== searchRun.current) return;
+    offline.rememberFoods(outcome.results);
     setSearch({
       status: 'ready',
       results: outcome.results,
       libraryFailed: outcome.libraryFailed,
       usdaFailed: outcome.usdaFailed,
+      offlineSearch: false,
     });
   }
 
@@ -87,49 +116,79 @@ export default function LogFoodPanel({ memberId, logDate, todayKey, meals, weekd
       return;
     }
     const amounts = amountToGrams({ amount, unit, servingGrams: selected.servingGrams });
+    // A USDA food is saved to the Food Library before it is logged, which needs a connection.
+    if (!offline.online && selected.source !== 'library') {
+      setError(t('today.offline.usdaSaveNeedsConnection'));
+      return;
+    }
 
     setBusy(true);
     setError('');
-    let food;
     try {
-      food = await libraryFoodFor(supabase, selected);
-    } catch {
-      setBusy(false);
-      setError(t('today.log.errors.usdaSave'));
-      return;
-    }
+      let food;
+      try {
+        food = await libraryFoodFor(supabase, selected);
+      } catch {
+        setError(t('today.log.errors.usdaSave'));
+        return;
+      }
 
-    const nutritionNow = entryNutrition(food, amounts.grams);
-    if (nutritionNow.kcal == null) {
-      setBusy(false);
-      setError(t('today.log.errors.noKcal'));
-      return;
-    }
+      const nutritionNow = entryNutrition(food, amounts.grams);
+      if (nutritionNow.kcal == null) {
+        setError(t('today.log.errors.noKcal'));
+        return;
+      }
 
-    const mealTimeId = mealChoice === OTHER ? null : Number(mealChoice);
-    const row = buildLogRow({
-      memberId,
-      logDate,
-      food,
-      grams: amounts.grams,
-      servings: amounts.servings,
-      nutrition: nutritionNow,
-      mealTimeId,
-      logTime: clockTime(new Date()),
-    });
-    try {
-      const saved = await insertEntry(supabase, row);
-      onLogged(saved);
-    } catch {
-      setError(t('today.log.errors.saveError'));
+      const mealTimeId = mealChoice === OTHER ? null : Number(mealChoice);
+      // The client_id lets a queued entry be resent without logging it twice (migration 025).
+      const row = {
+        ...buildLogRow({
+          memberId,
+          logDate,
+          food,
+          grams: amounts.grams,
+          servings: amounts.servings,
+          nutrition: nutritionNow,
+          mealTimeId,
+          logTime: clockTime(new Date()),
+        }),
+        client_id: makeClientId(),
+      };
+      await saveEntry(row);
     } finally {
       setBusy(false);
+    }
+  }
+
+  // Saves the row now when the phone is online. With no connection, or when the request never
+  // got an answer, the row waits on the phone instead and is sent later (see useOfflineLog).
+  async function saveEntry(row) {
+    let saved = null;
+    if (offline.online) {
+      try {
+        saved = await insertEntry(supabase, row);
+      } catch (failure) {
+        if (!isNetworkError(failure)) {
+          setError(t('today.log.errors.saveError'));
+          return;
+        }
+      }
+    }
+    if (saved) {
+      onLogged(saved);
+      return;
+    }
+    try {
+      onLogged(offline.enqueue(row));
+    } catch {
+      setError(t('today.offline.storageError'));
     }
   }
 
   return (
     <section aria-labelledby="log-food-heading">
       <h2 id="log-food-heading">{t('today.log.heading')}</h2>
+      {offline.online ? null : <p>{t('today.offline.banner')}</p>}
 
       <form onSubmit={handleSearch}>
         <label>
@@ -143,6 +202,7 @@ export default function LogFoodPanel({ memberId, logDate, todayKey, meals, weekd
 
       {search.libraryFailed ? <p role="alert">{t('today.log.libraryFailed')}</p> : null}
       {search.usdaFailed ? <p role="alert">{t('today.log.usdaFailed')}</p> : null}
+      {search.offlineSearch ? <p>{t('today.offline.usdaNeedsConnection')}</p> : null}
       {search.status === 'ready' && search.results.length === 0 ? (
         <p>{t('today.log.none')}</p>
       ) : null}

@@ -3,6 +3,7 @@ import {
   ENTRY_COLUMNS,
   deleteEntry,
   insertEntry,
+  insertQueuedEntry,
   libraryFoodFor,
   loadDay,
   loadFood,
@@ -210,5 +211,37 @@ describe('restoreEntry', () => {
       ['select', ENTRY_COLUMNS],
       ['single'],
     ]);
+  });
+});
+
+describe('insertQueuedEntry', () => {
+  const queued = { member_id: 4, log_date: '2026-10-17', description: 'Apple', client_id: 'c-1' };
+
+  it('stores the queued row with its client_id', async () => {
+    const client = fakeClient({ data: { id: 1 }, error: null });
+    await expect(insertQueuedEntry(client, queued)).resolves.toBeUndefined();
+    expect(client.calls[1]).toEqual(['insert', queued]);
+  });
+
+  it('counts a row the server already has (23505 on client_id) as sent', async () => {
+    const client = fakeClient({
+      data: null,
+      error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+    });
+    await expect(insertQueuedEntry(client, queued)).resolves.toBeUndefined();
+  });
+
+  it('throws any other error, so the entry is kept and marked', async () => {
+    const refused = { code: '42501', message: 'row-level security' };
+    const client = fakeClient({ data: null, error: refused });
+    await expect(insertQueuedEntry(client, queued)).rejects.toEqual(refused);
+  });
+
+  it('throws a network failure, so the entry stays queued', async () => {
+    const client = fakeClient({
+      data: null,
+      error: { code: '', message: 'TypeError: Failed to fetch' },
+    });
+    await expect(insertQueuedEntry(client, queued)).rejects.toMatchObject({ code: '' });
   });
 });

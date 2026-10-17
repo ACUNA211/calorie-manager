@@ -3,8 +3,10 @@ import { normalizeTime } from '../lib/mealTimesLogic.js';
 
 // The day's Meal Times, each with its calorie range and what is logged to it, then the
 // entries logged at another time. `sections` and `other` come from mealSections(). Tapping
-// an entry calls onEdit with it.
-export default function TodayMeals({ sections, other, onEdit }) {
+// an entry calls onEdit with it. An entry still on the phone (`pending`, ticket #34) is marked
+// "not synced" and cannot be edited; a failed one offers Try again and Discard through
+// onRetry and onDiscard, each called with the entry's id.
+export default function TodayMeals({ sections, other, onEdit, onRetry, onDiscard }) {
   const { t, formatNumber } = useI18n();
   const number = (value) => formatNumber(value, { maximumFractionDigits: 0 });
 
@@ -20,7 +22,7 @@ export default function TodayMeals({ sections, other, onEdit }) {
           </h3>
           <p>{calorieRangeText(meal, t, number)}</p>
           <p>{t('today.meals.sectionKcal', { kcal: number(kcal) })}</p>
-          <EntryList entries={entries} onEdit={onEdit} />
+          <EntryList entries={entries} onEdit={onEdit} onRetry={onRetry} onDiscard={onDiscard} />
         </article>
       ))}
 
@@ -28,7 +30,12 @@ export default function TodayMeals({ sections, other, onEdit }) {
         <article>
           <h3>{t('today.otherTime')}</h3>
           <p>{t('today.meals.sectionKcal', { kcal: number(other.kcal) })}</p>
-          <EntryList entries={other.entries} onEdit={onEdit} />
+          <EntryList
+            entries={other.entries}
+            onEdit={onEdit}
+            onRetry={onRetry}
+            onDiscard={onDiscard}
+          />
         </article>
       ) : null}
     </section>
@@ -49,21 +56,44 @@ function calorieRangeText(meal, t, number) {
   });
 }
 
-function EntryList({ entries, onEdit }) {
+function EntryList({ entries, onEdit, onRetry, onDiscard }) {
   const { t, formatNumber } = useI18n();
   if (entries.length === 0) return <p>{t('today.meals.nothing')}</p>;
   return (
     <ul>
-      {entries.map((entry) => (
-        <li key={entry.id}>
-          <button type="button" onClick={() => onEdit(entry)}>
-            {t('today.meals.entry', {
-              description: entry.description,
-              kcal: formatNumber(entry.kcal, { maximumFractionDigits: 0 }),
-            })}
-          </button>
-        </li>
-      ))}
+      {entries.map((entry) => {
+        const label = t('today.meals.entry', {
+          description: entry.description,
+          kcal: formatNumber(entry.kcal, { maximumFractionDigits: 0 }),
+        });
+        if (!entry.pending) {
+          return (
+            <li key={entry.id}>
+              <button type="button" onClick={() => onEdit(entry)}>
+                {label}
+              </button>
+            </li>
+          );
+        }
+        return (
+          <li key={entry.id}>
+            <span>{label}</span>{' '}
+            {entry.pending === 'failed' ? (
+              <>
+                <span role="alert">{t('today.offline.failed')}</span>{' '}
+                <button type="button" onClick={() => onRetry(entry.id)}>
+                  {t('today.offline.retry')}
+                </button>{' '}
+                <button type="button" onClick={() => onDiscard(entry.id)}>
+                  {t('today.offline.discard')}
+                </button>
+              </>
+            ) : (
+              <span>{t('today.offline.notSynced')}</span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
