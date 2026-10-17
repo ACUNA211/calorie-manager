@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 40 (Plan grid editing), 25 (Pantry page)
+**Blocked by:** 40 (Plan grid editing), 25 (Pantry page), 80 (Decide: Recipe servings, save and delete rules)
 
 **Status:** ready-for-agent
 
