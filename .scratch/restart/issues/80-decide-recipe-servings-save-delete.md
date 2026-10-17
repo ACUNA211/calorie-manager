@@ -14,12 +14,18 @@ Ticket 29 (star, tags, copy) added three more. Write these answers in ticket 29'
 5. **Tags you can't see.** A tag on another Member's Meal Time shows as "a Meal Time you cannot see" and is kept on save. Keep that?
 6. **Deleted original.** When the original Recipe is deleted, the copy stays but loses its "Variation of" link. Keep that? (Copies are never starred and are named "<name> (variation)".)
 
+Ticket 30 (Paste a Recipe) added two more. Write these answers in ticket 30's Comments.
+
+7. **Volume units.** Cups, tbsp, tsp and ml are converted to grams as if the food were water, and flagged "approximate". Keep that?
+8. **When USDA foods get saved.** A USDA food you pick on the review screen is saved to the Food Library when you press Continue, even if you then cancel the Recipe. Keep that, or save only on the editor's Save?
+
 **Blocked by:** None (can start immediately)
 
 **Status:** ready-for-human
 
-**Unblocks:** 28, 29, 50
+**Unblocks:** 28, 29, 30, 50
 
 - [ ] Three answers written in ticket 28's Comments
 - [ ] Three answers written in ticket 29's Comments
+- [ ] Two answers written in ticket 30's Comments
 - [ ] CONTEXT.md's Recipe entry updated if rule 1 changes

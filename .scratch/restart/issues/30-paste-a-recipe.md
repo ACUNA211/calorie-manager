@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 28 (Recipes page), 12 (AI cap counter), 76 (Get API keys and run the research tests)
+**Blocked by:** 28 (Recipes page), 12 (AI cap counter), 76 (Get API keys and run the research tests), 80 (Decide: Recipe servings, save and delete rules), 83 (Deploy the Edge Functions and set their secrets)
 
 **Status:** done (awaiting AI key)
 

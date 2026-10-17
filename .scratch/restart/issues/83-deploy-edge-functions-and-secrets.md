@@ -9,12 +9,19 @@
 3. Signed in to the app, save one USDA food on the Foods page and check that it gets a Spanish name.
 4. Backfill existing foods once per Household: call the function with body `{"backfill": true, "limit": 25}` (signed in as a Member), and repeat until it returns `remaining: 0`.
 
+Ticket 30 added the `parse-recipe` Edge Function (Paste a Recipe, Anthropic `claude-haiku-5-5`):
+
+5. Create the Anthropic key yourself (76 lists it), then run `supabase secrets set ANTHROPIC_API_KEY=<your key>`.
+6. Optional local check: install Deno, run `deno check supabase/functions/parse-recipe/index.ts`.
+7. Run `supabase functions deploy parse-recipe`, then paste a real recipe in the app and check the review screen, the matches and the AI cap message.
+
 **Blocked by:** 69 (Run the database tests locally), 76 (Get API keys and run the research tests)
 
 **Status:** ready-for-human
 
-**Unblocks:** 16
+**Unblocks:** 16, 30
 
 - [ ] Secret set and function deployed
 - [ ] A newly saved food gets a Spanish name
 - [ ] Backfill returned `remaining: 0`
+- [ ] `parse-recipe` deployed; a pasted recipe reaches the review screen
