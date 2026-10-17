@@ -6,6 +6,7 @@ import { loadWeek } from '../lib/week.js';
 import { buildWeek, shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic.js';
 import { dateKey, parseDateKey, targetView } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import WeightPanel from './WeightPanel.jsx';
 
 const LOADING = { key: null, status: 'loading', entries: [] };
 
@@ -155,6 +156,8 @@ export default function WeekPage({ onOpenDay }) {
           );
         })}
       </ol>
+
+      <WeightPanel memberId={actingMemberId} weekStart={start} todayKey={todayKey} />
     </section>
   );
 }

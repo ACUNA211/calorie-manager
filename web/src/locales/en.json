@@ -710,5 +710,40 @@
       "over": "Over the Calorie Target",
       "noTarget": "No Calorie Target yet"
     }
+  },
+  "weight": {
+    "heading": "Weight",
+    "loading": "Loading the weight log...",
+    "loadError": "Could not load the weight log. Try again.",
+    "dateLabel": "Date",
+    "weightLabel": "Weight (kg)",
+    "save": "Save weight",
+    "saved": "Weight saved.",
+    "replaces": "A day that already has a weight is replaced.",
+    "saveError": "Could not save the weight. Try again.",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteError": "Could not delete the weight. Try again.",
+    "editAria": "Edit the weight for {{date}}",
+    "deleteAria": "Delete the weight for {{date}}",
+    "entriesHeading": "Entries, last 12 weeks",
+    "none": "No weight logged in the last 12 weeks yet.",
+    "trend": {
+      "heading": "Trend, last 12 weeks",
+      "chartLabel": "Weight over the last 12 weeks, with a 7-day average",
+      "legendDaily": "Logged weight",
+      "legendAverage": "7-day average",
+      "range": "Lowest {{low}} kg, highest {{high}} kg",
+      "empty": "Log a weight to see the trend."
+    },
+    "errors": {
+      "number": "Enter a weight in kg, with one decimal at most, such as 72.5.",
+      "range": "A weight must be between {{min}} and {{max}} kg.",
+      "future": "A weight cannot be logged for a future day.",
+      "date": "Choose a valid date."
+    },
+    "entry": "{{date}}: {{kg}} kg",
+    "span": "{{from}} to {{to}}"
   }
 }
