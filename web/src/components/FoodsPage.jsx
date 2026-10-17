@@ -13,6 +13,7 @@ import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
 import ScanPanel from './ScanPanel.jsx';
 import OffCredit from './OffCredit.jsx';
+import LabelForm from './LabelForm.jsx';
 
 // Waits this long after the last keystroke before searching.
 const SEARCH_DELAY_MS = 300;
@@ -44,7 +45,7 @@ export default function FoodsPage() {
   // The Food Library food whose names are being edited: { key, id, name, nameEs, status }
   const [editing, setEditing] = useState(null);
   // Scan (ticket 18): null, or { phase, attempt, code, result }. Phases: camera, looking,
-  // found, notFound, error. scanToken changes whenever the scan opens or closes, so a
+  // found, notFound, label (typing in a label, ticket 20), error. scanToken changes whenever the scan opens or closes, so a
   // lookup that finishes after that is dropped.
   const [scan, setScan] = useState(null);
   const scanToken = useRef(0);
@@ -164,6 +165,13 @@ export default function FoodsPage() {
     if (token === scanToken.current) setScan((current) => ({ ...next, attempt: current?.attempt }));
   }
 
+  // A label typed in and saved (ticket 20): the scan looks the code up again, so the food now
+  // shows as a Food Library food, and the search list is refreshed.
+  function handleLabelSaved() {
+    refreshAfterChange();
+    lookUp(scan.code);
+  }
+
   function renderNameForm() {
     const busy = editing.status === 'saving';
     return (
@@ -260,7 +268,9 @@ export default function FoodsPage() {
         <p>
           {t(
             result.source === 'library'
-              ? 'foods.inLibrary'
+              ? result.typedFromLabel
+                ? 'foods.inLibraryFromLabel'
+                : 'foods.inLibrary'
               : result.source === 'off'
                 ? 'foods.fromOff'
                 : 'foods.fromUsda'
@@ -315,6 +325,16 @@ export default function FoodsPage() {
         />
       );
     }
+    if (scan.phase === 'label') {
+      return (
+        <LabelForm
+          key={scan.attempt}
+          code={scan.code}
+          onSaved={handleLabelSaved}
+          onCancel={() => setScan({ ...scan, phase: 'notFound' })}
+        />
+      );
+    }
     if (scan.phase === 'looking') {
       return <p role="status">{t('foods.scanLooking', { code: scan.code })}</p>;
     }
@@ -351,6 +371,12 @@ export default function FoodsPage() {
         <button type="button" onClick={searchByName}>
           {t('foods.searchByName')}
         </button>
+        {/* Only when no source knows the code, not when Open Food Facts was busy or down */}
+        {scan.phase === 'notFound' && !scan.offStatus && (
+          <button type="button" onClick={() => setScan({ ...scan, phase: 'label' })}>
+            {t('foods.typeInLabel')}
+          </button>
+        )}
         <button type="button" onClick={openScan}>
           {t('foods.scanAgain')}
         </button>

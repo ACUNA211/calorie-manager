@@ -13,7 +13,7 @@ const libraryRow = {
   id: 1,
   name: 'Jalapeño, pickled',
   brand: null,
-  source: 'label',
+  source: 'estimated',
   source_id: null,
   kcal_per_100g: 20,
   servings: [{ label: '1 jar', grams: 50 }],
@@ -25,7 +25,13 @@ const libraryRow = {
   sodium_mg: 900,
 };
 
-const oatFlakes = { ...libraryRow, id: 2, name: 'Oat flakes', source: 'label', source_id: null };
+const oatFlakes = {
+  ...libraryRow,
+  id: 2,
+  name: 'Oat flakes',
+  source: 'estimated',
+  source_id: null,
+};
 
 const usdaHit = {
   fdc_id: 2345,
@@ -230,7 +236,13 @@ describe('FoodsPage', () => {
   it('finds a food by its Spanish name', async () => {
     fakeBackend({
       library: [
-        { ...libraryRow, id: 7, name: 'Apples, raw', name_es: 'Manzana cruda', source: 'label' },
+        {
+          ...libraryRow,
+          id: 7,
+          name: 'Apples, raw',
+          name_es: 'Manzana cruda',
+          source: 'estimated',
+        },
       ],
     });
     renderScreen();
@@ -245,7 +257,13 @@ describe('FoodsPage', () => {
     window.localStorage.setItem('calorieManager.locale', 'es');
     fakeBackend({
       library: [
-        { ...libraryRow, id: 7, name: 'Apples, raw', name_es: 'Manzana cruda', source: 'label' },
+        {
+          ...libraryRow,
+          id: 7,
+          name: 'Apples, raw',
+          name_es: 'Manzana cruda',
+          source: 'estimated',
+        },
         { ...oatFlakes, id: 8, name: 'Oat flakes', name_es: null },
       ],
     });

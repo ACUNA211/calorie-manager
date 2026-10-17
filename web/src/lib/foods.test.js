@@ -631,3 +631,10 @@ describe('lookupGtin falls back to Open Food Facts (ticket 19)', () => {
     expect(client.functions.invoke).not.toHaveBeenCalled();
   });
 });
+
+describe('typed label foods (ticket 20)', () => {
+  it('marks a food saved from a label, and no other library food', () => {
+    expect(libraryResult({ ...oats, source: 'label', source_id: null }).typedFromLabel).toBe(true);
+    expect(libraryResult(oats).typedFromLabel).toBe(false);
+  });
+});

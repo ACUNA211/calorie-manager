@@ -246,6 +246,85 @@ describe('FoodsPage scan (ticket 18)', () => {
     expect(screen.getByRole('searchbox', { name: 'Search foods' })).toHaveFocus();
   });
 
+  it('types in a label for an unknown barcode, then finds it straight away (ticket 20)', async () => {
+    fakeCamera();
+    const typed = {
+      ...libraryRow,
+      id: 77,
+      name: 'Oat drink',
+      brand: 'Oatly',
+      source: 'label',
+      source_id: null,
+      kcal_per_100g: 36.8,
+      servings: [{ grams: 250 }],
+      protein_g: 0.4,
+      carbs_g: 6,
+      fat_g: 1.2,
+      fibre_g: null,
+      sugars_g: null,
+      sodium_mg: null,
+      name_es: null,
+    };
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      single: async () => ({ data: typed, error: null }),
+      order: () => chain,
+      limit: async () => ({ data: [], error: null }),
+    };
+    supabase.from.mockImplementation(() => chain);
+    supabase.functions.invoke.mockResolvedValue({ data: { status: 'notFound' }, error: null });
+    // Nothing knows the code until the label is saved; then the library has it.
+    let lookups = 0;
+    supabase.rpc.mockImplementation(async (name) => {
+      if (name === 'usda_lookup_gtin') {
+        lookups += 1;
+        return { data: lookups === 1 ? null : { food_id: 77 }, error: null };
+      }
+      if (name === 'save_label_food') return { data: 77, error: null };
+      return { data: null, error: null };
+    });
+    renderScreen();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Scan a barcode' }));
+    await screen.findByText(`Not found: no food has barcode ${CODE}.`);
+    await userEvent.click(screen.getByRole('button', { name: 'Type in the label' }));
+
+    const form = screen.getByRole('form', { name: 'Type in the Nutrition Facts label' });
+    const values = {
+      'Food name': 'Oat drink',
+      'Brand (optional)': 'Oatly',
+      'Serving size (g)': '250',
+      'Calories per serving': '92',
+      'Protein per serving (g)': '1',
+      'Carbs per serving (g)': '15',
+      'Fat per serving (g)': '3',
+    };
+    for (const [label, value] of Object.entries(values)) {
+      await userEvent.type(within(form).getByLabelText(label), value);
+    }
+    await userEvent.click(within(form).getByRole('button', { name: 'Save food' }));
+
+    expect(await screen.findByText(`Found by barcode ${CODE}.`)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Oat drink · Oatly' })).toBeInTheDocument();
+    expect(screen.getByText('Typed from a label, in your Food Library')).toBeInTheDocument();
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'save_label_food',
+      expect.objectContaining({ p_gtin: '00036000291452', p_kcal_per_100g: 36.8 })
+    );
+    expect(supabase.rpc.mock.calls.filter(([name]) => name === 'usda_lookup_gtin')).toHaveLength(2);
+  });
+
+  it('offers to type in a label only when no source knows the code', async () => {
+    fakeCamera();
+    fakeBackend({ lookup: null, off: { status: 'rateLimited' } });
+    renderScreen();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Scan a barcode' }));
+    await screen.findByText(/Open Food Facts is busy right now/);
+    expect(screen.queryByRole('button', { name: 'Type in the label' })).not.toBeInTheDocument();
+  });
+
   it('does not run the lookup if the scan is closed before a read', async () => {
     fakeCamera({ reads: [] });
     fakeBackend();

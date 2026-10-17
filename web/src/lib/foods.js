@@ -41,6 +41,8 @@ export function libraryResult(row) {
     source: 'library',
     id: row.id,
     usdaId: row.source === 'usda' && row.source_id ? String(row.source_id) : null,
+    // Typed in from a label (ticket 20): shown as such on the screen.
+    typedFromLabel: row.source === 'label',
     name: row.name,
     nameEs: row.name_es || null,
     nameEsEdited: row.name_es_edited_by_member === true,
@@ -48,7 +50,7 @@ export function libraryResult(row) {
     kcalPer100g: numberOrNull(row.kcal_per_100g),
     macros,
     servingGrams: serving ? numberOrNull(serving.grams) : null,
-    servingLabel: serving ? serving.label : null,
+    servingLabel: serving ? (serving.label ?? null) : null,
   };
 }
 
@@ -60,6 +62,7 @@ export function usdaResult(hit) {
     source: 'usda',
     fdcId: Number(hit.fdc_id),
     usdaId: String(hit.fdc_id),
+    typedFromLabel: false,
     name: hit.name,
     nameEs: null,
     nameEsEdited: false,
@@ -194,7 +197,8 @@ export async function searchFoods(client, query) {
 // screen can say "try again" rather than "no such food".
 // Returns { status: 'found', source: 'library' | 'usda' | 'off', result } (a result as
 // libraryResult, usdaResult or offResult gives), { status: 'notFound', offStatus? } or
-// { status: 'invalid' }. Throws when the USDA call fails.
+// { status: 'invalid' }. A notFound with no offStatus means Open Food Facts answered "no
+// such product" too, so the screen may offer to type in the label (ticket 20). Throws when the USDA call fails.
 export async function lookupGtin(client, code) {
   if (!isValidGtin(code)) return { status: 'invalid' };
   const [, , fourteen] = gtinForms(code);
