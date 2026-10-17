@@ -17,7 +17,7 @@ The Member who created the Household. They invite others and approve the Meal Pl
 _Avoid_: admin
 
 **Intake form**:
-The questions a Member answers when joining (such as age, height, weight, activity and goal). A standard formula turns the answers into suggested Targets, which the Member accepts or edits.
+The questions a Member answers when joining (such as age, height, weight, activity and goal). A standard formula turns the answers into suggested Targets, which the Member accepts or edits. When a new weight is logged, an updated suggestion is offered, never applied on its own. Dependents get no suggested Targets. (open: the formula and questions, see `.scratch/restart/issues/01-targets-formula-research.md`)
 _Avoid_: onboarding survey, quiz
 
 **Targets**:
@@ -36,7 +36,7 @@ _Avoid_: bot, assistant, chatbot
 TypeSafe AI's decision model. It doesn't write text; it answers typed questions (a choice, a score, a yes/no) with probabilities. Used for Rebalance and Voice commands, behind an interface that can switch to another decision model or a cheap text model.
 
 **Voice command**:
-A spoken instruction ("tick off the milk") turned to text, then rated by Jev into its most likely meanings, shown as options. Nothing changes until the Member picks one; if none is right, they say it again.
+A spoken instruction ("tick off the milk") turned to text by the browser's own speech recognition, then rated by Jev into its three most likely meanings, shown as option cards. Code pulls out any amounts. Nothing changes until the Member picks one; if none is right, they say it again. The actions: tick a Shopping list line, add to the Shopping list, log a planned Portion, log something else, mark a Pantry item used up or partly used, and start a Rebalance.
 _Avoid_: voice assistant, dictation
 
 **Pantry**:
@@ -48,11 +48,11 @@ The foods the app knows calories and macros for, stored per 100 g with serving s
 _Avoid_: food list, database
 
 **Recipe**:
-A named meal made of ingredients with amounts in grams. Its calories and macros come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback). It can be starred, tagged with the Meal Times it suits, and copied as a variation. The library belongs to the Household.
+A named meal made of ingredients with amounts in grams. Its calories and macros come from its ingredients and are shared out by the weight of the cooked result ("makes N servings" as the fallback). It can be starred, tagged with the Meal Times it suits, and copied as a variation. The library belongs to the Household. A Recipe is typed in, or pasted as text or a link and parsed by one cheap AI call, then confirmed; a starter set may be imported from USDA MyPlate Kitchen. Its nutrition always comes from Food Library matches, never from the AI.
 _Avoid_: dish
 
 **Meal Time**:
-A named time a Member eats ("Breakfast 7:30"), set for the weekdays it applies to, with a calorie range. Kinds: **Set** (already decided; its calories are set aside), **Planned** (the Agent must fill it, inside its range) and **If room** (filled only while calories are left; Rebalance may drop it). (open: Meal Times shared by several Members)
+A named time a Member eats ("Breakfast 7:30"), set for the weekdays it applies to, with a calorie range. Kinds: **Set** (already decided; its calories are set aside), **Planned** (the Agent must fill it, inside its range) and **If room** (filled only while calories are left; Rebalance may drop it). A **shared** Meal Time ("Family dinner 6:30") belongs to several Members and gets one Cook, with each Member's Portion sized by code to what they have left.
 _Avoid_: slot, Fixed / Open required / Open optional
 
 **Cook**:
@@ -77,6 +77,14 @@ _Avoid_: grocery list
 **Rebalance**:
 After a Member's day goes over, Jev rates what they said (how far over, which meal, what kind of fix they want), then fixed formulas pick the change from Cooks already planned. It never touches Set Meal Times or meals already logged, and never takes a Planned one below its range. Nothing changes until the Member picks.
 _Avoid_: adjust, correct, fix
+
+**Preferences**:
+What the Agent plans from. Household Preferences: cuisines, cooking time on weeknights and weekends, equipment, how often meals repeat, how many leftovers are fine, and a budget feel. Member Preferences: favourites and dislikes (soft), and **Hard rules** (allergies, foods they won't eat, diet rules such as vegetarian or halal). Code filters out any Recipe that breaks a Hard rule for anyone eating it before the Agent sees it.
+_Avoid_: settings, restrictions
+
+**Schedule**:
+A job that runs on its own: the weekly Meal Plan draft (on a set day and time, then a notification), building the Shopping list when the Meal Plan is approved, reminders around each Meal Time, and reminders on cook days. Approval is always by hand. Each Member picks which reminders they get, delivered by Web Push.
+_Avoid_: cron, automation
 
 **AI cap**:
 A $5/month hard limit per AI provider, plus an in-app counter that stops AI calls when it is reached.
