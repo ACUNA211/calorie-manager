@@ -5,6 +5,7 @@ import WeekPage from './WeekPage.jsx';
 import { useActingMember } from '../lib/actingMember.jsx';
 import { loadTargets } from '../lib/targets.js';
 import { loadWeek } from '../lib/week.js';
+import { loadWeight } from '../lib/weight.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
@@ -14,6 +15,11 @@ vi.mock('../lib/targets.js', async (importOriginal) => ({
   loadTargets: vi.fn(),
 }));
 vi.mock('../lib/week.js', () => ({ loadWeek: vi.fn() }));
+vi.mock('../lib/weight.js', () => ({
+  loadWeight: vi.fn(),
+  saveWeight: vi.fn(),
+  deleteWeight: vi.fn(),
+}));
 
 // Calorie Target 2000 with the default Planning band (1800 to 2000 kcal).
 const targetRow = {
@@ -49,6 +55,7 @@ describe('WeekPage', () => {
     vi.setSystemTime(new Date(2026, 9, 17, 12, 0));
     window.localStorage.clear();
     loadTargets.mockResolvedValue(targetRow);
+    loadWeight.mockResolvedValue([]);
     loadWeek.mockResolvedValue([
       { log_date: '2026-10-11', kcal: 1800, protein_g: 130, carbs_g: 200, fat_g: 60 },
       { log_date: '2026-10-14', kcal: 2100, protein_g: 100, carbs_g: 220, fat_g: 70 },
@@ -153,6 +160,22 @@ describe('WeekPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not load this week. Try again.'
     );
+  });
+
+  it('shows the weight log under the week, with a trend chart over the last 12 weeks', async () => {
+    loadWeight.mockResolvedValue([
+      { id: 1, log_date: '2026-10-11', kg: 72.5 },
+      { id: 2, log_date: '2026-10-14', kg: 72.1 },
+    ]);
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Weight' })).toBeInTheDocument();
+    // Eighty-four days, from 26 July to 17 October, with the seven days before them fetched too.
+    expect(loadWeight).toHaveBeenCalledWith({}, 4, '2026-07-20', '2026-10-17');
+    expect(
+      screen.getByRole('img', { name: 'Weight over the last 12 weeks, with a 7-day average' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Lowest 72.1 kg, highest 72.5 kg')).toBeInTheDocument();
   });
 
   it('asks for a Member when none is acted for', () => {

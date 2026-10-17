@@ -660,5 +660,40 @@
       "over": "Por encima del límite de calorías",
       "noTarget": "Todavía no hay límite de calorías"
     }
+  },
+  "weight": {
+    "heading": "Peso",
+    "loading": "Cargando el registro de peso...",
+    "loadError": "No se pudo cargar el registro de peso. Inténtalo de nuevo.",
+    "dateLabel": "Fecha",
+    "weightLabel": "Peso (kg)",
+    "save": "Guardar peso",
+    "saved": "Peso guardado.",
+    "replaces": "Si ese día ya tiene un peso, se reemplaza.",
+    "saveError": "No se pudo guardar el peso. Inténtalo de nuevo.",
+    "edit": "Editar",
+    "cancel": "Cancelar",
+    "delete": "Borrar",
+    "deleteError": "No se pudo borrar el peso. Inténtalo de nuevo.",
+    "editAria": "Editar el peso del {{date}}",
+    "deleteAria": "Borrar el peso del {{date}}",
+    "entriesHeading": "Registros de las últimas 12 semanas",
+    "none": "Todavía no hay ningún peso registrado en las últimas 12 semanas.",
+    "trend": {
+      "heading": "Tendencia, últimas 12 semanas",
+      "chartLabel": "Peso de las últimas 12 semanas, con una media de 7 días",
+      "legendDaily": "Peso registrado",
+      "legendAverage": "Media de 7 días",
+      "range": "Más bajo {{low}} kg, más alto {{high}} kg",
+      "empty": "Registra un peso para ver la tendencia."
+    },
+    "errors": {
+      "number": "Escribe un peso en kg, con una cifra decimal como máximo, por ejemplo 72.5.",
+      "range": "El peso debe estar entre {{min}} y {{max}} kg.",
+      "future": "No se puede registrar un peso para un día futuro.",
+      "date": "Elige una fecha válida."
+    },
+    "entry": "{{date}}: {{kg}} kg",
+    "span": "del {{from}} al {{to}}"
   }
 }
