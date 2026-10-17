@@ -80,3 +80,14 @@ export async function setPackageGrams(client, foodId, grams) {
   if (error) throw error;
   return Number(data);
 }
+
+// Takes up to grams of a food off the Household's Pantry (migration 029, used by Eaten on
+// Today, ticket #27). Returns the grams actually taken: 0 when the food is not in the Pantry.
+export async function takeFromPantry(client, foodId, grams) {
+  const { data, error } = await client.rpc('pantry_take', {
+    p_food_id: Number(foodId),
+    p_grams: grams,
+  });
+  if (error) throw error;
+  return Number(data);
+}

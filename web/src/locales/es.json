@@ -652,6 +652,31 @@
       "discard": "Descartar",
       "queuedToast": "Guardado en este teléfono: {{kcal}} kcal en {{meal}}. Se sincronizará cuando vuelva la conexión.",
       "storageError": "No se pudo guardar este registro en el teléfono. Inténtalo de nuevo con conexión."
+    },
+    "scan": {
+      "heading": "Escanear un alimento",
+      "button": "Escanear",
+      "needsConnection": "Escanear necesita conexión.",
+      "looking": "Buscando {{code}}...",
+      "notFound": "No se encontró ningún alimento para {{code}}. Regístralo buscándolo.",
+      "error": "No se pudo buscar ese código de barras. Inténtalo de nuevo.",
+      "offOnly": "{{name}} viene de Open Food Facts. Todavía no se puede añadir a la despensa ni registrar.",
+      "addToPantry": "Añadir a la despensa",
+      "adding": "Añadiendo...",
+      "pantryAdded": "Se añadió un envase de {{name}} ({{grams}} g) a la despensa.",
+      "pantryError": "No se pudo añadir a la despensa. Inténtalo de nuevo.",
+      "askWeight": "No se conoce el peso del envase de {{name}}. Escríbelo una vez.",
+      "weightLabel": "Peso del envase (g)",
+      "weightSave": "Guardar peso y añadir",
+      "eatenButton": "Comido",
+      "saving": "Guardando...",
+      "eatError": "No se pudo registrar este alimento. Inténtalo de nuevo.",
+      "again": "Escanear otra vez",
+      "close": "Cerrar",
+      "toast": "Registrado {{kcal}} kcal en {{meal}}. {{pantry}}",
+      "tookPantry": "Se quitaron {{grams}} g de la despensa.",
+      "notInPantry": "No está en la despensa, así que la despensa no cambia.",
+      "pantryFailed": "No se pudo actualizar la despensa."
     }
   },
   "week": {
