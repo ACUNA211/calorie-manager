@@ -6,10 +6,14 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done except deploy (awaiting review)
 
-- [ ] `npm run dev`, `npm run build`, `npm test` and a lint command all work
+- [x] `npm run dev`, `npm run build`, `npm test` and a lint command all work
 - [ ] A deployed Cloudflare Pages URL shows a sign-in form; signing in shows "Hi, <email>"; sign-out returns to the form
-- [ ] No keys are committed; a `.env.example` lists the settings needed
-- [ ] One passing test covers the signed-in / signed-out switch
-- [ ] A README section explains how to run and deploy
+- [x] No keys are committed; a `.env.example` lists the settings needed
+- [x] One passing test covers the signed-in / signed-out switch
+- [x] A README section explains how to run and deploy
+
+## Comments
+
+- 2026-10-17: Built in worktree `restart-t02` under `web/` (React 19 + Vite 8, Supabase Auth email/password, Vitest + Testing Library, ESLint + Prettier). `npm run dev`, `build`, `test`, `lint` and `format:check` pass locally. Deployed URL not ticked: it waits on the user, who must create the Cloudflare Pages project and set the VITE_ variables and Supabase redirect URLs (see README).

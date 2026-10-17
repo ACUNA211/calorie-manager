@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules/
+web/node_modules/
+dist/
+web/dist/
+coverage/
+
+# Local secrets: keep real Supabase values out of git
+.env
+.env.*
+!.env.example
+web/.env
+web/.env.*
+!web/.env.example
+
+# Editors and OS
+.DS_Store
+*.log
