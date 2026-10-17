@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { createHousehold, loadHousehold } from '../lib/households.js';
-import { HOUSEHOLD_TEXT } from '../strings.js';
+import { useI18n } from '../i18n/I18nProvider.jsx';
 
 export default function HouseholdPage({ user }) {
+  const { t } = useI18n();
   const [state, setState] = useState({ status: 'loading', household: null });
 
   useEffect(() => {
@@ -20,8 +21,8 @@ export default function HouseholdPage({ user }) {
     };
   }, [user.id]);
 
-  if (state.status === 'loading') return <p>{HOUSEHOLD_TEXT.loading}</p>;
-  if (state.status === 'error') return <p role="alert">{HOUSEHOLD_TEXT.loadError}</p>;
+  if (state.status === 'loading') return <p>{t('household.loading')}</p>;
+  if (state.status === 'error') return <p role="alert">{t('household.loadError')}</p>;
 
   if (!state.household) {
     return (
@@ -36,17 +37,18 @@ export default function HouseholdPage({ user }) {
 }
 
 function MemberList({ household }) {
+  const { t } = useI18n();
   return (
     <section aria-labelledby="household-heading">
       <h2 id="household-heading">{household.name}</h2>
-      <h3>{HOUSEHOLD_TEXT.membersHeading}</h3>
+      <h3>{t('household.membersHeading')}</h3>
       {household.members.length === 0 ? (
-        <p>{HOUSEHOLD_TEXT.noMembers}</p>
+        <p>{t('household.noMembers')}</p>
       ) : (
         <ul>
           {household.members.map((member) => (
             <li key={member.id}>
-              {member.display_name} <span>({HOUSEHOLD_TEXT.roles[member.role]})</span>
+              {member.display_name} <span>({t(`household.roles.${member.role}`)})</span>
             </li>
           ))}
         </ul>
@@ -56,6 +58,7 @@ function MemberList({ household }) {
 }
 
 function CreateHousehold({ userId, onCreated }) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [error, setError] = useState('');
@@ -70,7 +73,7 @@ function CreateHousehold({ userId, onCreated }) {
       const household = await loadHousehold(supabase, userId);
       onCreated(household);
     } catch {
-      setError(HOUSEHOLD_TEXT.createError);
+      setError(t('household.createError'));
     } finally {
       setBusy(false);
     }
@@ -78,15 +81,15 @@ function CreateHousehold({ userId, onCreated }) {
 
   return (
     <section aria-labelledby="household-heading">
-      <h2 id="household-heading">{HOUSEHOLD_TEXT.noHouseholdTitle}</h2>
-      <p>{HOUSEHOLD_TEXT.noHouseholdBody}</p>
+      <h2 id="household-heading">{t('household.noHouseholdTitle')}</h2>
+      <p>{t('household.noHouseholdBody')}</p>
       <form onSubmit={handleSubmit}>
         <label>
-          {HOUSEHOLD_TEXT.householdNameLabel}
+          {t('household.householdNameLabel')}
           <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <label>
-          {HOUSEHOLD_TEXT.ownerNameLabel}
+          {t('household.ownerNameLabel')}
           <input
             type="text"
             required
@@ -95,7 +98,7 @@ function CreateHousehold({ userId, onCreated }) {
           />
         </label>
         <button type="submit" disabled={busy}>
-          {busy ? HOUSEHOLD_TEXT.creating : HOUSEHOLD_TEXT.createButton}
+          {busy ? t('household.creating') : t('household.createButton')}
         </button>
         {error && <p role="alert">{error}</p>}
       </form>

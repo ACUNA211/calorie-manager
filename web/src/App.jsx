@@ -3,8 +3,11 @@ import { supabase } from './lib/supabase.js';
 import SignInForm from './components/SignInForm.jsx';
 import Home from './components/Home.jsx';
 import HouseholdPage from './components/HouseholdPage.jsx';
+import LanguageSwitch from './i18n/LanguageSwitch.jsx';
+import { useI18n } from './i18n/I18nProvider.jsx';
 
 export default function App() {
+  const { t } = useI18n();
   const [session, setSession] = useState(null);
   const [checked, setChecked] = useState(false);
 
@@ -28,12 +31,21 @@ export default function App() {
     };
   }, []);
 
-  if (!checked) return <p>Loading…</p>;
-  if (!session) return <SignInForm />;
+  let body;
+  if (!checked) body = <p>{t('app.loading')}</p>;
+  else if (!session) body = <SignInForm />;
+  else
+    body = (
+      <>
+        <Home user={session.user} />
+        <HouseholdPage user={session.user} />
+      </>
+    );
+
   return (
     <>
-      <Home user={session.user} />
-      <HouseholdPage user={session.user} />
+      <LanguageSwitch />
+      {body}
     </>
   );
 }

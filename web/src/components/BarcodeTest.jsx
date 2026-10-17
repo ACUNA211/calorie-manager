@@ -1,3 +1,4 @@
+/* eslint-disable local/no-hardcoded-text -- hidden English-only dev screen (#17) */
 import { useEffect, useRef, useState } from 'react';
 import { createBarcodeDetector } from '../lib/barcodeDetector.js';
 

@@ -1,0 +1,47 @@
+{
+  "app": {
+    "loading": "Cargando…"
+  },
+  "language": {
+    "label": "Idioma",
+    "names": {
+      "en": "English",
+      "es": "Español"
+    }
+  },
+  "signIn": {
+    "heading": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Iniciar sesión",
+    "submitting": "Iniciando sesión…",
+    "failed": "No se pudo iniciar sesión. Revisa tu correo y tu contraseña."
+  },
+  "home": {
+    "greeting": "Hola, {{email}}",
+    "signOut": "Cerrar sesión"
+  },
+  "household": {
+    "loading": "Cargando tu hogar…",
+    "loadError": "No se pudo cargar tu hogar.",
+    "membersHeading": "Miembros",
+    "noMembers": "Todavía no hay miembros.",
+    "noHouseholdTitle": "Todavía no estás en un hogar",
+    "noHouseholdBody": "Crea uno y serás su propietario.",
+    "householdNameLabel": "Nombre del hogar",
+    "ownerNameLabel": "Tu nombre",
+    "createButton": "Crear hogar",
+    "creating": "Creando…",
+    "createError": "No se pudo crear el hogar.",
+    "roles": {
+      "owner": "Propietario",
+      "member": "Miembro",
+      "dependent": "Dependiente"
+    }
+  },
+  "installHint": {
+    "label": "Sugerencia para instalar",
+    "body": "Para usar Calorie Manager como una app, toca el botón Compartir de Safari y luego Añadir a pantalla de inicio.",
+    "dismiss": "Entendido"
+  }
+}

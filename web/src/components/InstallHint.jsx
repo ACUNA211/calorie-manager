@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { markHintDismissed, shouldShowInstallHint } from '../lib/installHint.js';
+import { useI18n } from '../i18n/I18nProvider.jsx';
 
 function getStorage() {
   try {
@@ -10,6 +11,7 @@ function getStorage() {
 }
 
 export default function InstallHint() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(() => {
     return shouldShowInstallHint({
       userAgent: navigator.userAgent,
@@ -27,12 +29,10 @@ export default function InstallHint() {
   }
 
   return (
-    <aside role="region" aria-label="Install hint" style={styles.box}>
-      <p>
-        To use Calorie Manager like an app, tap the Share button in Safari, then Add to Home Screen.
-      </p>
+    <aside role="region" aria-label={t('installHint.label')} style={styles.box}>
+      <p>{t('installHint.body')}</p>
       <button type="button" onClick={dismiss}>
-        Got it
+        {t('installHint.dismiss')}
       </button>
     </aside>
   );
