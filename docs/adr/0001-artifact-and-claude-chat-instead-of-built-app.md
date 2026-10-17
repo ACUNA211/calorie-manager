@@ -1,6 +1,6 @@
 # Artifact + Claude chat instead of a built app with its own AI
 
-Status: accepted (2026-10-10)
+Status: superseded by [0002](0002-household-pwa-with-cheap-ai.md) (2026-10-17); accepted 2026-10-10
 
 ## Context
 
