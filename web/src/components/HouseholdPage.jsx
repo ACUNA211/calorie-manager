@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { createHousehold, loadHousehold } from '../lib/households.js';
+import { buildInviteUrl, createInvite } from '../lib/invites.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import AiSpendPanel from './AiSpendPanel.jsx';
 
@@ -55,7 +56,49 @@ function MemberList({ household }) {
         </ul>
       )}
       <AiSpendPanel client={supabase} />
+      {household.myRole === 'owner' && <InviteLink householdId={household.id} />}
     </section>
+  );
+}
+
+// Owner only: makes a single-use link (7 days) and copies it. The database checks the role too.
+function InviteLink({ householdId }) {
+  const { t, formatDate } = useI18n();
+  const [state, setState] = useState({ status: 'idle', url: '', expiresAt: null });
+
+  async function handleInvite() {
+    setState({ status: 'busy', url: '', expiresAt: null });
+    try {
+      const { token, expires_at: expiresAt } = await createInvite(supabase, householdId);
+      const url = buildInviteUrl(window.location, token);
+      let copied = true;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        copied = false;
+      }
+      setState({ status: copied ? 'copied' : 'copyFailed', url, expiresAt });
+    } catch {
+      setState({ status: 'error', url: '', expiresAt: null });
+    }
+  }
+
+  return (
+    <div>
+      <button type="button" onClick={handleInvite} disabled={state.status === 'busy'}>
+        {state.status === 'busy' ? t('invite.owner.creating') : t('invite.owner.button')}
+      </button>
+      {state.status === 'copied' && (
+        <p role="status">
+          {t('invite.owner.copied', { date: formatDate(new Date(state.expiresAt)) })}
+        </p>
+      )}
+      {state.status === 'copyFailed' && <p role="status">{t('invite.owner.copyFailed')}</p>}
+      {state.url && (
+        <input type="text" readOnly value={state.url} aria-label={t('invite.owner.linkLabel')} />
+      )}
+      {state.status === 'error' && <p role="alert">{t('invite.owner.createError')}</p>}
+    </div>
   );
 }
 

@@ -5,7 +5,7 @@
 export async function loadHousehold(client, userId) {
   const { data: me, error: meError } = await client
     .from('members')
-    .select('household_id')
+    .select('household_id, role')
     .eq('user_id', userId)
     .maybeSingle();
   if (meError) throw meError;
@@ -25,6 +25,7 @@ export async function loadHousehold(client, userId) {
   return {
     id: householdResult.data.id,
     name: householdResult.data.name,
+    myRole: me.role,
     members: membersResult.data,
   };
 }

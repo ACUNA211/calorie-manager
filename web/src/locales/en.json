@@ -174,5 +174,39 @@
       "rangeRequired": "Planned and If room need a minimum and a maximum.",
       "rangeOrder": "The minimum cannot be more than the maximum."
     }
+  },
+  "invite": {
+    "owner": {
+      "button": "Invite",
+      "creating": "Creating link…",
+      "copied": "Invite link copied. It expires {{date}}.",
+      "copyFailed": "Could not copy automatically. Copy this link:",
+      "createError": "Could not create an invite link.",
+      "linkLabel": "Invite link"
+    },
+    "landing": {
+      "checking": "Checking your invite…",
+      "invitedTo": "You are invited to join {{household}} as a Member.",
+      "loadError": "Could not check this invite link. Try again later.",
+      "createAccount": "Create an account",
+      "haveAccount": "I already have an account",
+      "signUpSubmit": "Create account",
+      "signUpSubmitting": "Creating account…",
+      "signUpFailed": "Could not create the account. Check your email and password, then try again.",
+      "confirmEmail": "Check your email to confirm your account, then open this invite link again.",
+      "signInSubmit": "Sign in",
+      "signInSubmitting": "Signing in…",
+      "nameLabel": "Your name",
+      "join": "Join Household",
+      "joining": "Joining…"
+    },
+    "errors": {
+      "notFound": "This invite link does not exist. Ask the Owner for a new one.",
+      "revoked": "This invite link was revoked. Ask the Owner for a new one.",
+      "used": "This invite link has already been used. Ask the Owner for a new one.",
+      "expired": "This invite link has expired. Ask the Owner for a new one.",
+      "alreadyInHousehold": "You already belong to a Household, so you cannot join this one.",
+      "joinFailed": "Could not join the Household. Try again."
+    }
   }
 }
