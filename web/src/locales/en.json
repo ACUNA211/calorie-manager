@@ -627,6 +627,31 @@
       "discard": "Discard",
       "queuedToast": "Saved on this phone: {{kcal}} kcal to {{meal}}. It will sync when you are back online.",
       "storageError": "Could not keep this entry on the phone. Try again when you are online."
+    },
+    "scan": {
+      "heading": "Scan a food",
+      "button": "Scan",
+      "needsConnection": "Scanning needs a connection.",
+      "looking": "Looking up {{code}}...",
+      "notFound": "No food found for {{code}}. Log it by search instead.",
+      "error": "Could not look that barcode up. Try again.",
+      "offOnly": "{{name}} is from Open Food Facts. It cannot be added to the Pantry or logged yet.",
+      "addToPantry": "Add to Pantry",
+      "adding": "Adding...",
+      "pantryAdded": "Added one package of {{name}} ({{grams}} g) to the Pantry.",
+      "pantryError": "Could not add to the Pantry. Try again.",
+      "askWeight": "The package weight of {{name}} is not known. Enter it once.",
+      "weightLabel": "Package weight (g)",
+      "weightSave": "Save weight and add",
+      "eatenButton": "Eaten",
+      "saving": "Saving...",
+      "eatError": "Could not log this food. Try again.",
+      "again": "Scan again",
+      "close": "Close",
+      "toast": "Logged {{kcal}} kcal to {{meal}}. {{pantry}}",
+      "tookPantry": "Took {{grams}} g from the Pantry.",
+      "notInPantry": "It is not in the Pantry, so the Pantry is unchanged.",
+      "pantryFailed": "The Pantry could not be updated."
     }
   },
   "week": {

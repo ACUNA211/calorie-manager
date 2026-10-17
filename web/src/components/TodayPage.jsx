@@ -27,6 +27,7 @@ import TodayMeals from './TodayMeals.jsx';
 import LogFoodPanel from './LogFoodPanel.jsx';
 import EditEntryPanel from './EditEntryPanel.jsx';
 import Toast from './Toast.jsx';
+import TodayScan from './TodayScan.jsx';
 
 const LOADING = { status: 'loading', entries: [] };
 
@@ -209,6 +210,27 @@ export default function TodayPage({ day: openDay = null }) {
     });
   }
 
+  // Eaten from a scan (ticket #27): the entry joins the day, and one toast offers Undo for both
+  // the log and the Pantry change.
+  function handleScanEaten(eaten) {
+    changeEntries((current) => sortEntries([...current, eaten.entry]));
+    const pantry = eaten.pantryFailed
+      ? t('today.scan.pantryFailed')
+      : eaten.taken > 0
+        ? t('today.scan.tookPantry', {
+            grams: formatNumber(eaten.taken, { maximumFractionDigits: 1 }),
+          })
+        : t('today.scan.notInPantry');
+    const kcal = formatNumber(eaten.entry.kcal, { maximumFractionDigits: 0 });
+    showToast(
+      t('today.scan.toast', { kcal, meal: eaten.meal ?? t('today.otherTime'), pantry }),
+      async () => {
+        await eaten.undo();
+        changeEntries((current) => current.filter((entry) => entry.id !== eaten.entry.id));
+      }
+    );
+  }
+
   function openEdit(entry) {
     setLogOpen(false);
     setEditingId(entry.id);
@@ -245,6 +267,18 @@ export default function TodayPage({ day: openDay = null }) {
         >
           {t('today.log.button')}
         </button>
+      ) : null}
+      {logAllowed ? (
+        <TodayScan
+          key={day}
+          memberId={actingMemberId}
+          logDate={day}
+          todayKey={todayKey}
+          meals={dayMeals}
+          weekday={weekday}
+          online={offline.online}
+          onEaten={handleScanEaten}
+        />
       ) : null}
       {toast ? (
         <Toast
