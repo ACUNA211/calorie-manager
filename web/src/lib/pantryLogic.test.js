@@ -5,6 +5,7 @@ import {
   applyCorrection,
   groupBySection,
   normalizeSection,
+  packageGrams,
   parseGrams,
   roundGrams,
   validateAddAmount,
@@ -141,5 +142,54 @@ describe('groupBySection', () => {
 
   it('returns no groups when nothing is left in the Pantry', () => {
     expect(groupBySection([item(1, 'Rice', 0, 'Pantry')])).toEqual([]);
+  });
+});
+
+describe('packageGrams (ticket #26)', () => {
+  it('uses the package weight the Household set on the food', () => {
+    expect(packageGrams({ packageGrams: 425, servings: [] })).toBe(425);
+    expect(packageGrams({ packageGrams: 425.04, servings: [] })).toBe(425);
+  });
+
+  it('prefers the set weight over a package-named serving', () => {
+    expect(
+      packageGrams({ packageGrams: 400, servings: [{ label: '1 can (425 g)', grams: 425 }] })
+    ).toBe(400);
+  });
+
+  it('reads the weight from a serving whose label names a package', () => {
+    expect(
+      packageGrams({
+        packageGrams: null,
+        servings: [{ label: '1 can (425 g)', grams: 425 }],
+      })
+    ).toBe(425);
+    expect(
+      packageGrams({ packageGrams: null, servings: [{ label: '1 package', grams: 250.04 }] })
+    ).toBe(250);
+  });
+
+  it('does not take a plain serving (one portion) for the package', () => {
+    expect(
+      packageGrams({ packageGrams: null, servings: [{ label: '1 cup', grams: 40 }] })
+    ).toBeNull();
+    expect(
+      packageGrams({ packageGrams: null, servings: [{ label: '1 serving', grams: 30 }] })
+    ).toBeNull();
+  });
+
+  it('is unknown when the food has no weight and no serving data', () => {
+    expect(packageGrams({ packageGrams: null, servings: [] })).toBeNull();
+    expect(packageGrams({ packageGrams: null, servings: null })).toBeNull();
+    expect(packageGrams({ packageGrams: null })).toBeNull();
+  });
+
+  it('ignores a package serving with no usable grams', () => {
+    expect(
+      packageGrams({ packageGrams: null, servings: [{ label: '1 can', grams: 0 }] })
+    ).toBeNull();
+    expect(
+      packageGrams({ packageGrams: null, servings: [{ label: '1 can', grams: 999999 }] })
+    ).toBeNull();
   });
 });

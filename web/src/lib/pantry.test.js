@@ -3,8 +3,10 @@ import {
   addToPantry,
   correctPantryItem,
   foodIdFor,
+  loadFoodPackage,
   loadPantry,
   pantryItemFromRow,
+  setPackageGrams,
 } from './pantry.js';
 
 // A client that answers the calls pantry.js makes and records them.
@@ -130,5 +132,73 @@ describe('correctPantryItem', () => {
       'pantry_correct',
       { p_item_id: 3, p_action: 'set', p_grams: 33.3 },
     ]);
+  });
+});
+
+describe('loadFoodPackage and setPackageGrams (ticket #26)', () => {
+  it('reads the food name, package weight and servings', async () => {
+    const { client, calls } = fakeClient();
+    const chain = {
+      select: (columns) => {
+        calls.select.push(columns);
+        return chain;
+      },
+      eq: (column, value) => {
+        calls.eq = [column, value];
+        return chain;
+      },
+      single: async () => ({
+        data: {
+          id: 7,
+          name: 'Soup',
+          package_grams: '425.0',
+          servings: [{ label: '1 can', grams: 425 }],
+        },
+        error: null,
+      }),
+    };
+    client.from = vi.fn(() => chain);
+
+    expect(await loadFoodPackage(client, '7')).toEqual({
+      id: 7,
+      name: 'Soup',
+      packageGrams: 425,
+      servings: [{ label: '1 can', grams: 425 }],
+    });
+    expect(client.from).toHaveBeenCalledWith('foods');
+    expect(calls.eq).toEqual(['id', 7]);
+  });
+
+  it('keeps an unset package weight as null', async () => {
+    const { client } = fakeClient();
+    client.from = vi.fn(() => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: { id: 7, name: 'Rice', package_grams: null, servings: null },
+            error: null,
+          }),
+        }),
+      }),
+    }));
+    expect(await loadFoodPackage(client, 7)).toEqual({
+      id: 7,
+      name: 'Rice',
+      packageGrams: null,
+      servings: [],
+    });
+  });
+
+  it('sets the package weight through set_package_grams', async () => {
+    const { client, calls } = fakeClient({
+      rpc: { set_package_grams: () => ({ data: 425, error: null }) },
+    });
+    expect(await setPackageGrams(client, '7', 425)).toBe(425);
+    expect(calls.rpc).toEqual([['set_package_grams', { p_food_id: 7, p_grams: 425 }]]);
+  });
+
+  it('throws when the weight cannot be saved', async () => {
+    const { client } = fakeClient({ error: new Error('nope') });
+    await expect(setPackageGrams(client, 7, 425)).rejects.toThrow('nope');
   });
 });

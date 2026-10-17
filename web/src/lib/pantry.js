@@ -53,3 +53,30 @@ export async function correctPantryItem(client, itemId, action, typedGrams = nul
   if (error) throw error;
   return Number(data);
 }
+
+// The food fields a package scan needs: its name, the package weight the Household set (if
+// any) and its serving data. Ticket #26 reads these to add one package at its label weight.
+export async function loadFoodPackage(client, foodId) {
+  const { data, error } = await client
+    .from('foods')
+    .select('id, name, package_grams, servings')
+    .eq('id', Number(foodId))
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    name: data.name,
+    packageGrams: data.package_grams === null ? null : Number(data.package_grams),
+    servings: data.servings || [],
+  };
+}
+
+// Remembers the label weight of one package on the food (migration 027). Returns it.
+export async function setPackageGrams(client, foodId, grams) {
+  const { data, error } = await client.rpc('set_package_grams', {
+    p_food_id: Number(foodId),
+    p_grams: grams,
+  });
+  if (error) throw error;
+  return Number(data);
+}

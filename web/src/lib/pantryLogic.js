@@ -92,3 +92,26 @@ export function groupBySection(items) {
       items: sectionItems.sort((a, b) => a.name.localeCompare(b.name)),
     }));
 }
+
+// Words that name a package in a serving label, such as "1 can (425 g)" or "1 package".
+// Plain serving labels ("1 cup", "30 g") are one portion, not the package, so they do not match.
+const PACKAGE_WORDS =
+  /\b(package|pkg|pack|packet|can|bottle|bag|box|jar|carton|pouch|container|tub|tin)\b/i;
+
+// The label weight of one package of a food, in grams, or null when it is not known yet.
+// A weight the Household has set on the food wins. Otherwise a serving whose label names a
+// package gives it. Takes { packageGrams, servings } as pantry.js reads them from the food.
+export function packageGrams(food) {
+  if (food.packageGrams !== null && food.packageGrams !== undefined) {
+    return roundGrams(Number(food.packageGrams));
+  }
+  const servings = Array.isArray(food.servings) ? food.servings : [];
+  const serving = servings.find(
+    (entry) =>
+      entry &&
+      PACKAGE_WORDS.test(String(entry.label ?? '')) &&
+      Number(entry.grams) > 0 &&
+      Number(entry.grams) <= PANTRY_MAX_GRAMS
+  );
+  return serving ? roundGrams(Number(serving.grams)) : null;
+}
