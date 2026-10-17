@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 25 (Pantry page), 18 (Scan finds a food), 75 (Phone check: barcode reads), 69 (Run the database tests locally)
+**Blocked by:** 25 (Pantry page), 18 (Scan finds a food), 75 (Phone check: barcode reads), 69 (Run the database tests locally), 81 (Decide: show macros on USDA search results?)
 
 **Status:** done (awaiting phone test)
 

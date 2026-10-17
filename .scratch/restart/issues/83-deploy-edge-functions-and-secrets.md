@@ -15,13 +15,20 @@ Ticket 30 added the `parse-recipe` Edge Function (Paste a Recipe, Anthropic `cla
 6. Optional local check: install Deno, run `deno check supabase/functions/parse-recipe/index.ts`.
 7. Run `supabase functions deploy parse-recipe`, then paste a real recipe in the app and check the review screen, the matches and the AI cap message.
 
+Ticket 19 added the `off-lookup` Edge Function (Open Food Facts fallback):
+
+8. Optional: `supabase secrets set OFF_USER_AGENT="CalorieManager/1.0 (<a contact you choose>)"`. Open Food Facts asks for a contact in the User-Agent.
+9. Check the production product URL used in `supabase/functions/_shared/off.ts` (`/api/v2/product/{code}.json`) against https://openfoodfacts.github.io/openfoodfacts-server/api/.
+10. Run `supabase functions deploy off-lookup`, then scan a product that USDA doesn't know and check the Open Food Facts credit shows.
+
 **Blocked by:** 69 (Run the database tests locally), 76 (Get API keys and run the research tests)
 
 **Status:** ready-for-human
 
-**Unblocks:** 16, 30
+**Unblocks:** 16, 19, 30
 
 - [ ] Secret set and function deployed
 - [ ] A newly saved food gets a Spanish name
 - [ ] Backfill returned `remaining: 0`
+- [ ] `off-lookup` deployed; an OFF-only product shows with its credit
 - [ ] `parse-recipe` deployed; a pasted recipe reaches the review screen

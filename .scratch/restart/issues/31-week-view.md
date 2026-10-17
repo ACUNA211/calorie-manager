@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 23 (Today: log a food)
+**Blocked by:** 23 (Today: log a food), 79 (Review Release 1 work and push it)
 
 **Status:** done (awaiting review)
 

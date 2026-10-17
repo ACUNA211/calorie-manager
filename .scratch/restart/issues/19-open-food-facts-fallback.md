@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 18 (Scan finds a food), 69 (Run the database tests locally), 83 (Deploy the Edge Functions and set their secrets)
+**Blocked by:** 18 (Scan finds a food), 69 (Run the database tests locally), 83 (Deploy the Edge Functions and set their secrets), 85 (Decide: how are Open Food Facts foods logged and stocked?)
 
 **Status:** done (awaiting DB test run)
 

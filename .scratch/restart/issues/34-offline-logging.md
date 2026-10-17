@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 23 (Today: log a food), 03 (Home Screen install and offline app shell), 74 (Phone check: install and offline), 69 (Run the database tests locally)
+**Blocked by:** 23 (Today: log a food), 03 (Home Screen install and offline app shell), 74 (Phone check: install and offline), 69 (Run the database tests locally), 84 (Decide: Today logging rules)
 
 **Status:** done (awaiting phone check)
 
