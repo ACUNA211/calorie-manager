@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
-import { createHousehold, loadHousehold } from '../lib/households.js';
+import {
+  addDependent,
+  createHousehold,
+  loadHousehold,
+  removeDependent,
+  renameDependent,
+  validateDependentName,
+} from '../lib/households.js';
 import { buildInviteUrl, createInvite } from '../lib/invites.js';
+import { useActingMember } from '../lib/actingMember.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import AiSpendPanel from './AiSpendPanel.jsx';
 
 export default function HouseholdPage({ user }) {
   const { t } = useI18n();
+  const { refresh: refreshActingMember } = useActingMember();
   const [state, setState] = useState({ status: 'loading', household: null });
 
   useEffect(() => {
@@ -23,6 +32,13 @@ export default function HouseholdPage({ user }) {
     };
   }, [user.id]);
 
+  // After a Dependent changes, reload this list and the "logging for" picker in the header.
+  async function reloadHousehold() {
+    const household = await loadHousehold(supabase, user.id);
+    setState({ status: 'ready', household });
+    refreshActingMember();
+  }
+
   if (state.status === 'loading') return <p>{t('household.loading')}</p>;
   if (state.status === 'error') return <p role="alert">{t('household.loadError')}</p>;
 
@@ -35,10 +51,10 @@ export default function HouseholdPage({ user }) {
     );
   }
 
-  return <MemberList household={state.household} />;
+  return <MemberList household={state.household} onChanged={reloadHousehold} />;
 }
 
-function MemberList({ household }) {
+function MemberList({ household, onChanged }) {
   const { t } = useI18n();
   return (
     <section aria-labelledby="household-heading">
@@ -57,7 +73,125 @@ function MemberList({ household }) {
       )}
       <AiSpendPanel client={supabase} />
       {household.myRole === 'owner' && <InviteLink householdId={household.id} />}
+      {household.myRole === 'owner' && (
+        <DependentsEditor household={household} onChanged={onChanged} />
+      )}
     </section>
+  );
+}
+
+// Owner only: adds, renames and removes Dependents. The database checks the role too.
+function DependentsEditor({ household, onChanged }) {
+  const { t } = useI18n();
+  const dependents = household.members.filter((member) => member.role === 'dependent');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function handleAdd(event) {
+    event.preventDefault();
+    const check = validateDependentName(name);
+    if (!check.ok) {
+      setError(t(check.error));
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      await addDependent(supabase, check.value);
+      setName('');
+      await onChanged();
+    } catch {
+      setError(t('household.dependents.addError'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section aria-labelledby="dependents-heading">
+      <h3 id="dependents-heading">{t('household.dependents.heading')}</h3>
+      <p>{t('household.dependents.hint')}</p>
+      {dependents.length === 0 ? (
+        <p>{t('household.dependents.none')}</p>
+      ) : (
+        dependents.map((dependent) => (
+          <DependentRow key={dependent.id} dependent={dependent} onChanged={onChanged} />
+        ))
+      )}
+      <form onSubmit={handleAdd} noValidate>
+        <label>
+          {t('household.dependents.nameLabel')}
+          <input type="text" value={name} onChange={(event) => setName(event.target.value)} />
+        </label>
+        <button type="submit" disabled={busy}>
+          {busy ? t('household.dependents.adding') : t('household.dependents.addButton')}
+        </button>
+        {error && <p role="alert">{error}</p>}
+      </form>
+    </section>
+  );
+}
+
+function DependentRow({ dependent, onChanged }) {
+  const { t } = useI18n();
+  const [draft, setDraft] = useState(dependent.display_name);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function handleRename(event) {
+    event.preventDefault();
+    const check = validateDependentName(draft);
+    if (!check.ok) {
+      setError(t(check.error));
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      await renameDependent(supabase, dependent.id, check.value);
+      await onChanged();
+    } catch {
+      setError(t('household.dependents.renameError'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRemove() {
+    // Removing deletes everything logged for this Dependent, so confirm first.
+    if (
+      !window.confirm(t('household.dependents.removeConfirm', { name: dependent.display_name }))
+    ) {
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      await removeDependent(supabase, dependent.id);
+      await onChanged();
+    } catch {
+      setError(t('household.dependents.removeError'));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <form onSubmit={handleRename} noValidate>
+        <label>
+          {t('household.dependents.nameFor', { name: dependent.display_name })}
+          <input type="text" value={draft} onChange={(event) => setDraft(event.target.value)} />
+        </label>{' '}
+        <button type="submit" disabled={busy}>
+          {t('household.dependents.renameButton')}
+        </button>{' '}
+        <button type="button" onClick={handleRemove} disabled={busy}>
+          {t('household.dependents.removeButton')}
+        </button>
+      </form>
+      {error && <p role="alert">{error}</p>}
+    </div>
   );
 }
 

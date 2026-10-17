@@ -8,6 +8,7 @@ import MealTimesPage from './components/MealTimesPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
+import LoggingForSwitch from './components/LoggingForSwitch.jsx';
 import { useI18n } from './i18n/I18nProvider.jsx';
 
 export default function App() {
@@ -63,6 +64,7 @@ export default function App() {
   return (
     <>
       <LanguageSwitch />
+      <LoggingForSwitch />
       {body}
     </>
   );

@@ -2,14 +2,24 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import HouseholdPage from './HouseholdPage.jsx';
-import { createHousehold, loadHousehold } from '../lib/households.js';
+import {
+  addDependent,
+  createHousehold,
+  loadHousehold,
+  removeDependent,
+  renameDependent,
+} from '../lib/households.js';
 import { createInvite } from '../lib/invites.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
-vi.mock('../lib/households.js', () => ({
+vi.mock('../lib/households.js', async (importOriginal) => ({
+  ...(await importOriginal()),
   loadHousehold: vi.fn(),
   createHousehold: vi.fn(),
+  addDependent: vi.fn(),
+  renameDependent: vi.fn(),
+  removeDependent: vi.fn(),
 }));
 vi.mock('../lib/invites.js', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -157,5 +167,114 @@ describe('HouseholdPage invite link', () => {
 
     expect(await screen.findByRole('heading', { name: 'Acuna home' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Invite' })).not.toBeInTheDocument();
+  });
+});
+
+describe('HouseholdPage Dependents', () => {
+  const ownerHousehold = {
+    id: 7,
+    name: 'Acuna home',
+    myRole: 'owner',
+    myMemberId: 1,
+    members: [
+      { id: 1, display_name: 'Sergio', role: 'owner' },
+      { id: 2, display_name: 'Ana', role: 'member' },
+      { id: 3, display_name: 'Lucia', role: 'dependent' },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    loadHousehold.mockResolvedValue(ownerHousehold);
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('lists the Dependents with a name box for each, for the Owner', async () => {
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    expect(await screen.findByLabelText('Name for Lucia')).toHaveValue('Lucia');
+    expect(screen.queryByLabelText('Name for Ana')).not.toBeInTheDocument();
+  });
+
+  it('does not show the Dependents editor to a plain Member', async () => {
+    loadHousehold.mockResolvedValue({ ...ownerHousehold, myRole: 'member' });
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    expect(await screen.findByRole('heading', { name: 'Acuna home' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Dependents' })).not.toBeInTheDocument();
+  });
+
+  it('adds a Dependent, trimmed, then reloads the list', async () => {
+    addDependent.mockResolvedValue(9);
+    loadHousehold.mockResolvedValueOnce(ownerHousehold).mockResolvedValueOnce({
+      ...ownerHousehold,
+      members: [...ownerHousehold.members, { id: 9, display_name: 'Mateo', role: 'dependent' }],
+    });
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await userEvent.type(await screen.findByLabelText("Dependent's name"), '  Mateo  ');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Dependent' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Name for Mateo')).toBeInTheDocument());
+    expect(addDependent).toHaveBeenCalledWith(expect.anything(), 'Mateo');
+  });
+
+  it('refuses a blank name without calling the database', async () => {
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await userEvent.type(await screen.findByLabelText("Dependent's name"), '   ');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Dependent' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.');
+    expect(addDependent).not.toHaveBeenCalled();
+  });
+
+  it('shows an error when adding fails', async () => {
+    addDependent.mockRejectedValue(new Error('boom'));
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await userEvent.type(await screen.findByLabelText("Dependent's name"), 'Mateo');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Dependent' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not add the Dependent.');
+  });
+
+  it('renames a Dependent', async () => {
+    renameDependent.mockResolvedValue(undefined);
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    const box = await screen.findByLabelText('Name for Lucia');
+    await userEvent.clear(box);
+    await userEvent.type(box, 'Luci');
+    await userEvent.click(screen.getByRole('button', { name: 'Save name' }));
+
+    await waitFor(() => expect(renameDependent).toHaveBeenCalledWith(expect.anything(), 3, 'Luci'));
+    expect(loadHousehold).toHaveBeenCalledTimes(2);
+  });
+
+  it('removes a Dependent only after confirmation', async () => {
+    removeDependent.mockResolvedValue(undefined);
+    const confirm = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    await screen.findByLabelText('Name for Lucia');
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(removeDependent).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(removeDependent).toHaveBeenCalledWith(expect.anything(), 3));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Lucia'));
+    confirm.mockRestore();
   });
 });

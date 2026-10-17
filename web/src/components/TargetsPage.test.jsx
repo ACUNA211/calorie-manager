@@ -2,10 +2,22 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import TargetsPage from './TargetsPage.jsx';
+import LoggingForSwitch from './LoggingForSwitch.jsx';
+import { ActingMemberProvider } from '../lib/actingMember.jsx';
+import { loadHousehold } from '../lib/households.js';
 import { supabase } from '../lib/supabase.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
-vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn() } }));
+vi.mock('../lib/supabase.js', () => ({
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getSession: vi.fn(async () => ({ data: { session: null } })),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+    },
+  },
+}));
+vi.mock('../lib/households.js', () => ({ loadHousehold: vi.fn() }));
 
 const user = { id: 'user-1' };
 
@@ -186,5 +198,39 @@ describe('TargetsPage', () => {
     renderScreen({ memberId: 5 });
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load your Targets.');
+  });
+
+  it('shows the Targets of the Dependent picked under "logging for"', async () => {
+    supabase.auth.getSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } });
+    loadHousehold.mockResolvedValue({
+      id: 7,
+      name: 'Acuna home',
+      myRole: 'owner',
+      myMemberId: 5,
+      members: [
+        { id: 5, display_name: 'Sergio', role: 'owner' },
+        { id: 9, display_name: 'Lucia', role: 'dependent' },
+      ],
+    });
+    const { upsert } = fakeClient({ settingsRow: storedRow, memberRow: { id: 5 } });
+
+    render(
+      <I18nProvider>
+        <ActingMemberProvider>
+          <LoggingForSwitch />
+          <TargetsPage user={user} />
+        </ActingMemberProvider>
+      </I18nProvider>
+    );
+
+    await screen.findByRole('heading', { name: 'Targets' });
+    await userEvent.selectOptions(await screen.findByLabelText('Logging for'), '9');
+
+    expect(await screen.findByText('Setting Targets for Lucia.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save Targets' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Targets saved.');
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ member_id: 9 }), {
+      onConflict: 'member_id',
+    });
   });
 });
