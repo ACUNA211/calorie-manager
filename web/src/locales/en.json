@@ -66,5 +66,39 @@
       "google": "Google",
       "openai": "OpenAI"
     }
+  },
+  "targets": {
+    "heading": "Targets",
+    "loading": "Loading your Targets…",
+    "loadError": "Could not load your Targets.",
+    "clearHint": "Leave a field empty and save to clear that Target. Carbs and fat can stay empty.",
+    "calorieTargetLabel": "Calorie Target (kcal per day, a ceiling)",
+    "proteinFloorLabel": "Protein floor (g per day)",
+    "carbsLegend": "Carbs (g per day, optional range)",
+    "carbLowLabel": "Carbs low",
+    "carbHighLabel": "Carbs high",
+    "fatLegend": "Fat (g per day, optional range)",
+    "fatLowLabel": "Fat low",
+    "fatHighLabel": "Fat high",
+    "bandLegend": "Planning band (% of the Calorie Target)",
+    "bandLowLabel": "Band low (%)",
+    "bandHighLabel": "Band high (%)",
+    "aim": "Aim: {{low}}–{{high}}",
+    "aimNeedsTarget": "Set a Calorie Target to see the band in calories.",
+    "aimInvalid": "Fix the fields above to see the band in calories.",
+    "saveButton": "Save Targets",
+    "saving": "Saving…",
+    "saved": "Targets saved.",
+    "saveError": "Could not save your Targets.",
+    "errors": {
+      "whole": "Enter a whole number, such as 1800.",
+      "calorieTargetPositive": "The Calorie Target must be above 0.",
+      "notNegative": "Grams cannot be negative.",
+      "tooLarge": "That number is too large.",
+      "rangeIncomplete": "Fill in both ends of the range, or leave both empty.",
+      "rangeOrder": "The low end cannot be above the high end.",
+      "bandRange": "Enter a percent from 50 to 100.",
+      "bandOrder": "The band's low end cannot be above its high end."
+    }
   }
 }
