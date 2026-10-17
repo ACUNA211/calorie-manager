@@ -12,6 +12,7 @@ import { searchTokens } from '../lib/norm.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
 import ScanPanel from './ScanPanel.jsx';
+import OffCredit from './OffCredit.jsx';
 
 // Waits this long after the last keystroke before searching.
 const SEARCH_DELAY_MS = 300;
@@ -156,7 +157,7 @@ export default function FoodsPage() {
       next =
         outcome.status === 'found'
           ? { phase: 'found', code, result: outcome.result }
-          : { phase: 'notFound', code };
+          : { phase: 'notFound', code, offStatus: outcome.offStatus ?? null };
     } catch {
       next = { phase: 'error', code };
     }
@@ -256,8 +257,17 @@ export default function FoodsPage() {
           {displayName(result, locale)}
           {result.brand ? ` · ${result.brand}` : ''}
         </h3>
-        <p>{t(result.source === 'library' ? 'foods.inLibrary' : 'foods.fromUsda')}</p>
+        <p>
+          {t(
+            result.source === 'library'
+              ? 'foods.inLibrary'
+              : result.source === 'off'
+                ? 'foods.fromOff'
+                : 'foods.fromUsda'
+          )}
+        </p>
         {renderNutrition(result)}
+        {result.source === 'off' && <OffCredit />}
         {result.source === 'usda' && (
           <>
             <button type="button" disabled={isSaving} onClick={() => handleSave(result)}>
@@ -323,6 +333,13 @@ export default function FoodsPage() {
       );
     }
     // notFound and error: never a dead end, so search and scan again are both offered.
+    // When Open Food Facts could not answer, the line says to try again, not "not found".
+    const offMessage =
+      scan.offStatus === 'rateLimited'
+        ? t('foods.scanOffBusy')
+        : scan.offStatus === 'unavailable'
+          ? t('foods.scanOffError')
+          : null;
     return (
       <>
         <p role={scan.phase === 'error' ? 'alert' : 'status'}>
@@ -330,6 +347,7 @@ export default function FoodsPage() {
             ? t('foods.scanError')
             : t('foods.scanNotFound', { code: scan.code })}
         </p>
+        {offMessage && <p role="status">{offMessage}</p>}
         <button type="button" onClick={searchByName}>
           {t('foods.searchByName')}
         </button>

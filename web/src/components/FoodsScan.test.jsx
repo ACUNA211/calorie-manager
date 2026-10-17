@@ -69,7 +69,8 @@ function fakeCamera({ denied = false, reads = [[{ rawValue: CODE, format: 'upc_a
 }
 
 // Library and USDA backend. `lookup` is what usda_lookup_gtin answers.
-function fakeBackend({ lookup = { food_id: 2 }, lookupError } = {}) {
+// `off` is what off-lookup answers (ticket 19); by default Open Food Facts has no such code.
+function fakeBackend({ lookup = { food_id: 2 }, lookupError, off = { status: 'notFound' } } = {}) {
   const chain = {
     select: () => chain,
     eq: () => chain,
@@ -78,7 +79,11 @@ function fakeBackend({ lookup = { food_id: 2 }, lookupError } = {}) {
     limit: async () => ({ data: [], error: null }),
   };
   supabase.from.mockImplementation(() => chain);
-  supabase.functions.invoke.mockResolvedValue({ data: { status: 'translated' }, error: null });
+  supabase.functions.invoke.mockImplementation(async (name) =>
+    name === 'off-lookup'
+      ? { data: off, error: null }
+      : { data: { status: 'translated' }, error: null }
+  );
   supabase.rpc.mockImplementation(async (name) => {
     if (name === 'usda_lookup_gtin') {
       return lookupError ? { data: null, error: new Error('down') } : { data: lookup, error: null };
@@ -160,6 +165,43 @@ describe('FoodsPage scan (ticket 18)', () => {
     );
     expect(within(item).getByText('USDA')).toBeInTheDocument();
     expect(within(item).getByRole('button', { name: 'Save to Food Library' })).toBeInTheDocument();
+  });
+
+  it('shows an Open Food Facts product with calories, macros and the credit', async () => {
+    fakeCamera();
+    fakeBackend({
+      lookup: null,
+      off: {
+        status: 'found',
+        barcode: '36000291452',
+        offCode: '0036000291452',
+        product: {
+          product_name: 'Oat drink',
+          brands: 'Oatly',
+          nutriments: { 'energy-kcal_100g': 46, proteins_100g: 1 },
+        },
+      },
+    });
+    renderScreen();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Scan a barcode' }));
+
+    expect(await screen.findByText(`Found by barcode ${CODE}.`)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Oat drink · Oatly' })).toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /Protein/ })).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: 'Open Food Facts' });
+    expect(link).toHaveAttribute('href', 'https://world.openfoodfacts.org/');
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('off-lookup', { body: { code: CODE } });
+  });
+
+  it('says to try again when Open Food Facts is busy, not that the food does not exist', async () => {
+    fakeCamera();
+    fakeBackend({ lookup: null, off: { status: 'rateLimited' } });
+    renderScreen();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Scan a barcode' }));
+
+    expect(await screen.findByText(/Open Food Facts is busy right now/)).toBeInTheDocument();
   });
 
   it('says Not found and offers search, never a dead end', async () => {

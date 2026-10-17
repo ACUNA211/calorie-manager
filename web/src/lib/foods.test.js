@@ -20,6 +20,15 @@ import {
 } from './foods.js';
 import { searchTokens } from './norm.js';
 
+// Open Food Facts fallback (ticket 19): the Edge Function answers, the USDA step does not.
+const offProduct = {
+  product_name: 'Oat drink',
+  brands: 'Oatly',
+  serving_quantity: 250,
+  serving_quantity_unit: 'ml',
+  nutriments: { 'energy-kcal_100g': 46, proteins_100g: 1 },
+};
+
 const oats = {
   id: 1,
   name: 'Rolled oats',
@@ -531,6 +540,9 @@ describe('lookupGtin', () => {
 
   it('says not found when neither source has the code', async () => {
     const client = fakeClient({ lookupAnswer: null });
+    client.functions = {
+      invoke: vi.fn(async () => ({ data: { status: 'notFound' }, error: null })),
+    };
     expect(await lookupGtin(client, UPC_A)).toEqual({ status: 'notFound' });
   });
 
@@ -543,5 +555,79 @@ describe('lookupGtin', () => {
   it('throws when the lookup call fails', async () => {
     const client = fakeClient({ error: new Error('down') });
     await expect(lookupGtin(client, UPC_A)).rejects.toThrow('down');
+  });
+});
+
+describe('lookupGtin falls back to Open Food Facts (ticket 19)', () => {
+  const UPC_A = '036000291452';
+
+  // USDA and the Food Library miss; functions.invoke answers `offAnswer` (or throws).
+  function missingClient({ offAnswer, offError } = {}) {
+    const rpc = vi.fn(async () => ({ data: null, error: null }));
+    const invoke = vi.fn(async () =>
+      offError ? { data: null, error: offError } : { data: offAnswer, error: null }
+    );
+    return { rpc, functions: { invoke } };
+  }
+
+  it('returns an Open Food Facts product as found, with source off', async () => {
+    const client = missingClient({
+      offAnswer: {
+        status: 'found',
+        barcode: '36000291452',
+        offCode: '0036000291452',
+        product: offProduct,
+      },
+    });
+    const outcome = await lookupGtin(client, UPC_A);
+    expect(outcome.status).toBe('found');
+    expect(outcome.source).toBe('off');
+    expect(outcome.result).toMatchObject({
+      key: 'off:36000291452',
+      name: 'Oat drink',
+      brand: 'Oatly',
+      kcalPer100g: 46,
+      servingGrams: 250,
+    });
+    expect(client.functions.invoke).toHaveBeenCalledWith('off-lookup', { body: { code: UPC_A } });
+  });
+
+  it('is not asked when the Food Library or USDA already has the food', async () => {
+    const client = missingClient({ offAnswer: { status: 'notFound' } });
+    client.rpc = vi.fn(async () => ({ data: { food_id: 7 }, error: null }));
+    client.from = vi.fn(() => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({ data: { id: 7, name: 'X', kcal_per_100g: 1 }, error: null }),
+        }),
+      }),
+    }));
+    const outcome = await lookupGtin(client, UPC_A);
+    expect(outcome.source).toBe('library');
+    expect(client.functions.invoke).not.toHaveBeenCalled();
+  });
+
+  it('says not found when Open Food Facts has no such code', async () => {
+    const outcome = await lookupGtin(missingClient({ offAnswer: { status: 'notFound' } }), UPC_A);
+    expect(outcome).toEqual({ status: 'notFound' });
+  });
+
+  it('passes on the rate limit as offStatus, so the screen can say try again', async () => {
+    const outcome = await lookupGtin(
+      missingClient({ offAnswer: { status: 'rateLimited' } }),
+      UPC_A
+    );
+    expect(outcome).toEqual({ status: 'notFound', offStatus: 'rateLimited' });
+  });
+
+  it('treats a failed Open Food Facts call as unavailable, never as a thrown error', async () => {
+    const outcome = await lookupGtin(missingClient({ offError: new Error('down') }), UPC_A);
+    expect(outcome).toEqual({ status: 'notFound', offStatus: 'unavailable' });
+  });
+
+  it('does not ask Open Food Facts for a code that fails its check digit', async () => {
+    const client = missingClient({ offAnswer: { status: 'notFound' } });
+    expect(await lookupGtin(client, '036000291453')).toEqual({ status: 'invalid' });
+    expect(client.functions.invoke).not.toHaveBeenCalled();
   });
 });

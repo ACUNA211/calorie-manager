@@ -7,6 +7,7 @@
 
 import { norm, searchTokens } from './norm.js';
 import { gtinForms, isValidGtin } from './gtin.js';
+import { lookupOff } from './off.js';
 
 export const FOOD_COLUMNS =
   'id, name, name_es, name_es_edited_by_member, brand, source, source_id, kcal_per_100g, servings, protein_g, carbs_g, fat_g, fibre_g, sugars_g, sodium_mg';
@@ -188,15 +189,18 @@ export async function searchFoods(client, query) {
 // Household's Food Library first and asks USDA only when that misses, so a library hit
 // makes no USDA call. Every zero-padded form of a code is the same key on the server, so
 // one call with the 14-digit form covers the 12- and 13-digit forms too.
-// Returns { status: 'found', source: 'library' | 'usda', result } (a result as libraryResult
-// or usdaResult gives), { status: 'notFound' } or { status: 'invalid' }. Throws when the
-// call fails.
+// When USDA misses, Open Food Facts is asked (ticket 19, off-lookup). Its failure does not
+// fail the lookup: the answer then carries offStatus ('rateLimited' or 'unavailable') so the
+// screen can say "try again" rather than "no such food".
+// Returns { status: 'found', source: 'library' | 'usda' | 'off', result } (a result as
+// libraryResult, usdaResult or offResult gives), { status: 'notFound', offStatus? } or
+// { status: 'invalid' }. Throws when the USDA call fails.
 export async function lookupGtin(client, code) {
   if (!isValidGtin(code)) return { status: 'invalid' };
   const [, , fourteen] = gtinForms(code);
   const { data, error } = await client.rpc('usda_lookup_gtin', { p_code: fourteen });
   if (error) throw error;
-  if (!data) return { status: 'notFound' };
+  if (!data) return lookupOffFallback(client, code);
   if (data.food_id !== undefined && data.food_id !== null) {
     const { data: row, error: rowError } = await client
       .from('foods')
@@ -207,6 +211,18 @@ export async function lookupGtin(client, code) {
     return { status: 'found', source: 'library', result: libraryResult(row) };
   }
   return { status: 'found', source: 'usda', result: usdaResult(data) };
+}
+
+// The Open Food Facts step of lookupGtin. Any failure is an answer, never a throw.
+async function lookupOffFallback(client, code) {
+  try {
+    const outcome = await lookupOff(client, code);
+    if (outcome.status === 'found')
+      return { status: 'found', source: 'off', result: outcome.result };
+    return outcome;
+  } catch {
+    return { status: 'notFound', offStatus: 'unavailable' };
+  }
 }
 
 // Saves a USDA food to the Food Library (usda_save returns the existing row when the food
