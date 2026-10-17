@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { createHousehold, loadHousehold } from '../lib/households.js';
 import { HOUSEHOLD_TEXT } from '../strings.js';
+import AiSpendPanel from './AiSpendPanel.jsx';
 
 export default function HouseholdPage({ user }) {
   const [state, setState] = useState({ status: 'loading', household: null });
@@ -51,6 +52,7 @@ function MemberList({ household }) {
           ))}
         </ul>
       )}
+      <AiSpendPanel client={supabase} />
     </section>
   );
 }

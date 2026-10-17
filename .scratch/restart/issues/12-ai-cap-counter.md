@@ -6,10 +6,15 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting DB test run)
 
 - [ ] A usage ledger table with provider, model, input/output tokens, cost and time
-- [ ] The helper refuses a call over the cap with a clear error the app shows ("AI limit reached this month")
-- [ ] Prices per model live in one config place, not scattered
+- [x] The helper refuses a call over the cap with a clear error the app shows ("AI limit reached this month")
+- [x] Prices per model live in one config place, not scattered
 - [ ] Settings shows spend per provider against the cap
-- [ ] Tests cover under cap, exactly at cap and over cap
+- [x] Tests cover under cap, exactly at cap and over cap
+
+## Comments
+
+- 2026-10-17: Built in worktree `restart-t12` (branch `restart-t12`). Migration `supabase/migrations/008_ai_usage_ledger.sql` adds `ai_usage` (household, optional member, provider, model, tokens, cost_usd, created_at; select-only for members, no client insert), `household_settings` (one row per Household, `ai_monthly_cap_usd` default 5.00, created by a trigger and backfilled; the cap lives here, not on `households`), and `public.ai_spend_this_month()` (SECURITY INVOKER, Owner only, spend per provider this UTC month). Pure cap rules in `supabase/functions/_shared/cap.ts`, prices in `prices.ts`, the Edge Function helper `ai-gate.ts` (`createAiGate`: `checkCap`, `recordUsage`, `withAiCap`, throwing `AiLimitError` with code `AI_LIMIT_REACHED`). Web: `AiSpendPanel.jsx` (rendered on the Household page), `lib/aiSpend.js`, `AiSpendPanel.strings.js`.
+- 2026-10-17: Tests: Vitest for cap logic and the gate with a fake client (under, exactly at, over cap), and the panel with a mocked client. `npm run lint`, `build`, `test` (40 passing) and `format:check` pass. NOT RUN: no SQL, no Deno, no Supabase project. Migration 008 and the Edge Function are unexecuted, so the ledger box and the Settings box stay unticked until the DB test run. Known gaps: the cap can only be changed with the service role (no Owner setter yet); check-then-record is not atomic; a failed call records nothing; a failed insert after a successful call throws and drops the result; months are UTC.
