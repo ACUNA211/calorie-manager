@@ -117,7 +117,5 @@ A $5/month hard limit per AI provider, plus an in-app counter that stops AI call
 
 ## Flagged ambiguities
 
-
-
 - "Plan" was used for both the weekly meal plan and a calorie goal. Resolved: **Meal Plan** and **Targets**.
 - "Text to speech" for Voice commands means speech-to-text: the Member speaks, the app reads it.
