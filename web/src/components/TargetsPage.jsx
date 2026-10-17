@@ -11,14 +11,17 @@ import {
 } from '../lib/targets.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { formatNumber } from '../i18n/format.js';
+import { useActingMember } from '../lib/actingMember.jsx';
 
-// Targets for one Member. Without a memberId, the signed-in person's own Member is used.
-// Ticket 07 ("logging for") passes the Dependent's memberId to reuse this screen.
+// Targets for one Member: the Member being acted as ("logging for", see actingMember.jsx).
+// A memberId prop overrides that; without either, the signed-in person's own Member is used.
 export default function TargetsPage({ user, memberId }) {
   const { t, locale } = useI18n();
-  // The state records which request it answers, so a new user or memberId shows the
+  const { actingMemberId, actingName, actingIsDependent } = useActingMember();
+  const targetMemberId = memberId ?? actingMemberId;
+  // The state records which request it answers, so a new user or Member shows the
   // loading line until its own Targets arrive, without resetting state inside the effect.
-  const requestKey = `${user.id}:${memberId ?? ''}`;
+  const requestKey = `${user.id}:${targetMemberId ?? ''}`;
   const [loaded, setLoaded] = useState({ key: null, status: 'loading', memberId: null });
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
@@ -30,7 +33,7 @@ export default function TargetsPage({ user, memberId }) {
 
     (async () => {
       try {
-        const id = memberId ?? (await resolveMemberId(supabase, user.id));
+        const id = targetMemberId ?? (await resolveMemberId(supabase, user.id));
         if (id === null || id === undefined) throw new Error('no Member');
         const row = await loadTargets(supabase, id);
         if (!active) return;
@@ -46,7 +49,7 @@ export default function TargetsPage({ user, memberId }) {
     return () => {
       active = false;
     };
-  }, [user.id, memberId, requestKey]);
+  }, [user.id, targetMemberId, requestKey]);
 
   const state = loaded.key === requestKey ? loaded : { status: 'loading', memberId: null };
 
@@ -124,6 +127,7 @@ export default function TargetsPage({ user, memberId }) {
   return (
     <section aria-labelledby="targets-heading">
       <h2 id="targets-heading">{t('targets.heading')}</h2>
+      {actingIsDependent && !memberId && <p>{t('targets.forDependent', { name: actingName })}</p>}
       <p>{t('targets.clearHint')}</p>
       <form onSubmit={handleSubmit} noValidate>
         {field('calorieTarget', 'targets.calorieTargetLabel')}

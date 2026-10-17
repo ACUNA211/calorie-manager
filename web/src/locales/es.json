@@ -37,6 +37,25 @@
       "owner": "Propietario",
       "member": "Miembro",
       "dependent": "Dependiente"
+    },
+    "dependents": {
+      "heading": "Dependientes",
+      "hint": "Un dependiente no tiene cuenta. Todos los adultos del hogar pueden registrar comida y ajustar las metas de esa persona.",
+      "none": "Todavía no hay dependientes.",
+      "nameLabel": "Nombre del dependiente",
+      "addButton": "Añadir dependiente",
+      "adding": "Añadiendo...",
+      "nameFor": "Nombre de {{name}}",
+      "renameButton": "Guardar nombre",
+      "removeButton": "Quitar",
+      "removeConfirm": "¿Quitar a {{name}}? También se borrarán sus horarios de comida, su registro de calorías y sus metas.",
+      "addError": "No se pudo añadir el dependiente.",
+      "renameError": "No se pudo guardar el nombre.",
+      "removeError": "No se pudo quitar el dependiente.",
+      "errors": {
+        "nameRequired": "Escribe un nombre.",
+        "nameTooLong": "El nombre puede tener como máximo 60 caracteres."
+      }
     }
   },
   "installHint": {
@@ -99,7 +118,8 @@
       "rangeOrder": "El mínimo no puede ser mayor que el máximo.",
       "bandRange": "Escribe un porcentaje de 50 a 100.",
       "bandOrder": "El mínimo de la franja no puede ser mayor que su máximo."
-    }
+    },
+    "forDependent": "Metas de {{name}}."
   },
   "mealTimes": {
     "heading": "Horarios de comida",
@@ -323,5 +343,9 @@
     "saving": "Guardando…",
     "saved": "Guardado en tu biblioteca de alimentos.",
     "saveError": "No se pudo guardar este alimento. Inténtalo de nuevo."
+  },
+  "loggingFor": {
+    "label": "Registrando para",
+    "you": "{{name}} (tú)"
   }
 }

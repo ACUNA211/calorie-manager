@@ -37,6 +37,25 @@
       "owner": "Owner",
       "member": "Member",
       "dependent": "Dependent"
+    },
+    "dependents": {
+      "heading": "Dependents",
+      "hint": "A Dependent has no login. Every adult in the Household can log food and set Targets for them.",
+      "none": "No Dependents yet.",
+      "nameLabel": "Dependent's name",
+      "addButton": "Add Dependent",
+      "adding": "Adding...",
+      "nameFor": "Name for {{name}}",
+      "renameButton": "Save name",
+      "removeButton": "Remove",
+      "removeConfirm": "Remove {{name}}? Their Meal Times, Calorie Log and Targets are deleted too.",
+      "addError": "Could not add the Dependent.",
+      "renameError": "Could not save the name.",
+      "removeError": "Could not remove the Dependent.",
+      "errors": {
+        "nameRequired": "Enter a name.",
+        "nameTooLong": "A name can be at most 60 characters."
+      }
     }
   },
   "installHint": {
@@ -99,7 +118,8 @@
       "rangeOrder": "The low end cannot be above the high end.",
       "bandRange": "Enter a percent from 50 to 100.",
       "bandOrder": "The band's low end cannot be above its high end."
-    }
+    },
+    "forDependent": "Setting Targets for {{name}}."
   },
   "mealTimes": {
     "heading": "Meal Times",
@@ -323,5 +343,9 @@
     "saving": "Saving…",
     "saved": "Saved to your Food Library.",
     "saveError": "Could not save this food. Try again."
+  },
+  "loggingFor": {
+    "label": "Logging for",
+    "you": "{{name}} (you)"
   }
 }
