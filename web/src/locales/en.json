@@ -483,6 +483,25 @@
     "futureReadOnly": "This day is in the future, so it is read-only.",
     "logged": "Logged {{kcal}} kcal to {{meal}}.",
     "otherTime": "Another time",
+    "toast": {
+      "undo": "Undo",
+      "deleted": "Entry deleted.",
+      "changed": "Entry changed."
+    },
+    "undo": {
+      "failed": "Could not undo that. Check the day and try again."
+    },
+    "edit": {
+      "heading": "Edit entry",
+      "food": "Food: {{name}}",
+      "save": "Save changes",
+      "delete": "Delete entry",
+      "errors": {
+        "noGrams": "This entry has no amount to change. Delete it and log it again.",
+        "saveError": "Could not save the change. Try again.",
+        "deleteError": "Could not delete the entry. Try again."
+      }
+    },
     "bar": {
       "eaten": "{{eaten}} of {{target}} kcal eaten",
       "left": "{{left}} kcal left",

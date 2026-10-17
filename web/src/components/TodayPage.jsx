@@ -1,18 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { useActingMember } from '../lib/actingMember.jsx';
 import { loadMealTimes } from '../lib/mealTimes.js';
 import { loadTargets } from '../lib/targets.js';
-import { loadDay } from '../lib/today.js';
+import { deleteEntry, loadDay, restoreEntry, updateEntry } from '../lib/today.js';
 import {
   addDays,
   calorieBar,
   canLogOn,
   dateKey,
+  entryValues,
   isFutureDay,
   macroBar,
   mealSections,
   mealsOnDay,
+  restoreRow,
+  sortEntries,
   sumEntries,
   targetView,
   weekdayOf,
@@ -21,12 +24,16 @@ import { useI18n } from '../i18n/I18nProvider.jsx';
 import DayBar from './DayBar.jsx';
 import TodayMeals from './TodayMeals.jsx';
 import LogFoodPanel from './LogFoodPanel.jsx';
+import EditEntryPanel from './EditEntryPanel.jsx';
+import Toast from './Toast.jsx';
 
 const LOADING = { status: 'loading', entries: [] };
 
 // The Today screen for the Member being acted for ("logging for"). It shows one day: the
-// day bar, the day's Meal Times with what is logged to each, and Log food. Future days are
-// read-only. Data is keyed by Member and day, so an old answer never shows for a new choice.
+// day bar, the day's Meal Times with what is logged to each, and Log food. Tapping an entry
+// opens it for editing or deleting. Every log, change and delete shows a toast with Undo for
+// a few seconds; only the latest change can be undone. Future days are read-only. Data is
+// keyed by Member and day, so an old answer never shows for a new choice.
 export default function TodayPage() {
   const { t, formatNumber } = useI18n();
   const { actingMemberId } = useActingMember();
@@ -36,7 +43,10 @@ export default function TodayPage() {
   const [setup, setSetup] = useState({ memberId: null, status: 'loading' });
   const [dayState, setDayState] = useState({ key: null, status: 'loading', entries: [] });
   const [logOpen, setLogOpen] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  // The toast: { id, text, undo } where undo is an async function, or null for a message only.
+  const [toast, setToast] = useState(null);
+  const toastIds = useRef(0);
 
   useEffect(() => {
     if (actingMemberId == null) return undefined;
@@ -115,26 +125,83 @@ export default function TodayPage() {
   const dayMeals = mealsOnDay(meals, weekday);
   const future = isFutureDay(day, todayKey);
   const logAllowed = canLogOn(day, todayKey);
+  const editingEntry = editingId == null ? null : entries.find((e) => e.id === editingId) || null;
+
+  // Changes the entries of the day on screen. A late answer for another day is ignored.
+  function changeEntries(update) {
+    setDayState((current) =>
+      current.key === dayKey ? { ...current, entries: update(current.entries) } : current
+    );
+  }
+
+  function showToast(text, undo) {
+    toastIds.current += 1;
+    setToast({ id: toastIds.current, text, undo });
+  }
 
   function move(count) {
     setDay((current) => addDays(current, count));
+    closePanels();
+  }
+
+  function closePanels() {
     setLogOpen(false);
-    setNotice('');
+    setEditingId(null);
+    setToast(null);
+  }
+
+  // Runs the Undo of the latest change. If it fails, the toast says so and the day is left as it is.
+  function undoToast() {
+    const undo = toast?.undo;
+    setToast(null);
+    if (!undo) return;
+    undo().catch(() => showToast(t('today.undo.failed'), null));
   }
 
   // Adds the saved row to the day at once, so the bar and the Meal Time list update.
   function handleLogged(row) {
-    setDayState((current) =>
-      current.key === dayKey ? { ...current, entries: [...current.entries, row] } : current
-    );
+    changeEntries((current) => sortEntries([...current, row]));
     const meal = meals.find((candidate) => Number(candidate.id) === Number(row.meal_time_id));
-    setNotice(
+    showToast(
       t('today.logged', {
         kcal: formatNumber(row.kcal, { maximumFractionDigits: 0 }),
         meal: meal ? meal.name : t('today.otherTime'),
-      })
+      }),
+      async () => {
+        await deleteEntry(supabase, row.id);
+        changeEntries((current) => current.filter((entry) => entry.id !== row.id));
+      }
     );
     setLogOpen(false);
+  }
+
+  // An edit is stored; Undo writes the old values back.
+  function handleSaved(saved, before) {
+    changeEntries((current) =>
+      sortEntries(current.map((entry) => (entry.id === saved.id ? saved : entry)))
+    );
+    setEditingId(null);
+    showToast(t('today.toast.changed'), async () => {
+      const restored = await updateEntry(supabase, before.id, entryValues(before));
+      changeEntries((current) =>
+        sortEntries(current.map((entry) => (entry.id === restored.id ? restored : entry)))
+      );
+    });
+  }
+
+  // A delete is stored; Undo puts the entry back (see restoreRow).
+  function handleDeleted(before) {
+    changeEntries((current) => current.filter((entry) => entry.id !== before.id));
+    setEditingId(null);
+    showToast(t('today.toast.deleted'), async () => {
+      const restored = await restoreEntry(supabase, restoreRow(before, actingMemberId));
+      changeEntries((current) => sortEntries([...current, restored]));
+    });
+  }
+
+  function openEdit(entry) {
+    setLogOpen(false);
+    setEditingId(entry.id);
   }
 
   const missingMacros = totals.missingMacros;
@@ -151,8 +218,7 @@ export default function TodayPage() {
         onNext={() => move(1)}
         onToday={() => {
           setDay(todayKey);
-          setLogOpen(false);
-          setNotice('');
+          closePanels();
         }}
       />
 
@@ -160,11 +226,25 @@ export default function TodayPage() {
 
       {future ? <p>{t('today.futureReadOnly')}</p> : null}
       {logAllowed ? (
-        <button type="button" onClick={() => setLogOpen((open) => !open)}>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingId(null);
+            setLogOpen((open) => !open);
+          }}
+        >
           {t('today.log.button')}
         </button>
       ) : null}
-      {notice ? <p role="status">{notice}</p> : null}
+      {toast ? (
+        <Toast
+          key={toast.id}
+          message={toast.text}
+          actionLabel={t('today.toast.undo')}
+          onAction={toast.undo ? undoToast : undefined}
+          onDismiss={() => setToast(null)}
+        />
+      ) : null}
 
       {logAllowed && logOpen ? (
         <LogFoodPanel
@@ -177,7 +257,18 @@ export default function TodayPage() {
         />
       ) : null}
 
-      <TodayMeals sections={sections.sections} other={sections.other} />
+      {logAllowed && editingEntry ? (
+        <EditEntryPanel
+          key={editingEntry.id}
+          entry={editingEntry}
+          meals={meals}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+          onCancel={() => setEditingId(null)}
+        />
+      ) : null}
+
+      <TodayMeals sections={sections.sections} other={sections.other} onEdit={openEdit} />
     </div>
   );
 }

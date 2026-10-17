@@ -2,8 +2,9 @@ import { useI18n } from '../i18n/I18nProvider.jsx';
 import { normalizeTime } from '../lib/mealTimesLogic.js';
 
 // The day's Meal Times, each with its calorie range and what is logged to it, then the
-// entries logged at another time. `sections` and `other` come from mealSections().
-export default function TodayMeals({ sections, other }) {
+// entries logged at another time. `sections` and `other` come from mealSections(). Tapping
+// an entry calls onEdit with it.
+export default function TodayMeals({ sections, other, onEdit }) {
   const { t, formatNumber } = useI18n();
   const number = (value) => formatNumber(value, { maximumFractionDigits: 0 });
 
@@ -19,7 +20,7 @@ export default function TodayMeals({ sections, other }) {
           </h3>
           <p>{calorieRangeText(meal, t, number)}</p>
           <p>{t('today.meals.sectionKcal', { kcal: number(kcal) })}</p>
-          <EntryList entries={entries} />
+          <EntryList entries={entries} onEdit={onEdit} />
         </article>
       ))}
 
@@ -27,7 +28,7 @@ export default function TodayMeals({ sections, other }) {
         <article>
           <h3>{t('today.otherTime')}</h3>
           <p>{t('today.meals.sectionKcal', { kcal: number(other.kcal) })}</p>
-          <EntryList entries={other.entries} />
+          <EntryList entries={other.entries} onEdit={onEdit} />
         </article>
       ) : null}
     </section>
@@ -48,17 +49,19 @@ function calorieRangeText(meal, t, number) {
   });
 }
 
-function EntryList({ entries }) {
+function EntryList({ entries, onEdit }) {
   const { t, formatNumber } = useI18n();
   if (entries.length === 0) return <p>{t('today.meals.nothing')}</p>;
   return (
     <ul>
       {entries.map((entry) => (
         <li key={entry.id}>
-          {t('today.meals.entry', {
-            description: entry.description,
-            kcal: formatNumber(entry.kcal, { maximumFractionDigits: 0 }),
-          })}
+          <button type="button" onClick={() => onEdit(entry)}>
+            {t('today.meals.entry', {
+              description: entry.description,
+              kcal: formatNumber(entry.kcal, { maximumFractionDigits: 0 }),
+            })}
+          </button>
         </li>
       ))}
     </ul>
