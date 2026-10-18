@@ -6,10 +6,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 76
 
-- [ ] Hard rules filled in
-- [ ] Other Members' Meal Times and Targets added, or confirmed not needed
-- [ ] Recipe calories checked
+- [x] Hard rules filled in
+- [x] Other Members' Meal Times and Targets added, or confirmed not needed
+- [x] Recipe calories checked
+
+## Comments
+
+2026-10-17: No Hard rules. Brenda added (`inputs/member-2.json`, copies of Sergio's Meal Times, breakfast at 11:00, no lunch; kit change noted on 36). Recipe calories: Sergio says real Recipes must be built from Food Library ingredients (as CONTEXT's Recipe already says); the test keeps the flat per-serving numbers as rough stand-ins (decided 2026-10-17); they are not real Recipes.

@@ -13,3 +13,4 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 - [ ] A report in `.scratch/restart/research/` with scores, token counts and cost per plan per model
 - [ ] A model pick for ticket 42, with the prompt and JSON shape used
 - [ ] Total spend recorded (expected under $1)
+- 2026-10-17 (#77): Household data added. Brenda (member-2, adult, 2,000 kcal) is in `inputs/member-2.json`: plain copies of member-1's Breakfast (at 11:00), Snack, Dinner and Dessert, no lunch, not shared Meal Times. No Hard rules for anyone. The kit still handles one Member: extend `lib/slots.mjs`, the prompt and `scorer.mjs` to plan and score each Member's days against their own Target, then rerun. Note her copied ranges top out at 1,500 kcal (Sun–Thu) and 1,800 (Fri/Sat), under her 1,800–2,000 band, so the scorer will flag band misses until her ranges are raised.

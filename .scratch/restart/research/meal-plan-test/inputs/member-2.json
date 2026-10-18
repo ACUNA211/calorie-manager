@@ -1,0 +1,75 @@
+{
+  "note": "Brenda (member-2), adult woman. Her Meal Times are plain copies of member-1's (same times and ranges; breakfast moved to 11:00), not shared Meal Times. Not read by the kit yet: lib/slots.mjs and scorer.mjs handle one Member (see ticket 36).",
+  "member": "member-2",
+  "name": "Brenda",
+  "calorieTarget": 2000,
+  "planningBand": {
+    "low": 0.9,
+    "high": 1.0
+  },
+  "mealTimes": [
+    {
+      "id": "brenda-breakfast",
+      "name": "Breakfast",
+      "time": "11:00",
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
+      "kind": "Planned",
+      "min": 350,
+      "max": 450
+    },
+    {
+      "id": "brenda-snack",
+      "name": "Snack",
+      "time": "15:30",
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
+      "kind": "If room",
+      "min": 100,
+      "max": 250
+    },
+    {
+      "id": "brenda-dinner",
+      "name": "Dinner",
+      "time": "18:30",
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
+      "kind": "Planned",
+      "min": 550,
+      "max": 800
+    },
+    {
+      "id": "brenda-dessert",
+      "name": "Dessert",
+      "time": "20:30",
+      "days": [
+        "Fri",
+        "Sat"
+      ],
+      "kind": "If room",
+      "min": 150,
+      "max": 300
+    }
+  ]
+}

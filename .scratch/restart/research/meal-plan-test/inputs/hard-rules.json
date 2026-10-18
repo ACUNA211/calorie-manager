@@ -1,6 +1,11 @@
 {
-  "note": "No Hard rules are recorded in the source files. forbiddenTags are matched against each Recipe's tags. Fill these from the Preferences page when it exists.",
+  "note": "No Hard rules for this Household (confirmed 2026-10-17). forbiddenTags are matched against each Recipe's tags.",
   "members": {
-    "member-1": { "forbiddenTags": [] }
+    "member-1": {
+      "forbiddenTags": []
+    },
+    "member-2": {
+      "forbiddenTags": []
+    }
   }
 }
