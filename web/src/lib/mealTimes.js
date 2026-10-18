@@ -3,7 +3,13 @@
 // writes to Meal Times the caller's Members share. A Meal Time's name, time, kind and
 // weekdays are shared; each sharing Member's calorie range is on meal_time_members.
 
-import { draftToRow, normalizeSharerIds, normalizeTime } from './mealTimesLogic.js';
+import {
+  draftToRow,
+  newSharerIds,
+  normalizeSharerIds,
+  normalizeTime,
+  rangeRow,
+} from './mealTimesLogic.js';
 
 // The Member for a login, or null when the person has no Household yet.
 export async function loadMemberId(client, userId) {
@@ -86,9 +92,18 @@ export async function loadTargets(client, memberId) {
   return data;
 }
 
+// Each new sharer's own range, for save_meal_time(). A new sharer with no range is left out,
+// so the database refuses the save rather than copying someone else's range.
+export function sharerRangesPayload(draft, memberId) {
+  const sharerIds = normalizeSharerIds(draft.sharerIds, draft.createdBy ?? memberId, memberId);
+  return newSharerIds(sharerIds, draft.existingSharerIds, memberId)
+    .filter((id) => draft.sharerRanges?.[id])
+    .map((id) => ({ member_id: id, ...rangeRow(draft.kind, draft.sharerRanges[id]) }));
+}
+
 // Inserts or updates a Meal Time (draft.id set) and its sharers in one call, through
-// save_meal_time(). The Member's own range comes from the draft; a new sharer starts with it.
-// Returns the Meal Time id.
+// save_meal_time(). The Member's own range comes from the draft; each new sharer sends their
+// own range. Returns the Meal Time id.
 export async function saveMealTime(client, memberId, draft) {
   const row = draftToRow(draft);
   const { data, error } = await client.rpc('save_meal_time', {
@@ -102,6 +117,7 @@ export async function saveMealTime(client, memberId, draft) {
     p_cal_max: row.cal_max,
     p_set_calories: row.set_calories,
     p_sharer_ids: normalizeSharerIds(draft.sharerIds, draft.createdBy ?? memberId, memberId),
+    p_sharer_ranges: sharerRangesPayload(draft, memberId),
   });
   if (error) throw error;
   return data;

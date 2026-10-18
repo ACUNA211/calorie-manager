@@ -6,12 +6,12 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 21 (Meal Times page), 69 (Run the database tests locally), 72 (Decide: when do two Meal Times overlap?)
 
-**Status:** ready-for-agent (DB tests pass; apply the #72 decisions in Comments)
+**Status:** done (awaiting review)
 
 - [x] Editing a Meal Time has a Members picker; the creator is always included
-- [ ] A shared Meal Time shows on each sharing Member's grid, marked as shared
-- [ ] Each sharing Member can have their own calorie range on it
-- [ ] Removing a Member from a shared Meal Time leaves the others' unchanged
+- [x] A shared Meal Time shows on each sharing Member's grid, marked as shared
+- [x] Each sharing Member can have their own calorie range on it
+- [x] Removing a Member from a shared Meal Time leaves the others' unchanged
 
 ## Comments
 
@@ -20,3 +20,5 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 - 2026-10-17 (dispatcher): migration 013 drops `meal_times.cal_min`, `cal_max` and `set_calories`. The old artifact skills `skills/plan-week-cal` and `skills/rebalance-cal` still read those columns; they need to join `meal_time_members` (or be retired in 68). The Meal Times page does not yet follow "logging for" (07): it should read `useActingMember().actingMemberId`.
 - 2026-10-17 (#72 decided): an **If room** Meal Time needs **only a maximum**; make `validateMealTime` agree with `needsCalories` (no minimum required). A **new sharer is asked for their own range** when added, instead of copying the editor's; the save waits until each new sharer has one. Spanish strings Compartido con and Dejar de compartir are approved.
 - 2026-10-17 (#72 applied): If room now needs only a maximum. `validateMealTime` agrees with `needsCalories`; a blank If room minimum is stored as null. Planned still needs both ends; Set still needs one number; a given minimum must be a whole number no more than the maximum. New strings: `mealTimes.errors.maxRequired` and `minInvalid` (English and Spanish); `rangeRequired` text reworded to Planned only. `mealTimesLogic.test.js` updated; `npm test` 917 pass, lint, build, format:check pass. NOT done: a new sharer is asked for their own range. Blocked: `save_meal_time()` (migration 013) gives every new sharer the editor's range and takes only one range, and the client cannot write `meal_time_members` directly (insert and update revoked). This needs a new migration to take per-sharer ranges, which is a dispatcher or user decision. Boxes are unchanged and status stays ready-for-agent.
+
+- 2026-10-17 (new-sharer ranges): New sharers set their own range. Migration `supabase/migrations/033_meal_time_sharer_ranges.sql` drops and replaces `save_meal_time()` with an 11th argument `p_sharer_ranges jsonb` (one `{member_id, cal_min, cal_max, set_calories}` per new sharer). A new sharer with no entry raises 22023; existing sharers keep their rows; the editor's range still comes from `p_cal_*`. `shared_meal_times_test.sql` moved to the new signature (a new sharer now gets the range given for them, Kid 300-500). New `supabase/tests/meal_time_sharer_ranges_test.sql` (8 tests). Client: `sharerRangesPayload` in `mealTimes.js`; `missingSharerRanges` and `newSharerIds` in `mealTimesLogic.js`; the editor shows an empty range for each new sharer and blocks Save until it is valid, in English and Spanish (`sharerRangeMissing`). If room with no minimum shows "Up to N kcal" / "Hasta N kcal" (`calories.upTo`). Runs: `supabase test db` 387 of 387 pass across 22 files (shared_meal_times 24, sharer ranges 8). Vitest 934 pass in 67 files; `npm run lint`, `npm run build` and `npm run format:check` pass. The local stack ran with ports shifted by +10000 (a temporary `supabase/config.toml`, not committed) because the `integ` stack holds 54321-54327; the config was removed after the run.

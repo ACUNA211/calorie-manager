@@ -14,7 +14,9 @@ import {
   WEEKDAYS,
   dayTotals,
   findOverlaps,
+  missingSharerRanges,
   needsCalories,
+  newSharerIds,
   normalizeTime,
   targetsFromRow,
   validateMealTime,
@@ -33,6 +35,8 @@ const NEW_MEAL_DEFAULTS = {
   setCalories: '',
   createdBy: null,
   sharerIds: [],
+  sharerRanges: {},
+  existingSharerIds: [],
 };
 
 // Turns a stored Meal Time into an editor draft (numbers as strings, as typed).
@@ -48,6 +52,10 @@ function draftFromMeal(meal) {
     setCalories: meal.set_calories == null ? '' : String(meal.set_calories),
     createdBy: meal.createdBy,
     sharerIds: meal.sharers.map((sharer) => sharer.id),
+    // The Members already sharing it: only the others need their own range on save.
+    existingSharerIds: meal.sharers.map((sharer) => sharer.id),
+    // Each new sharer's own range, as typed, by Member id.
+    sharerRanges: {},
   };
 }
 
@@ -240,10 +248,12 @@ export default function MealTimesPage({ user, memberId }) {
                         ? t('mealTimes.calories.missing')
                         : meal.kind === 'set'
                           ? t('mealTimes.calories.set', { calories: cal(meal.set_calories) })
-                          : t('mealTimes.calories.range', {
-                              min: cal(meal.cal_min),
-                              max: cal(meal.cal_max),
-                            })}
+                          : meal.kind === 'if_room' && meal.cal_min == null
+                            ? t('mealTimes.calories.upTo', { max: cal(meal.cal_max) })
+                            : t('mealTimes.calories.range', {
+                                min: cal(meal.cal_min),
+                                max: cal(meal.cal_max),
+                              })}
                     </span>
                     {sharedWithOthers(meal, viewerId).length > 0 && (
                       <span>
@@ -394,6 +404,7 @@ function MealTimeEditor({
   const { t } = useI18n();
   const [draft, setDraft] = useState(initial);
   const [errors, setErrors] = useState({});
+  const [missingNames, setMissingNames] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isNew = initial.id == null;
   const isCreator = isNew || initial.createdBy === memberId;
@@ -409,6 +420,21 @@ function MealTimeEditor({
     }));
   }
 
+  // A Member added as a sharer on this save gets an empty range of their own.
+  const newSharers = members.filter((member) =>
+    newSharerIds(draft.sharerIds, initial.existingSharerIds, memberId).includes(member.id)
+  );
+
+  function updateSharerRange(id, field, value) {
+    setDraft((current) => ({
+      ...current,
+      sharerRanges: {
+        ...current.sharerRanges,
+        [id]: { ...current.sharerRanges[id], [field]: value },
+      },
+    }));
+  }
+
   function toggleSharer(id) {
     setDraft((current) => ({
       ...current,
@@ -421,8 +447,12 @@ function MealTimeEditor({
   function handleSubmit(event) {
     event.preventDefault();
     const result = validateMealTime(draft);
+    const missing = missingSharerRanges(draft, initial.existingSharerIds, memberId);
     setErrors(result.errors);
-    if (Object.keys(result.errors).length === 0) onSubmit(draft);
+    setMissingNames(
+      members.filter((member) => missing.includes(member.id)).map((member) => member.display_name)
+    );
+    if (Object.keys(result.errors).length === 0 && missing.length === 0) onSubmit(draft);
   }
 
   const errorMessages = [...new Set(Object.values(errors))];
@@ -536,10 +566,44 @@ function MealTimeEditor({
         </>
       )}
 
-      {errorMessages.length > 0 && (
+      {newSharers.map((member) => {
+        const range = draft.sharerRanges[member.id] ?? {};
+        const name = member.display_name;
+        const rangeField = (field, label) => (
+          <label>
+            {label}
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              step="10"
+              value={range[field] ?? ''}
+              onChange={(e) => updateSharerRange(member.id, field, e.target.value)}
+            />
+          </label>
+        );
+        return (
+          <fieldset key={member.id}>
+            <legend>{name}</legend>
+            {draft.kind === 'set' ? (
+              rangeField('setCalories', t('mealTimes.form.sharerSetCalories', { name }))
+            ) : (
+              <>
+                {rangeField('calMin', t('mealTimes.form.sharerMinCalories', { name }))}
+                {rangeField('calMax', t('mealTimes.form.sharerMaxCalories', { name }))}
+              </>
+            )}
+          </fieldset>
+        );
+      })}
+
+      {(errorMessages.length > 0 || missingNames.length > 0) && (
         <ul role="alert">
           {errorMessages.map((key) => (
             <li key={key}>{t(key)}</li>
+          ))}
+          {missingNames.map((name) => (
+            <li key={name}>{t('mealTimes.errors.sharerRangeMissing', { name })}</li>
           ))}
         </ul>
       )}

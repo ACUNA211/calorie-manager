@@ -43,7 +43,11 @@ select set_config('request.jwt.claims', json_build_object('sub', current_setting
 select set_config('test.mt', public.save_meal_time(
   current_setting('test.alice_m')::bigint, null, 'Family dinner', '18:30', 'planned',
   array[1, 3]::smallint[], 600, 800, null,
-  array[current_setting('test.dana_m')::bigint, current_setting('test.kid_m')::bigint]
+  array[current_setting('test.dana_m')::bigint, current_setting('test.kid_m')::bigint],
+  jsonb_build_array(
+    jsonb_build_object('member_id', current_setting('test.dana_m')::bigint, 'cal_min', 450, 'cal_max', 650, 'set_calories', null),
+    jsonb_build_object('member_id', current_setting('test.kid_m')::bigint, 'cal_min', 300, 'cal_max', 500, 'set_calories', null)
+  )
 )::text, true);
 select set_config('test.a_sharers_created', (select count(*) from public.meal_time_members where meal_time_id = current_setting('test.mt')::bigint)::text, true);
 select set_config('test.a_kid_range_created', (select cal_min || '-' || cal_max from public.meal_time_members where meal_time_id = current_setting('test.mt')::bigint and member_id = current_setting('test.kid_m')::bigint), true);
@@ -57,7 +61,7 @@ select set_config('test.d_sees', (select count(*) from public.meal_times where i
 select set_config('test.d_save', public.save_meal_time(
   current_setting('test.dana_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
   array[1, 3]::smallint[], 500, 700, null,
-  array[current_setting('test.alice_m')::bigint, current_setting('test.kid_m')::bigint]
+  array[current_setting('test.alice_m')::bigint, current_setting('test.kid_m')::bigint], '[]'::jsonb
 )::text, true);
 reset role;
 
@@ -76,7 +80,7 @@ select set_config('test.d_range_after_save', (select cal_min || '-' || cal_max f
 select public.save_meal_time(
   current_setting('test.dana_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
   array[1, 3]::smallint[], 500, 700, null,
-  array[current_setting('test.alice_m')::bigint]
+  array[current_setting('test.alice_m')::bigint], '[]'::jsonb
 );
 reset role;
 
@@ -95,7 +99,7 @@ begin
   perform public.save_meal_time(
     current_setting('test.dana_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
     array[1, 3]::smallint[], 500, 700, null,
-    array[current_setting('test.bob_m')::bigint]
+    array[current_setting('test.bob_m')::bigint], '[]'::jsonb
   );
   perform set_config('test.d_bob_sharer', 'ok', true);
 exception when others then
@@ -111,7 +115,7 @@ do $$
 begin
   perform public.save_meal_time(
     current_setting('test.bob_m')::bigint, current_setting('test.mt')::bigint, 'Sneaky', '18:30', 'planned',
-    array[1]::smallint[], 100, 200, null, array[]::bigint[]
+    array[1]::smallint[], 100, 200, null, array[]::bigint[], '[]'::jsonb
   );
   perform set_config('test.b_save', 'ok', true);
 exception when others then
@@ -148,14 +152,14 @@ end $$;
 -- Saving with no extra sharers keeps the creator in, and bad input is refused
 select public.save_meal_time(
   current_setting('test.alice_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
-  array[1, 3]::smallint[], 600, 800, null, array[]::bigint[]
+  array[1, 3]::smallint[], 600, 800, null, array[]::bigint[], '[]'::jsonb
 );
 select set_config('test.a_sharers_after_empty', (select count(*) from public.meal_time_members where meal_time_id = current_setting('test.mt')::bigint)::text, true);
 do $$
 begin
   perform public.save_meal_time(
     current_setting('test.alice_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'bogus',
-    array[1]::smallint[], 600, 800, null, array[]::bigint[]
+    array[1]::smallint[], 600, 800, null, array[]::bigint[], '[]'::jsonb
   );
   perform set_config('test.a_bad_kind', 'ok', true);
 exception when others then
@@ -165,7 +169,7 @@ do $$
 begin
   perform public.save_meal_time(
     current_setting('test.alice_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
-    array[7]::smallint[], 600, 800, null, array[]::bigint[]
+    array[7]::smallint[], 600, 800, null, array[]::bigint[], '[]'::jsonb
   );
   perform set_config('test.a_bad_weekday', 'ok', true);
 exception when others then
@@ -175,7 +179,7 @@ do $$
 begin
   perform public.save_meal_time(
     current_setting('test.alice_m')::bigint, current_setting('test.mt')::bigint, 'Family dinner', '18:30', 'planned',
-    array[1]::smallint[], 900, 800, null, array[]::bigint[]
+    array[1]::smallint[], 900, 800, null, array[]::bigint[], '[]'::jsonb
   );
   perform set_config('test.a_bad_range', 'ok', true);
 exception when others then
@@ -222,11 +226,11 @@ reset role;
 -- Assertions (database owner)
 select is(current_setting('test.a_sharers_created'), '3', 'the creator, Dana and Kid share the new Meal Time');
 select is(current_setting('test.a_alice_range_created'), '600-800', 'the creator''s range is saved');
-select is(current_setting('test.a_kid_range_created'), '600-800', 'a new sharer starts with the same range');
+select is(current_setting('test.a_kid_range_created'), '300-500', 'a new sharer gets the range given for them, not the editor''s');
 select is(current_setting('test.d_sees'), '1', 'Dana sees the shared Meal Time');
 select is(current_setting('test.d_range_after_save'), '500-700', 'Dana keeps her own range');
 select is(current_setting('test.a_alice_range_after_dana'), '600-800', 'Dana''s edit leaves Alice''s range alone');
-select is(current_setting('test.a_kid_range_after_dana'), '600-800', 'Dana''s edit leaves Kid''s range alone');
+select is(current_setting('test.a_kid_range_after_dana'), '300-500', 'Dana''s edit leaves Kid''s range alone');
 select is(current_setting('test.a_kid_rows_after_removal'), '0', 'taking Kid off removes only Kid''s row');
 select is(current_setting('test.a_alice_range_after_removal'), '600-800', 'removing Kid leaves the others unchanged');
 select is(current_setting('test.a_sharers_after_removal'), '2', 'two sharers remain after Kid is removed');

@@ -7,6 +7,7 @@ import {
   loadTargets,
   saveMealTime,
   setWeekdays,
+  sharerRangesPayload,
 } from './mealTimes.js';
 
 // A chainable fake of the Supabase query builder. Each call is recorded; awaiting the
@@ -210,6 +211,7 @@ describe('meal times data access', () => {
       setCalories: '',
       createdBy: 4,
       sharerIds: [9, 9],
+      sharerRanges: { 9: { calMin: '450', calMax: '650', setCalories: '' } },
     });
     expect(id).toBe(21);
     expect(client.calls[0].rpc).toBe('save_meal_time');
@@ -224,7 +226,87 @@ describe('meal times data access', () => {
       p_cal_max: 800,
       p_set_calories: null,
       p_sharer_ids: [4, 9],
+      p_sharer_ranges: [{ member_id: 9, cal_min: 450, cal_max: 650, set_calories: null }],
     });
+  });
+
+  it('sends each new sharer their own range, never the editor range', () => {
+    const payload = sharerRangesPayload(
+      {
+        kind: 'planned',
+        createdBy: 4,
+        existingSharerIds: [4],
+        sharerIds: [4, 9, 12],
+        calMin: '600',
+        calMax: '800',
+        sharerRanges: {
+          9: { calMin: '300', calMax: '500' },
+          12: { calMin: '100', calMax: '200' },
+        },
+      },
+      4
+    );
+    expect(payload).toEqual([
+      { member_id: 9, cal_min: 300, cal_max: 500, set_calories: null },
+      { member_id: 12, cal_min: 100, cal_max: 200, set_calories: null },
+    ]);
+  });
+
+  it('leaves out a new sharer with no range, so the database refuses rather than copying', () => {
+    const payload = sharerRangesPayload(
+      {
+        kind: 'planned',
+        createdBy: 4,
+        existingSharerIds: [4],
+        sharerIds: [4, 9],
+        calMin: '600',
+        calMax: '800',
+        sharerRanges: {},
+      },
+      4
+    );
+    expect(payload).toEqual([]);
+  });
+
+  it('does not send a range for a sharer who already shares the Meal Time', () => {
+    const payload = sharerRangesPayload(
+      {
+        kind: 'planned',
+        createdBy: 4,
+        existingSharerIds: [4, 9],
+        sharerIds: [4, 9],
+        sharerRanges: { 9: { calMin: '1', calMax: '2' } },
+      },
+      4
+    );
+    expect(payload).toEqual([]);
+  });
+
+  it('sends a Set sharer one number and an If room sharer a null minimum when blank', () => {
+    expect(
+      sharerRangesPayload(
+        {
+          kind: 'set',
+          createdBy: 4,
+          existingSharerIds: [4],
+          sharerIds: [4, 9],
+          sharerRanges: { 9: { setCalories: '150' } },
+        },
+        4
+      )
+    ).toEqual([{ member_id: 9, cal_min: null, cal_max: null, set_calories: 150 }]);
+    expect(
+      sharerRangesPayload(
+        {
+          kind: 'if_room',
+          createdBy: 4,
+          existingSharerIds: [4],
+          sharerIds: [4, 9],
+          sharerRanges: { 9: { calMin: '', calMax: '200' } },
+        },
+        4
+      )
+    ).toEqual([{ member_id: 9, cal_min: null, cal_max: 200, set_calories: null }]);
   });
 
   it('updates an existing Meal Time through save_meal_time, adding the editing Member', async () => {

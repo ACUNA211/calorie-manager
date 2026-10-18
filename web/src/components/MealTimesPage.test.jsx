@@ -225,15 +225,80 @@ describe('MealTimesPage', () => {
     });
   });
 
-  it('lets the editor add another Member to share a Meal Time', async () => {
+  it('lets the editor add another Member to share a Meal Time, with their own range', async () => {
     setUpData([lunch]);
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Kid' }));
+    await userEvent.type(screen.getByLabelText("Kid's min calories"), '300');
+    await userEvent.type(screen.getByLabelText("Kid's max calories"), '500');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(saveMealTime).toHaveBeenCalled());
-    expect(saveMealTime.mock.calls[0][2]).toMatchObject({ id: 1, sharerIds: [4, 9] });
+    expect(saveMealTime.mock.calls[0][2]).toMatchObject({
+      id: 1,
+      sharerIds: [4, 9],
+      sharerRanges: { 9: { calMin: '300', calMax: '500' } },
+    });
+  });
+
+  it('shows an empty range for a Member added as a sharer, and blocks Save until it is filled', async () => {
+    setUpData([lunch]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Kid' }));
+
+    expect(screen.getByLabelText("Kid's min calories")).toHaveValue(null);
+    expect(screen.getByLabelText("Kid's max calories")).toHaveValue(null);
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(
+      await screen.findByText('Give Kid their own calorie range for this Meal Time.')
+    ).toBeInTheDocument();
+    expect(saveMealTime).not.toHaveBeenCalled();
+
+    await userEvent.type(screen.getByLabelText("Kid's min calories"), '300');
+    await userEvent.type(screen.getByLabelText("Kid's max calories"), '500');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(saveMealTime).toHaveBeenCalled());
+  });
+
+  it('asks a new If room sharer for a maximum, and a new Set sharer for one number', async () => {
+    setUpData([snack]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Snack' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Kid' }));
+    expect(screen.getByLabelText("Kid's max calories")).toBeInTheDocument();
+    expect(screen.getByLabelText("Kid's min calories")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Set' }));
+    expect(screen.getByLabelText("Kid's calories")).toHaveValue(null);
+    expect(screen.queryByLabelText("Kid's max calories")).not.toBeInTheDocument();
+  });
+
+  it('does not ask for a range from Members who already share the Meal Time', async () => {
+    setUpData([
+      {
+        ...lunch,
+        createdBy: 9,
+        sharers: [
+          { id: 9, name: 'Kid' },
+          { id: 4, name: 'Alice' },
+        ],
+      },
+      snack,
+    ]);
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Lunch' }));
+    expect(screen.queryByLabelText("Kid's min calories")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Alice's min calories")).not.toBeInTheDocument();
+  });
+
+  it('shows an If room Meal Time with no minimum as Up to its maximum', async () => {
+    setUpData([snack]);
+    renderPage();
+    expect(await screen.findByText(/Up to 200 kcal/)).toBeInTheDocument();
+    expect(screen.queryByText(/0–200 kcal/)).not.toBeInTheDocument();
   });
 
   it('locks the creator and the editing Member in the sharing picker', async () => {

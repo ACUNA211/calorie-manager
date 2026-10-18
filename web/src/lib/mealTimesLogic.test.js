@@ -4,9 +4,12 @@ import {
   draftToRow,
   findOverlaps,
   minutesOf,
+  missingSharerRanges,
   needsCalories,
+  newSharerIds,
   normalizeSharerIds,
   normalizeTime,
+  rangeRow,
   targetsFromRow,
   validateMealTime,
 } from './mealTimesLogic.js';
@@ -176,6 +179,75 @@ describe('draftToRow', () => {
     expect(draftToRow(planned({ kind: 'if_room', calMin: '100', calMax: '300' }))).toMatchObject({
       cal_min: 100,
       cal_max: 300,
+    });
+  });
+});
+
+describe('new sharers', () => {
+  it('lists only the Members added on this save, not the existing sharers or the editor', () => {
+    expect(newSharerIds([4, 7, 9], [4, 7], 4)).toEqual([9]);
+    expect(newSharerIds([4, 9, 9], [], 4)).toEqual([9]);
+    expect(newSharerIds([], [4], 4)).toEqual([]);
+  });
+
+  it('a new sharer with no range of their own is missing one', () => {
+    const draft = planned({ sharerIds: [4, 9], sharerRanges: {}, existingSharerIds: [] });
+    expect(missingSharerRanges(draft, [], 4)).toEqual([9]);
+  });
+
+  it('a new sharer with a range for the kind is not missing', () => {
+    const draft = planned({
+      sharerIds: [4, 9],
+      sharerRanges: { 9: { calMin: '300', calMax: '500' } },
+    });
+    expect(missingSharerRanges(draft, [], 4)).toEqual([]);
+  });
+
+  it('a range that is incomplete for Planned is missing', () => {
+    const draft = planned({ sharerIds: [4, 9], sharerRanges: { 9: { calMin: '300' } } });
+    expect(missingSharerRanges(draft, [], 4)).toEqual([9]);
+  });
+
+  it('an If room sharer needs a maximum, and a minimum is optional', () => {
+    const base = { kind: 'if_room', sharerIds: [4, 9] };
+    expect(
+      missingSharerRanges({ ...base, sharerRanges: { 9: { calMin: '', calMax: '' } } }, [], 4)
+    ).toEqual([9]);
+    expect(
+      missingSharerRanges({ ...base, sharerRanges: { 9: { calMin: '', calMax: '200' } } }, [], 4)
+    ).toEqual([]);
+    expect(
+      missingSharerRanges({ ...base, sharerRanges: { 9: { calMin: '300', calMax: '200' } } }, [], 4)
+    ).toEqual([9]);
+  });
+
+  it('a Set sharer needs one number', () => {
+    const base = { kind: 'set', sharerIds: [4, 9] };
+    expect(
+      missingSharerRanges({ ...base, sharerRanges: { 9: { setCalories: '' } } }, [], 4)
+    ).toEqual([9]);
+    expect(
+      missingSharerRanges({ ...base, sharerRanges: { 9: { setCalories: '150' } } }, [], 4)
+    ).toEqual([]);
+  });
+
+  it('existing sharers never count as missing', () => {
+    const draft = planned({ sharerIds: [4, 9], sharerRanges: {} });
+    expect(missingSharerRanges(draft, [4, 9], 4)).toEqual([]);
+  });
+
+  it('the editing Member never counts as missing', () => {
+    const draft = planned({ sharerIds: [4], sharerRanges: {} });
+    expect(missingSharerRanges(draft, [], 4)).toEqual([]);
+  });
+});
+
+describe('rangeRow', () => {
+  it('gives an If room blank minimum as null and the maximum as a number', () => {
+    expect(rangeRow('if_room', { calMin: '', calMax: '250' })).toEqual({
+      set_calories: null,
+      cal_min: null,
+      cal_max: 250,
     });
   });
 });

@@ -17,6 +17,31 @@ export function minutesOf(time) {
 
 const isWholeNumber = (value) => /^\d+$/.test(String(value ?? '').trim());
 
+// The calorie fields of one Member's range, as typed (strings). Returns the translation key
+// of the first problem for this kind, or null when the range is valid.
+// Set needs one number; Planned needs both ends; If room needs its maximum, and a minimum
+// only if one is typed.
+function rangeErrorKey(kind, range) {
+  if (kind === 'set') {
+    return isWholeNumber(range.setCalories) ? null : 'mealTimes.errors.setCaloriesRequired';
+  }
+  if (kind === 'planned') {
+    if (!isWholeNumber(range.calMin) || !isWholeNumber(range.calMax)) {
+      return 'mealTimes.errors.rangeRequired';
+    }
+    return Number(range.calMin) > Number(range.calMax) ? 'mealTimes.errors.rangeOrder' : null;
+  }
+  if (kind === 'if_room') {
+    // A minimum is optional, but if given it must be a whole number no more than the maximum
+    // (matches needsCalories).
+    const hasMin = String(range.calMin ?? '').trim() !== '';
+    if (!isWholeNumber(range.calMax)) return 'mealTimes.errors.maxRequired';
+    if (hasMin && !isWholeNumber(range.calMin)) return 'mealTimes.errors.minInvalid';
+    if (hasMin && Number(range.calMin) > Number(range.calMax)) return 'mealTimes.errors.rangeOrder';
+  }
+  return null;
+}
+
 // A draft is what the editor holds: calories as typed strings.
 // Returns { errors } where errors maps a field to a translation key; empty when valid.
 export function validateMealTime(draft) {
@@ -27,50 +52,34 @@ export function validateMealTime(draft) {
   }
   if (!KINDS.includes(draft.kind)) errors.kind = 'mealTimes.errors.kindRequired';
 
-  if (draft.kind === 'set') {
-    if (!isWholeNumber(draft.setCalories)) {
-      errors.setCalories = 'mealTimes.errors.setCaloriesRequired';
-    }
-  } else if (draft.kind === 'planned') {
-    if (!isWholeNumber(draft.calMin) || !isWholeNumber(draft.calMax)) {
-      errors.range = 'mealTimes.errors.rangeRequired';
-    } else if (Number(draft.calMin) > Number(draft.calMax)) {
-      errors.range = 'mealTimes.errors.rangeOrder';
-    }
-  } else if (draft.kind === 'if_room') {
-    // Only the maximum is needed. A minimum is optional, but if given it must be a whole
-    // number no more than the maximum (matches needsCalories).
-    const hasMin = String(draft.calMin ?? '').trim() !== '';
-    if (!isWholeNumber(draft.calMax)) {
-      errors.range = 'mealTimes.errors.maxRequired';
-    } else if (hasMin && !isWholeNumber(draft.calMin)) {
-      errors.range = 'mealTimes.errors.minInvalid';
-    } else if (hasMin && Number(draft.calMin) > Number(draft.calMax)) {
-      errors.range = 'mealTimes.errors.rangeOrder';
-    }
-  }
+  const rangeKey = rangeErrorKey(draft.kind, draft);
+  if (rangeKey) errors[draft.kind === 'set' ? 'setCalories' : 'range'] = rangeKey;
   return { errors };
 }
 
-// The database row for a valid draft. Only the fields that belong to the kind are filled.
+// The database columns for one range, for its kind. A blank If room minimum is stored as
+// null, not 0. Only the fields that belong to the kind are filled.
+export function rangeRow(kind, range) {
+  if (kind === 'set') {
+    return { set_calories: Number(range.setCalories), cal_min: null, cal_max: null };
+  }
+  const noMin = kind === 'if_room' && !isWholeNumber(range.calMin);
+  return {
+    set_calories: null,
+    cal_min: noMin ? null : Number(range.calMin),
+    cal_max: Number(range.calMax),
+  };
+}
+
+// The database row for a valid draft: the Meal Time's own fields and the editing Member's range.
 export function draftToRow(draft) {
   const weekdays = [...new Set(draft.weekdays)].sort((a, b) => a - b);
-  const base = {
+  return {
     name: String(draft.name).trim(),
     time_of_day: normalizeTime(draft.time),
     kind: draft.kind,
     weekdays,
-  };
-  if (draft.kind === 'set') {
-    return { ...base, set_calories: Number(draft.setCalories), cal_min: null, cal_max: null };
-  }
-  // An If room minimum left blank is stored as null, not 0.
-  const noMin = draft.kind === 'if_room' && !isWholeNumber(draft.calMin);
-  return {
-    ...base,
-    set_calories: null,
-    cal_min: noMin ? null : Number(draft.calMin),
-    cal_max: Number(draft.calMax),
+    ...rangeRow(draft.kind, draft),
   };
 }
 
@@ -79,6 +88,24 @@ export function draftToRow(draft) {
 export function normalizeSharerIds(sharerIds, creatorId, editorId) {
   const ids = [...(sharerIds || []), creatorId, editorId].map(Number).filter((id) => id > 0);
   return [...new Set(ids)].sort((a, b) => a - b);
+}
+
+// The sharers being added on this save: in the draft's sharers, but not already sharing the
+// Meal Time and not the editing Member (whose range is the draft's own).
+export function newSharerIds(sharerIds, existingSharerIds, editorId) {
+  const existing = new Set((existingSharerIds || []).map(Number));
+  return [...new Set((sharerIds || []).map(Number))].filter(
+    (id) => id > 0 && id !== Number(editorId) && !existing.has(id)
+  );
+}
+
+// The new sharers whose own range is missing or not valid for the draft's kind. Each new
+// sharer gets their own range; the editor's range is never copied to them.
+// draft.sharerRanges maps a Member id to { calMin, calMax, setCalories } as typed.
+export function missingSharerRanges(draft, existingSharerIds, editorId) {
+  return newSharerIds(draft.sharerIds, existingSharerIds, editorId).filter(
+    (id) => rangeErrorKey(draft.kind, draft.sharerRanges?.[id] ?? {}) !== null
+  );
 }
 
 // True when the Member's own row lacks the number its kind needs: Set needs one number,

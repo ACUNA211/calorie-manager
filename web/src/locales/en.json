@@ -155,7 +155,8 @@
     "calories": {
       "set": "{{calories}} kcal",
       "range": "{{min}}–{{max}} kcal",
-      "missing": "Needs calories for this kind"
+      "missing": "Needs calories for this kind",
+      "upTo": "Up to {{max}} kcal"
     },
     "totals": {
       "range": "{{floor}}–{{ceiling}}",
@@ -182,13 +183,16 @@
       "setCalories": "Calories",
       "minCalories": "Min calories",
       "maxCalories": "Max calories",
+      "sharerSetCalories": "{{name}}'s calories",
+      "sharerMinCalories": "{{name}}'s min calories",
+      "sharerMaxCalories": "{{name}}'s max calories",
       "save": "Save",
       "cancel": "Cancel",
       "delete": "Delete",
       "confirmDelete": "Delete {{name}}? This cannot be undone.",
       "confirmDeleteButton": "Yes, delete",
       "sharers": "Shared with",
-      "sharersHint": "You and the creator are always in. A Member added here starts with this range. Each Member changes their own range on their own grid.",
+      "sharersHint": "You and the creator are always in. A Member added here sets their own range below. Each Member changes their own range on their own grid.",
       "leave": "Stop sharing",
       "confirmLeave": "Stop sharing {{name}}? The others keep it.",
       "confirmLeaveButton": "Yes, stop sharing"
@@ -201,7 +205,8 @@
       "rangeRequired": "Planned needs a minimum and a maximum, as whole numbers.",
       "maxRequired": "If room needs a maximum, as a whole number.",
       "minInvalid": "The minimum, if given, must be a whole number.",
-      "rangeOrder": "The minimum cannot be more than the maximum."
+      "rangeOrder": "The minimum cannot be more than the maximum.",
+      "sharerRangeMissing": "Give {{name}} their own calorie range for this Meal Time."
     }
   },
   "invite": {
