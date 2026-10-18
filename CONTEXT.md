@@ -21,7 +21,7 @@ The questions a Member answers when joining (such as age, height, weight, activi
 _Avoid_: onboarding survey, quiz
 
 **Targets**:
-A Member's daily aims, set by hand or suggested from the Intake form. The **Calorie Target** is a ceiling: a day counts as "under" against it. Protein is a floor. Carbs and fat are optional ranges. Fibre, sugar and sodium are recorded and shown, but have no targets yet.
+A Member's daily aims, set by hand or suggested from the Intake form. The **Calorie Target** is a ceiling: a day counts as "under" against it. Protein is a floor. A suggested Calorie Target never goes below the Member's **suggestion floor** (1,200 kcal for women, 1,500 for men by default), a per-Member setting that can be changed or turned off; a Target typed by hand ignores it. The floor is part of the formula, not a warning. Carbs and fat are optional ranges. Fibre, sugar and sodium are recorded and shown, but have no targets yet.
 _Avoid_: goal, plan, budget
 
 **Planning band**:

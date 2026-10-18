@@ -6,9 +6,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** decided (dashboard check waits on 73)
 
 **Unblocks:** 06
 
-- [ ] Option chosen and written in ticket 06's Comments
+- [x] Option chosen and written in ticket 06's Comments
 - [ ] The Supabase dashboard setting matches the choice (once 73 is done)
+
+## Comments
+
+2026-10-17: (a) for now: sign-ups off, accounts by hand. Soft launch → (c) invite-only Auth hook; product → (b) open sign-ups. When 73 is done, check "Allow new users to sign up" is **off** in Supabase → Authentication → Sign In / Providers.

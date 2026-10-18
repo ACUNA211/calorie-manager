@@ -6,9 +6,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 01
 
-- [ ] Decision written in ticket 01's Comments
-- [ ] CONTEXT.md's Targets entry updated to match
+- [x] Decision written in ticket 01's Comments
+- [x] CONTEXT.md's Targets entry updated to match
+
+## Comments
+
+2026-10-17: Decided: make it a setting. On by default at 1,200 / 1,500 kcal, per Member, changeable or off. Recorded in 01's Comments and CONTEXT.md; the setting is a new box on #64.

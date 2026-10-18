@@ -24,3 +24,4 @@
 
 From the restart grilling (2026-10-17): don't lock a formula until this is done. Targets can always be set by hand.
 - 2026-10-17: Research done, report at `.scratch/restart/research/targets-formula.md`. Pick: Mifflin-St Jeor RMR x activity factor, deficit 250/500/750 kcal (default 500), protein floor 1.4 g/kg, fat 25–35%, Dependents get no suggestion. Unverified: Cunningham, activity multipliers, Academy 2022 and AAP numbers (secondary sources), Body Weight Planner equations. Needs review, and a decision on the calorie floor vs "no safety rails" in CONTEXT.
+- 2026-10-17 (#70 decided): the calorie floor stays as a formula input, and is a **per-Member setting**: on by default at 1,200 kcal (women) / 1,500 kcal (men), changeable or off. Suggestions clamp at it with no warning; Targets typed by hand ignore it. Built in #64.

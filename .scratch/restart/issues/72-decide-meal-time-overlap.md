@@ -12,10 +12,14 @@ Ticket 22 (Shared Meal Times) added two more questions:
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 21, 22
 
-- [ ] Rule chosen and written in ticket 21's Comments
-- [ ] Spanish kind names approved or corrected
-- [ ] If room rule and new-sharer range chosen and written in ticket 22's Comments
+- [x] Rule chosen and written in ticket 21's Comments
+- [x] Spanish kind names approved or corrected
+- [x] If room rule and new-sharer range chosen and written in ticket 22's Comments
+
+## Comments
+
+2026-10-17: Overlap = exact same time. If room = maximum only. New sharers are asked for their own range. All Spanish strings approved. Code changes noted in 21 and 22.
