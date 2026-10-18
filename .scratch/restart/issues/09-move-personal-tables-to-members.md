@@ -6,12 +6,12 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members), 69 (Run the database tests locally)
 
-**Status:** done (awaiting DB test run)
+**Status:** done (awaiting review)
 
-- [ ] Meal Times, Portions and Calorie Log rows each have a Member; current rows belong to the Owner
+- [x] Meal Times, Portions and Calorie Log rows each have a Member; current rows belong to the Owner
 - [ ] The one-row settings table is replaced by one settings row per Member, with the current Calorie Target and Planning band kept
-- [ ] Portions are unique per (member, Meal Time, date)
-- [ ] Policies let adults see their own rows and their Dependents' rows (tested); other Members' visibility is ticket 33
+- [x] Portions are unique per (member, Meal Time, date)
+- [x] Policies let adults see their own rows and their Dependents' rows (tested); other Members' visibility is ticket 33
 
 ## Comments
 

@@ -18,7 +18,7 @@ reset role;
 select set_config('test.alice_m', (select id::text from public.members where user_id = current_setting('test.alice')::uuid), true);
 
 -- 1. The column exists and is nullable
-select col_is_null('public.calorie_log', 'client_id', 'calorie_log.client_id is nullable');
+select col_is_null('public', 'calorie_log', 'client_id', 'calorie_log.client_id is nullable');
 
 -- 2. An entry with a client_id is stored as given
 insert into public.calorie_log (member_id, log_date, description, grams, kcal, client_id)

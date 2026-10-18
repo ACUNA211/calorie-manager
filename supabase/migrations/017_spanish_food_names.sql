@@ -63,6 +63,8 @@ begin
    where id = p_food_id
      and name_es_edited_by_member = false;
   get diagnostics v_rows = row_count;
+  -- the setting is transaction-local: clear it so later writes in the same transaction count as the Member's
+  perform set_config('calorie.name_es_source', '', true);
   return v_rows > 0;
 end $$;
 

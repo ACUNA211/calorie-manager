@@ -8,9 +8,9 @@ create extension if not exists pgtap with schema extensions;
 select plan(9);
 
 -- 1-3. Columns exist and are nullable
-select col_is_null('public.calorie_log', 'protein_g', 'calorie_log.protein_g is nullable');
-select col_is_null('public.calorie_log', 'carbs_g', 'calorie_log.carbs_g is nullable');
-select col_is_null('public.calorie_log', 'fat_g', 'calorie_log.fat_g is nullable');
+select col_is_null('public', 'calorie_log', 'protein_g', 'calorie_log.protein_g is nullable');
+select col_is_null('public', 'calorie_log', 'carbs_g', 'calorie_log.carbs_g is nullable');
+select col_is_null('public', 'calorie_log', 'fat_g', 'calorie_log.fat_g is nullable');
 
 select set_config('test.alice', '88888888-8888-4888-8888-888888888888', true);
 insert into auth.users (id, aud, role, email) values

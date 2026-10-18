@@ -36,6 +36,7 @@ select is(public.pantry_take(999999, 10), 0.0::numeric, 'a food not in the Pantr
 
 -- Bob cannot take Alice's rice
 select set_config('request.jwt.claims', json_build_object('sub', current_setting('test.bob'), 'role', 'authenticated')::text, true);
+select public.create_household('Bob house', 'Bob');
 select is(public.pantry_take(current_setting('test.rice')::bigint, 10), 0.0::numeric, 'another Household takes nothing from Alice');
 select is((select count(*) from public.pantry_items), 0::bigint, 'another Household sees no Pantry rows');
 

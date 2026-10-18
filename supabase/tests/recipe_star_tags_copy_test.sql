@@ -26,14 +26,17 @@ select set_config('test.bob_hh', (select public.create_household('Bob house', 'B
 reset role;
 
 -- One Meal Time each, owned by each Member (set up as the owner, so RLS does not get in the way)
-insert into public.meal_times (member_id, name, time_of_day, kind, set_calories)
-  select m.id, 'Alice breakfast', '07:30', 'set', 400
+-- (the Set calories live on the sharing row since 013)
+insert into public.meal_times (member_id, name, time_of_day, kind)
+  select m.id, 'Alice breakfast', '07:30', 'set'
   from public.members m
   where m.user_id = current_setting('test.alice')::uuid;
-insert into public.meal_times (member_id, name, time_of_day, kind, set_calories)
-  select m.id, 'Bob breakfast', '07:30', 'set', 400
+insert into public.meal_times (member_id, name, time_of_day, kind)
+  select m.id, 'Bob breakfast', '07:30', 'set'
   from public.members m
   where m.user_id = current_setting('test.bob')::uuid;
+insert into public.meal_time_members (meal_time_id, member_id, set_calories)
+  select id, member_id, 400 from public.meal_times where name in ('Alice breakfast', 'Bob breakfast');
 select set_config('test.alice_mt', (select id::text from public.meal_times where name = 'Alice breakfast'), true);
 select set_config('test.bob_mt', (select id::text from public.meal_times where name = 'Bob breakfast'), true);
 
@@ -101,7 +104,9 @@ reset role;
 -- Alice reads her tags (RLS: only her Household's rows)
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', current_setting('test.alice'), 'role', 'authenticated')::text, true);
-select set_config('test.alice_tags', (select count(*)::text from public.recipe_meal_time_tags), true);
+-- (the original's tag only: her copy carries one too, counted further down)
+select set_config('test.alice_tags', (select count(*)::text from public.recipe_meal_time_tags
+  where recipe_id = (select id from public.recipes where name = 'Alice bowl')), true);
 reset role;
 
 -- The copy: starred off, linked to the original, with the same ingredient line and tag

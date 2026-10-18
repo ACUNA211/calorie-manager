@@ -6,13 +6,13 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members), 69 (Run the database tests locally), 71 (Decide: how sign-ups work with invites)
 
-**Status:** done (awaiting DB test run)
+**Status:** done (DB tests pass; awaiting 71)
 
 - [x] Owner sees "Invite" on the Household page, creates a link and can copy it
 - [ ] Someone opening the link signs up and lands in that Household as a Member
-- [ ] An expired or revoked link shows a clear message and joins nobody
-- [ ] A person already in a Household can't join a second one
-- [ ] Only the Owner can create or revoke links (enforced by policy, tested)
+- [x] An expired or revoked link shows a clear message and joins nobody
+- [x] A person already in a Household can't join a second one
+- [x] Only the Owner can create or revoke links (enforced by policy, tested)
 
 ## Comments
 

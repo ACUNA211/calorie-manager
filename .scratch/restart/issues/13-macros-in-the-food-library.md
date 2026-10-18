@@ -6,12 +6,12 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 08 (Move shared tables into the Household), 69 (Run the database tests locally)
 
-**Status:** done (awaiting DB test run)
+**Status:** done (awaiting review)
 
-- [ ] Saving a USDA food stores all six macros when USDA has them; missing values stay empty, never zero
+- [x] Saving a USDA food stores all six macros when USDA has them; missing values stay empty, never zero
 - [ ] Existing USDA foods are backfilled (a one-off script or function, rate-limited under 1,000 requests an hour)
-- [ ] Recipe totals show calories and the six macros per serving
-- [ ] The calorie sanity check (4·carb + 4·protein + 9·fat) still runs
+- [x] Recipe totals show calories and the six macros per serving
+- [x] The calorie sanity check (4·carb + 4·protein + 9·fat) still runs
 
 ## Comments
 

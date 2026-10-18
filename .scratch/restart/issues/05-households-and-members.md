@@ -6,11 +6,11 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 02 (App skeleton and sign-in), 69 (Run the database tests locally)
 
-**Status:** done (awaiting DB test run)
+**Status:** done (awaiting review)
 
-- [ ] Creating a Household makes the creator its Owner and only Member
-- [ ] A person belongs to at most one Household (enforced in the database)
-- [ ] Policies stop a signed-in person from reading or writing another Household's rows (a test signs in as two people and proves it)
+- [x] Creating a Household makes the creator its Owner and only Member
+- [x] A person belongs to at most one Household (enforced in the database)
+- [x] Policies stop a signed-in person from reading or writing another Household's rows (a test signs in as two people and proves it)
 - [x] The Household page lists Members with their role (Owner / Member / Dependent)
 - [x] Migration is a new numbered file in `supabase/migrations/`
 

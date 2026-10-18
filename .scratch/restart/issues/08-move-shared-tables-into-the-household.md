@@ -6,12 +6,12 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members), 69 (Run the database tests locally)
 
-**Status:** done (awaiting DB test run)
+**Status:** done (awaiting review)
 
-- [ ] Each shared table has a non-null `household_id` and Household policies
+- [x] Each shared table has a non-null `household_id` and Household policies
 - [ ] Every existing row belongs to the Owner's Household after the migration
 - [ ] Existing functions (USDA search/save, shopping list sync, approve) still pass a smoke test
-- [ ] A test proves a second Household can't see these rows
+- [x] A test proves a second Household can't see these rows
 - [ ] The migration can run on a copy of the current project without errors
 
 ## Comments
