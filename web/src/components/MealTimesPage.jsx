@@ -11,7 +11,6 @@ import {
 } from '../lib/mealTimes.js';
 import {
   KINDS,
-  OVERLAP_MINUTES,
   WEEKDAYS,
   dayTotals,
   findOverlaps,
@@ -366,7 +365,6 @@ function ClashPrompt({ clash, busy, onReplace, onKeep, onCancel, dayLabel }) {
             name,
             other: overlap.meal.name,
             days: overlap.weekdays.map((day) => dayLabel(day, 'long')).join(', '),
-            minutes: OVERLAP_MINUTES,
           })}
         </p>
       ))}

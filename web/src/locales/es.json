@@ -167,7 +167,7 @@
     },
     "clash": {
       "heading": "Horarios que chocan",
-      "question": "{{name}} está a menos de {{minutes}} minutos de {{other}} los {{days}}. ¿Quitar {{days}} de {{other}}?",
+      "question": "{{name}} es a la misma hora que {{other}} los {{days}}. ¿Quitar {{days}} de {{other}}?",
       "replace": "Sí, reemplazar ahí",
       "keepBoth": "Mantener ambos",
       "cancel": "Cancelar"

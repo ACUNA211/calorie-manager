@@ -5,10 +5,6 @@
 export const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]; // 0 = Sunday
 export const KINDS = ['set', 'planned', 'if_room'];
 
-// Two Meal Times on the same weekday this close together clash and ask to replace.
-// Agreed in the mvp-reset Meal Times prototype (45 minutes).
-export const OVERLAP_MINUTES = 45;
-
 // Stored times come back as "07:30:00"; the page works in "07:30".
 export function normalizeTime(value) {
   return String(value || '').slice(0, 5);
@@ -81,14 +77,14 @@ export function needsCalories(meal) {
   return meal.cal_min == null || meal.cal_max == null;
 }
 
-// Other Meal Times that share a weekday with `meal` and start within OVERLAP_MINUTES of it.
+// Other Meal Times that share a weekday with `meal` and start at the exact same time (decision #72).
 // `weekdays` is the days being checked (a toggle checks one day; a save checks all of its days).
 // Returns [{ meal: other, weekdays: [shared days] }].
 export function findOverlaps(meal, allMeals, weekdays) {
   const clashes = [];
   for (const other of allMeals) {
     if (other.id === meal.id) continue;
-    if (Math.abs(minutesOf(other.time_of_day) - minutesOf(meal.time_of_day)) > OVERLAP_MINUTES) {
+    if (minutesOf(other.time_of_day) !== minutesOf(meal.time_of_day)) {
       continue;
     }
     const shared = weekdays.filter((day) => (other.weekdays || []).includes(day));

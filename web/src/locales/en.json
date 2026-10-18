@@ -167,7 +167,7 @@
     },
     "clash": {
       "heading": "Times that clash",
-      "question": "{{name}} is within {{minutes}} minutes of {{other}} on {{days}}. Take {{days}} off {{other}}?",
+      "question": "{{name}} is at the same time as {{other}} on {{days}}. Take {{days}} off {{other}}?",
       "replace": "Yes, replace there",
       "keepBoth": "Keep both",
       "cancel": "Cancel"

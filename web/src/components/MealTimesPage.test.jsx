@@ -44,7 +44,7 @@ const lunch = {
 const snack = {
   id: 2,
   name: 'Snack',
-  time_of_day: '13:00',
+  time_of_day: '12:30',
   weekdays: [2, 5],
   kind: 'if_room',
   cal_min: null,
@@ -165,7 +165,7 @@ describe('MealTimesPage', () => {
 
     expect(
       await screen.findByText(
-        'Snack is within 45 minutes of Lunch on Monday. Take Monday off Lunch?'
+        'Snack is at the same time as Lunch on Monday. Take Monday off Lunch?'
       )
     ).toBeInTheDocument();
     expect(setWeekdays).not.toHaveBeenCalled();

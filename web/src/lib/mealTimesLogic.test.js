@@ -144,20 +144,32 @@ describe('time helpers', () => {
 
 describe('findOverlaps', () => {
   const lunch = { id: 1, name: 'Lunch', time_of_day: '12:30', weekdays: [1, 2, 3] };
-  const snack = { id: 2, name: 'Snack', time_of_day: '13:00', weekdays: [2, 5] };
+  const snack = { id: 2, name: 'Snack', time_of_day: '12:30', weekdays: [2, 5] };
   const late = { id: 3, name: 'Late', time_of_day: '14:30', weekdays: [1] };
 
-  it('finds a Meal Time within 45 minutes that shares a weekday', () => {
+  it('finds a Meal Time at the exact same time that shares a weekday', () => {
     expect(findOverlaps(lunch, [lunch, snack, late], [1, 2, 3])).toEqual([
       { meal: snack, weekdays: [2] },
     ]);
   });
 
-  it('is exactly 45 minutes inclusive and ignores 46', () => {
-    const at45 = { id: 9, time_of_day: '13:15', weekdays: [1] };
-    const at46 = { id: 10, time_of_day: '13:16', weekdays: [1] };
-    expect(findOverlaps(lunch, [at45], [1])).toHaveLength(1);
-    expect(findOverlaps(lunch, [at46], [1])).toHaveLength(0);
+  it('does not count 18:00 and 18:30 on the same day as overlapping', () => {
+    const sixPm = { id: 4, time_of_day: '18:00', weekdays: [1] };
+    const sixThirty = { id: 5, time_of_day: '18:30', weekdays: [1] };
+    expect(findOverlaps(sixPm, [sixThirty], [1])).toEqual([]);
+    expect(findOverlaps(sixThirty, [sixPm], [1])).toEqual([]);
+  });
+
+  it('counts 18:00 and 18:00 on the same day as overlapping', () => {
+    const sixPm = { id: 4, time_of_day: '18:00', weekdays: [1] };
+    const otherSixPm = { id: 5, time_of_day: '18:00:00', weekdays: [1, 6] };
+    expect(findOverlaps(sixPm, [otherSixPm], [1])).toEqual([{ meal: otherSixPm, weekdays: [1] }]);
+  });
+
+  it('ignores a one-minute difference', () => {
+    const at1229 = { id: 9, time_of_day: '12:29', weekdays: [1] };
+    const at1231 = { id: 10, time_of_day: '12:31', weekdays: [1] };
+    expect(findOverlaps(lunch, [at1229, at1231], [1])).toEqual([]);
   });
 
   it('checks only the days asked about', () => {
@@ -169,7 +181,7 @@ describe('findOverlaps', () => {
   });
 
   it('treats a new Meal Time (no id) as clashing with the existing ones', () => {
-    const draft = { id: null, time_of_day: '12:45' };
+    const draft = { id: null, time_of_day: '12:30' };
     expect(findOverlaps(draft, [lunch], [1])).toEqual([{ meal: lunch, weekdays: [1] }]);
   });
 });
