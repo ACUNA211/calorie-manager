@@ -90,15 +90,46 @@ describe('validateMealTime', () => {
     expect(validateMealTime(planned({ kind: 'set', setCalories: '650' })).errors).toEqual({});
   });
 
-  it('needs a min and a max for Planned and If room', () => {
-    for (const kind of ['planned', 'if_room']) {
-      expect(validateMealTime(planned({ kind, calMin: '', calMax: '500' })).errors.range).toBe(
-        'mealTimes.errors.rangeRequired'
-      );
-    }
+  it('needs a min and a max for Planned', () => {
+    expect(validateMealTime(planned({ calMin: '', calMax: '500' })).errors.range).toBe(
+      'mealTimes.errors.rangeRequired'
+    );
   });
 
-  it('refuses a min above the max', () => {
+  it('accepts an If room Meal Time with only a maximum', () => {
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '', calMax: '300' })).errors
+    ).toEqual({});
+  });
+
+  it('needs a maximum for If room, even when a minimum is given', () => {
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '', calMax: '' })).errors.range
+    ).toBe('mealTimes.errors.maxRequired');
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '100', calMax: '' })).errors.range
+    ).toBe('mealTimes.errors.maxRequired');
+  });
+
+  it('accepts an If room minimum that is no more than the maximum', () => {
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '200', calMax: '200' })).errors
+    ).toEqual({});
+  });
+
+  it('refuses an If room minimum above its maximum', () => {
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '400', calMax: '300' })).errors.range
+    ).toBe('mealTimes.errors.rangeOrder');
+  });
+
+  it('refuses an If room minimum that is not a whole number', () => {
+    expect(
+      validateMealTime(planned({ kind: 'if_room', calMin: '12.5', calMax: '300' })).errors.range
+    ).toBe('mealTimes.errors.minInvalid');
+  });
+
+  it('refuses a Planned minimum above the maximum', () => {
     expect(validateMealTime(planned({ calMin: '700', calMax: '600' })).errors.range).toBe(
       'mealTimes.errors.rangeOrder'
     );
@@ -110,6 +141,9 @@ describe('validateMealTime', () => {
     );
     expect(validateMealTime(planned({ calMax: '-5' })).errors.range).toBe(
       'mealTimes.errors.rangeRequired'
+    );
+    expect(validateMealTime(planned({ kind: 'if_room', calMax: '-5' })).errors.range).toBe(
+      'mealTimes.errors.maxRequired'
     );
   });
 });
@@ -130,6 +164,18 @@ describe('draftToRow', () => {
       set_calories: 650,
       cal_min: null,
       cal_max: null,
+    });
+  });
+
+  it('stores an If room minimum left blank as null, and keeps a typed one', () => {
+    expect(draftToRow(planned({ kind: 'if_room', calMin: '', calMax: '300' }))).toMatchObject({
+      kind: 'if_room',
+      cal_min: null,
+      cal_max: 300,
+    });
+    expect(draftToRow(planned({ kind: 'if_room', calMin: '100', calMax: '300' }))).toMatchObject({
+      cal_min: 100,
+      cal_max: 300,
     });
   });
 });

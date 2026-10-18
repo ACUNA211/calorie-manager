@@ -31,10 +31,21 @@ export function validateMealTime(draft) {
     if (!isWholeNumber(draft.setCalories)) {
       errors.setCalories = 'mealTimes.errors.setCaloriesRequired';
     }
-  } else if (KINDS.includes(draft.kind)) {
+  } else if (draft.kind === 'planned') {
     if (!isWholeNumber(draft.calMin) || !isWholeNumber(draft.calMax)) {
       errors.range = 'mealTimes.errors.rangeRequired';
     } else if (Number(draft.calMin) > Number(draft.calMax)) {
+      errors.range = 'mealTimes.errors.rangeOrder';
+    }
+  } else if (draft.kind === 'if_room') {
+    // Only the maximum is needed. A minimum is optional, but if given it must be a whole
+    // number no more than the maximum (matches needsCalories).
+    const hasMin = String(draft.calMin ?? '').trim() !== '';
+    if (!isWholeNumber(draft.calMax)) {
+      errors.range = 'mealTimes.errors.maxRequired';
+    } else if (hasMin && !isWholeNumber(draft.calMin)) {
+      errors.range = 'mealTimes.errors.minInvalid';
+    } else if (hasMin && Number(draft.calMin) > Number(draft.calMax)) {
       errors.range = 'mealTimes.errors.rangeOrder';
     }
   }
@@ -53,10 +64,12 @@ export function draftToRow(draft) {
   if (draft.kind === 'set') {
     return { ...base, set_calories: Number(draft.setCalories), cal_min: null, cal_max: null };
   }
+  // An If room minimum left blank is stored as null, not 0.
+  const noMin = draft.kind === 'if_room' && !isWholeNumber(draft.calMin);
   return {
     ...base,
     set_calories: null,
-    cal_min: Number(draft.calMin),
+    cal_min: noMin ? null : Number(draft.calMin),
     cal_max: Number(draft.calMax),
   };
 }

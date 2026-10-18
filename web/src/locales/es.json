@@ -198,7 +198,9 @@
       "timeRequired": "Pon una hora al horario de comida.",
       "kindRequired": "Elige un tipo.",
       "setCaloriesRequired": "Un horario Fijo necesita un número de calorías.",
-      "rangeRequired": "Planificado y Si hay espacio necesitan un mínimo y un máximo.",
+      "rangeRequired": "Planificado necesita un mínimo y un máximo, en números enteros.",
+      "maxRequired": "Si hay espacio necesita un máximo, en número entero.",
+      "minInvalid": "El mínimo, si lo pones, debe ser un número entero.",
       "rangeOrder": "El mínimo no puede ser mayor que el máximo."
     }
   },

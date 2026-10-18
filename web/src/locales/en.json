@@ -198,7 +198,9 @@
       "timeRequired": "Give the Meal Time a time.",
       "kindRequired": "Choose a kind.",
       "setCaloriesRequired": "A Set Meal Time needs one calorie number.",
-      "rangeRequired": "Planned and If room need a minimum and a maximum.",
+      "rangeRequired": "Planned needs a minimum and a maximum, as whole numbers.",
+      "maxRequired": "If room needs a maximum, as a whole number.",
+      "minInvalid": "The minimum, if given, must be a whole number.",
       "rangeOrder": "The minimum cannot be more than the maximum."
     }
   },
