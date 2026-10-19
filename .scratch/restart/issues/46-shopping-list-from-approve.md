@@ -12,3 +12,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 - [ ] Lines group by store section and show their date
 - [ ] Changing the plan after approval adds a new line for any extra need; existing lines aren't rewritten
 - [ ] Every Member sees the same list
+
+## Comments
+
+- 2026-10-19: From ticket 45: `plan_approve()` (migration 041) ends by calling the existing `sync_shopping_list(plan_id)`, marked "HOOK (46)", only when a plan is newly approved or was edited since approval. Replace or keep that one call here.

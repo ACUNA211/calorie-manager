@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 40 (Plan grid editing)
+**Blocked by:** 40 (Plan grid editing), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you: run the database tests with `supabase test db`, push migration 041, then try allow/disallow on the Household page and Approve on /plan with two real accounts)
 
