@@ -1020,5 +1020,18 @@
     "none": "No other adult Members yet.",
     "allow": "Let {{name}} approve the plan",
     "saveError": "Could not save that. Try again."
+  },
+  "voice": {
+    "heading": "Voice",
+    "start": "Start speaking",
+    "stop": "Stop",
+    "listening": "Listening…",
+    "nothing": "Nothing heard.",
+    "retry": "Try again",
+    "error": {
+      "denied": "The microphone is blocked. Allow microphone access for this site in your browser settings, then try again.",
+      "noSpeech": "I did not hear anything. Tap Try again and speak.",
+      "other": "Voice capture did not work. Try again."
+    }
   }
 }
