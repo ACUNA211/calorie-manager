@@ -38,6 +38,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,wasm}'],
         // Any page navigation offline gets the cached shell.
         navigateFallback: '/index.html',
+        // Push and notification-click handlers (ticket 54) live in public/push-sw.js.
+        importScripts: ['push-sw.js'],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,

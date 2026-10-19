@@ -989,6 +989,27 @@
       "makes": "How much it makes"
     }
   },
+  "notifications": {
+    "intro": "Get a notification on this device when a plan is ready or a meal is coming up.",
+    "checking": "Checking this device…",
+    "notConfigured": "Notifications are not set up yet: the app needs its push key.",
+    "unsupported": "This browser cannot show notifications.",
+    "needsInstall": "On iPhone and iPad, notifications work only after you add Calorie Manager to the Home Screen (iOS 16.4 or later). Tap Share, then Add to Home Screen, and open the app from there.",
+    "needsInstallSource": "Apple's explanation (WebKit)",
+    "denied": "Notifications are blocked for this app. Allow them in your browser or phone settings, then come back.",
+    "off": "Notifications are off on this device.",
+    "on": "Notifications are on for this device.",
+    "turnOn": "Turn on notifications",
+    "turnOff": "Turn off",
+    "sendTest": "Send test",
+    "testTitle": "Calorie Manager",
+    "testBody": "Test notification: it works.",
+    "testSent": "Test sent to {{count}} device(s).",
+    "testNone": "No device is subscribed yet. Turn on notifications first.",
+    "testRemoved": "That device had expired and was removed. Turn notifications on again.",
+    "testFailed": "The test could not be delivered. Try again in a moment.",
+    "saveError": "Could not change notifications. Try again."
+  },
   "settings": {
     "heading": "Settings",
     "back": "Back to Settings",
@@ -1008,7 +1029,6 @@
     "createHousehold": "Create a Household",
     "createHouseholdHint": "Start here: the other tabs need a Household.",
     "notifications": "Notifications",
-    "notificationsSoon": "Reminders will be set up here.",
     "language": "Language",
     "account": "Account",
     "signedInAs": "Signed in as {{email}}",
