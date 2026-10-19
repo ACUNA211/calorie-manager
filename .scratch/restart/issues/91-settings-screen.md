@@ -16,7 +16,7 @@ Behaviour stays as built: this moves and groups existing components, it doesn't 
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 89 (App shell and navigation)
+**Blocked by:** 89 (App shell and navigation), 97 (Phone check: app shell and screen layouts), 99 (Decide: does Weight entry stay on Week?)
 
 **Status:** done (awaiting review)
 

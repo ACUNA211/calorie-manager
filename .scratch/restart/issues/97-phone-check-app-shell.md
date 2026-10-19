@@ -11,7 +11,8 @@
 5. Turn on airplane mode and open the app: it still opens (ticket 03's check).
 
 6. Ticket 90 re-laid-out Today, Week, Meal Times, Recipes, Foods and Pantry, checked at 375 px only against made-up data. With real data, in English and in Spanish, open the Recipe editor, the paste flow, the Log food panel and the Edit entry panel, and full Foods and Pantry lists; note anything cramped or cut off in ticket 90's Comments.
-7. Delete two stray files the ticket 90 agent left outside the repo: `D:\tmp_baseline.txt` and `D:\scratch_vite.log`.
+7. Ticket 91 turned More into the Settings screen (Household, Calorie Targets and units, Meal Times sub-pages; links to Plan, Preferences and Intake form; Language; Sign out). Check it reads well at phone width in English and Spanish, and with a brand-new account that the other tabs send you to More's "Create a Household".
+8. Delete two stray files the ticket 90 agent left outside the repo: `D:\tmp_baseline.txt` and `D:\scratch_vite.log`.
 
 Tick the matching boxes in ticket 89, and note anything off in its Comments (or ticket 90's for screen layouts).
 
@@ -19,8 +20,9 @@ Tick the matching boxes in ticket 89, and note anything off in its Comments (or 
 
 **Status:** ready-for-human
 
-**Unblocks:** 89, 90
+**Unblocks:** 89, 90, 91
 
 - [ ] Checks 1–5 pass, or what failed is noted in ticket 89
 - [ ] Check 6 done, anything off noted in ticket 90
+- [ ] Check 7 done, anything off noted in ticket 91
 - [ ] Stray files deleted
