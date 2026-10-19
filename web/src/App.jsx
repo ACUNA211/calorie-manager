@@ -7,6 +7,7 @@ import FoodsPage from './components/FoodsPage.jsx';
 import RecipesPage from './components/RecipesPage.jsx';
 import PantryPage from './components/PantryPage.jsx';
 import PlanPage from './components/PlanPage.jsx';
+import ShoppingPage from './components/ShoppingPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
@@ -112,6 +113,7 @@ export default function App() {
           {route === 'pantry' && <PantryPage user={session.user} />}
           {route === 'recipes' && <RecipesPage />}
           {route === 'plan' && <PlanPage />}
+          {route === 'shopping' && <ShoppingPage />}
           {route === 'preferences' && <PreferencesPage user={session.user} />}
           {route === 'intake' && <IntakePage user={session.user} />}
           {route === 'more' && (
@@ -119,9 +121,7 @@ export default function App() {
           )}
         </div>
         <TabBar
-          current={
-            route === 'preferences' || route === 'plan' || route === 'intake' ? 'more' : route
-          }
+          current={['preferences', 'plan', 'intake', 'shopping'].includes(route) ? 'more' : route}
           onNavigate={(next) => navigate(pathFor(next))}
         />
       </div>

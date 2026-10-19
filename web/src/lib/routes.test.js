@@ -23,6 +23,11 @@ describe('routes', () => {
     expect(ROUTES).not.toContain('preferences');
   });
 
+  it('accepts the Shopping list path without making it a tab', () => {
+    expect(routeFromPath('/shopping')).toBe('shopping');
+    expect(ROUTES).not.toContain('shopping');
+  });
+
   it('ignores a trailing slash', () => {
     expect(routeFromPath('/week/')).toBe('week');
   });
