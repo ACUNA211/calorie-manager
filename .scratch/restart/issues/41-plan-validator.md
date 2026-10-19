@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 38 (Hard-rule filter), 40 (Plan grid editing)
+**Blocked by:** 38 (Hard-rule filter), 40 (Plan grid editing), 98 (Run the database tests for migrations 035 onward), 103 (Decide: Plan validator rules)
 
 **Status:** done (awaiting you: run the database tests with `supabase test db` and push migration 045, then open /plan with real data to see the warnings)
 
