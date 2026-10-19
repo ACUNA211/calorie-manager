@@ -1,0 +1,109 @@
+/* Plan grid page. Uses the shared tokens from styles.css. */
+.plan-weeknav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.plan-weeknav p {
+  margin: 0;
+  font-weight: 600;
+}
+.plan-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.plan-status {
+  color: var(--mute);
+  font-size: var(--text-small);
+  margin: 0 0 var(--space-2);
+}
+.plan-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.plan-scroll {
+  overflow-x: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.plan-grid {
+  border-collapse: collapse;
+  min-width: 860px;
+  width: 100%;
+  font-size: var(--text-small);
+}
+.plan-grid th,
+.plan-grid td {
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-2);
+  text-align: left;
+  vertical-align: top;
+}
+.plan-grid thead th {
+  white-space: nowrap;
+}
+.plan-grid tbody th,
+.plan-grid tfoot th {
+  position: sticky;
+  left: 0;
+  background: var(--card);
+  min-width: 110px;
+}
+.plan-time,
+.plan-shared {
+  display: block;
+  color: var(--mute);
+  font-weight: 400;
+}
+.plan-cook {
+  border-left: 4px solid var(--cook, var(--accent));
+  background: var(--soft);
+  border-radius: var(--radius-small);
+  padding: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-1);
+}
+.plan-cook ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plan-cook-0 {
+  --cook: #3056d3;
+}
+.plan-cook-1 {
+  --cook: #2f7d4f;
+}
+.plan-cook-2 {
+  --cook: #c0572b;
+}
+.plan-cook-3 {
+  --cook: #8a4fbf;
+}
+.plan-cook-4 {
+  --cook: #b08a12;
+}
+.plan-cook-5 {
+  --cook: #1f8a9a;
+}
+.plan-state {
+  display: block;
+}
+.plan-total-under .plan-state,
+.plan-total-over .plan-state {
+  color: var(--warn);
+}
+.plan-total-over .plan-state {
+  font-weight: 600;
+}
+.plan-total-in .plan-state {
+  color: var(--good);
+}

@@ -806,7 +806,38 @@
       "foods": "Foods",
       "pantry": "Pantry",
       "recipes": "Recipes",
-      "more": "More"
+      "more": "More",
+      "plan": "Plan"
     }
+  },
+  "plan": {
+    "heading": "Plan",
+    "loading": "Loading the plan...",
+    "loadError": "Could not load the plan. Try again.",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "range": "{{from}} to {{to}}",
+    "filterLabel": "Show",
+    "everyone": "Everyone",
+    "empty": "This week has no plan yet.",
+    "gridCaption": "Meal Plan for the week: Meal Times down the side, days across",
+    "mealTime": "Meal Time",
+    "shared": "Shared",
+    "portion": "{{name}}: {{servings}} serving(s), {{kcal}} kcal",
+    "dayTotal": "{{name}} day total",
+    "band": "Band {{low}} to {{high}} kcal",
+    "noBand": "No Calorie Target",
+    "nothing": "Nothing planned",
+    "kcal": "{{kcal}} kcal",
+    "status": {
+      "draft": "Draft plan",
+      "approved": "Approved plan"
+    },
+    "state": {
+      "under": "Under the band",
+      "in": "In the band",
+      "over": "Over the band"
+    },
+    "openLink": "Open the Plan"
   }
 }

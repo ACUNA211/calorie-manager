@@ -1,6 +1,8 @@
 // The app's screens and how they map to URL paths. Pure, so it can be tested without a browser.
 
 export const ROUTES = ['today', 'week', 'foods', 'pantry', 'recipes', 'more'];
+// Screens reached from More, not from the tab bar.
+export const EXTRA_ROUTES = ['plan'];
 export const DEFAULT_ROUTE = 'today';
 
 export function pathFor(route) {
@@ -10,7 +12,7 @@ export function pathFor(route) {
 // The route a path belongs to, or null for "/" and unknown paths. A trailing slash is ignored.
 export function routeFromPath(pathname) {
   const name = String(pathname ?? '').replace(/^\/+|\/+$/g, '');
-  return ROUTES.includes(name) ? name : null;
+  return ROUTES.includes(name) || EXTRA_ROUTES.includes(name) ? name : null;
 }
 
 // The route to show for a path: unknown paths fall back to Today.

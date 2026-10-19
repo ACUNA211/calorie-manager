@@ -48,3 +48,10 @@ describe('routes', () => {
     expect(dayFromSearch(path.slice(path.indexOf('?')))).toBe('2026-10-18');
   });
 });
+
+describe('extra routes', () => {
+  it('accepts the Plan path without making it a tab', () => {
+    expect(routeFromPath('/plan')).toBe('plan');
+    expect(ROUTES).not.toContain('plan');
+  });
+});
