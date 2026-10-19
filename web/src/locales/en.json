@@ -807,7 +807,9 @@
       "pantry": "Pantry",
       "recipes": "Recipes",
       "more": "More",
-      "plan": "Plan"
+      "plan": "Plan",
+      "intake": "Intake form",
+      "preferences": "Preferences"
     }
   },
   "plan": {

@@ -807,7 +807,9 @@
       "pantry": "Despensa",
       "recipes": "Recetas",
       "more": "Más",
-      "plan": "Plan"
+      "plan": "Plan",
+      "intake": "Formulario inicial",
+      "preferences": "Preferencias"
     }
   },
   "plan": {
