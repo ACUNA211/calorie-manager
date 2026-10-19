@@ -2,6 +2,7 @@ import { useState } from 'react';
 import HouseholdPage from '../HouseholdPage.jsx';
 import TargetsPage from '../TargetsPage.jsx';
 import MealTimesPage from '../MealTimesPage.jsx';
+import NotificationsSetting from '../NotificationsSetting.jsx';
 import LanguageSwitch from '../../i18n/LanguageSwitch.jsx';
 import { supabase } from '../../lib/supabase.js';
 import { useActingMember } from '../../lib/actingMember.jsx';
@@ -113,12 +114,12 @@ export default function MorePage({ user, onNavigate }) {
           ))}
         </ul>
       </nav>
-      {/* Notifications: ticket 54 fills this section (reminders and web push). */}
+      {/* Notifications: Web Push on this device (ticket 54); reminder choices come with ticket 56. */}
       <section aria-labelledby="settings-notifications">
         <h2 className="eyebrow" id="settings-notifications">
           {t('settings.notifications')}
         </h2>
-        <p className="mute">{t('settings.notificationsSoon')}</p>
+        <NotificationsSetting />
       </section>
       {language}
       {account}

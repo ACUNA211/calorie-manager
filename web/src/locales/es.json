@@ -984,6 +984,27 @@
       "makes": "Cuánto rinde"
     }
   },
+  "notifications": {
+    "intro": "Recibe una notificación en este dispositivo cuando un plan esté listo o se acerque una comida.",
+    "checking": "Revisando este dispositivo…",
+    "notConfigured": "Las notificaciones aún no están configuradas: la app necesita su clave de notificaciones.",
+    "unsupported": "Este navegador no puede mostrar notificaciones.",
+    "needsInstall": "En iPhone y iPad las notificaciones solo funcionan después de añadir Calorie Manager a la pantalla de inicio (iOS 16.4 o posterior). Toca Compartir, luego Añadir a pantalla de inicio, y abre la app desde ahí.",
+    "needsInstallSource": "Explicación de Apple (WebKit)",
+    "denied": "Las notificaciones están bloqueadas para esta app. Permítelas en los ajustes del navegador o del teléfono y vuelve.",
+    "off": "Las notificaciones están desactivadas en este dispositivo.",
+    "on": "Las notificaciones están activadas en este dispositivo.",
+    "turnOn": "Activar notificaciones",
+    "turnOff": "Desactivar",
+    "sendTest": "Enviar prueba",
+    "testTitle": "Calorie Manager",
+    "testBody": "Notificación de prueba: funciona.",
+    "testSent": "Prueba enviada a {{count}} dispositivo(s).",
+    "testNone": "Ningún dispositivo está suscrito todavía. Activa primero las notificaciones.",
+    "testRemoved": "Ese dispositivo había caducado y se eliminó. Vuelve a activar las notificaciones.",
+    "testFailed": "No se pudo entregar la prueba. Inténtalo de nuevo en un momento.",
+    "saveError": "No se pudieron cambiar las notificaciones. Inténtalo de nuevo."
+  },
   "settings": {
     "heading": "Ajustes",
     "back": "Volver a Ajustes",
@@ -1003,7 +1024,6 @@
     "createHousehold": "Crear un Hogar",
     "createHouseholdHint": "Empieza aquí: las otras pestañas necesitan un Hogar.",
     "notifications": "Notificaciones",
-    "notificationsSoon": "Aquí se configurarán los recordatorios.",
     "language": "Idioma",
     "account": "Cuenta",
     "signedInAs": "Sesión iniciada como {{email}}",
