@@ -1,10 +1,10 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ShoppingPage from './ShoppingPage.jsx';
 import { supabase } from '../lib/supabase.js';
 import { MetricProvider } from '../test/metricUnits.jsx';
 
-vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn() } }));
+vi.mock('../lib/supabase.js', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }));
 
 const rows = [
   {
@@ -151,5 +151,119 @@ describe('ShoppingPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not load your Shopping list.'
     );
+  });
+
+  describe('ticking', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('Bought ticks the line, moves it to Done and shows Undo', async () => {
+      fakeList(rows);
+      supabase.rpc.mockResolvedValue({
+        data: { applied: true, line_id: 2, pantry_grams: 150, pantry_delta: 150 },
+        error: null,
+      });
+      renderPage();
+      await screen.findByText('Apple');
+      fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));
+      expect(supabase.rpc).toHaveBeenCalledWith('shopping_tick', {
+        p_line_id: 2,
+        p_kind: 'bought',
+        p_grams: null,
+      });
+      const done = screen.getByRole('heading', { name: 'Done' }).closest('section');
+      await waitFor(() => expect(done).toHaveTextContent('Apple'));
+      expect(screen.queryByRole('button', { name: 'Bought: Apple' })).toBeNull();
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'Apple ticked Bought. Pantry now 150 g.'
+      );
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    });
+
+    it('Have it sends the other kind', async () => {
+      fakeList(rows);
+      supabase.rpc.mockResolvedValue({
+        data: { applied: true, line_id: 2, pantry_grams: 150, pantry_delta: 150 },
+        error: null,
+      });
+      renderPage();
+      await screen.findByText('Apple');
+      fireEvent.click(screen.getByRole('button', { name: 'Have it: Apple' }));
+      await waitFor(() =>
+        expect(supabase.rpc).toHaveBeenCalledWith('shopping_tick', {
+          p_line_id: 2,
+          p_kind: 'have_it',
+          p_grams: null,
+        })
+      );
+      expect(await screen.findByRole('status')).toHaveTextContent('ticked Have it');
+    });
+
+    it('offers only one tick on a hand-added line and none on a ticked line', async () => {
+      fakeList(rows);
+      renderPage();
+      await screen.findByText('Apple');
+      expect(screen.getByRole('button', { name: 'Bought: Foil' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Have it: Foil' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Bought: Rice' })).toBeNull();
+    });
+
+    it('Undo calls the database, puts the line back and clears the toast', async () => {
+      fakeList(rows);
+      supabase.rpc
+        .mockResolvedValueOnce({
+          data: { applied: true, line_id: 2, pantry_grams: 150, pantry_delta: 150 },
+          error: null,
+        })
+        .mockResolvedValueOnce({ data: { line_id: 2, pantry_grams: 0 }, error: null });
+      renderPage();
+      await screen.findByText('Apple');
+      fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Undo' }));
+      await waitFor(() =>
+        expect(supabase.rpc).toHaveBeenLastCalledWith('shopping_untick', { p_line_id: 2 })
+      );
+      expect(await screen.findByRole('button', { name: 'Bought: Apple' })).toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
+    });
+
+    it('Undo goes away after a few seconds', async () => {
+      fakeList(rows);
+      supabase.rpc.mockResolvedValue({
+        data: { applied: true, line_id: 2, pantry_grams: 150, pantry_delta: 150 },
+        error: null,
+      });
+      renderPage();
+      await screen.findByText('Apple');
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));
+      await screen.findByRole('button', { name: 'Undo' });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5100);
+      });
+      expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+      expect(
+        within(screen.getByRole('heading', { name: 'Done' }).closest('section')).getByText('Apple')
+      ).toBeInTheDocument();
+    });
+
+    it('puts the line back and says so when the tick fails', async () => {
+      fakeList(rows);
+      supabase.rpc.mockResolvedValue({ data: null, error: { message: 'down' } });
+      renderPage();
+      await screen.findByText('Apple');
+      fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));
+      expect(await screen.findByRole('status')).toHaveTextContent('Could not tick that line');
+      expect(screen.getByRole('button', { name: 'Bought: Apple' })).toBeInTheDocument();
+    });
+
+    it('shows no Undo when the line was already ticked by someone else', async () => {
+      fakeList(rows);
+      supabase.rpc.mockResolvedValue({ data: { applied: false, line_id: 2 }, error: null });
+      renderPage();
+      await screen.findByText('Apple');
+      fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));
+      await waitFor(() => expect(supabase.rpc).toHaveBeenCalled());
+      expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    });
   });
 });

@@ -3,9 +3,13 @@ import {
   addedDate,
   groupLines,
   lineFromRow,
+  pantryAfterTick,
+  pantryAfterUndo,
   shoppingMeasure,
   shortfalls,
   splitList,
+  tickOptions,
+  withTicked,
 } from './shoppingLogic.js';
 
 const line = (id, name, storeSection, addedAt = '2026-10-19T10:00:00Z', extra = {}) => ({
@@ -175,5 +179,74 @@ describe('lineFromRow and addedDate', () => {
       measureKind: null,
     });
     expect(addedDate(l)).toBeNull();
+  });
+});
+
+describe('Bought / Have it', () => {
+  const rice = { id: 1, foodId: 7, grams: 1000, needGrams: 700 };
+
+  it('offers one tick for a line with no food and two otherwise', () => {
+    expect(tickOptions(rice)).toEqual(['bought', 'have_it']);
+    expect(tickOptions({ id: 2, foodId: null })).toEqual(['bought']);
+  });
+
+  it('Bought adds the line grams to the Pantry', () => {
+    expect(pantryAfterTick('bought', rice, 300)).toEqual({ before: 300, after: 1300, delta: 1000 });
+  });
+
+  it('Bought with a scanned weight adds that weight instead of the planned amount', () => {
+    expect(pantryAfterTick('bought', rice, 300, 907).after).toBe(1207);
+  });
+
+  it('Bought stops at the Pantry maximum', () => {
+    expect(pantryAfterTick('bought', rice, 99900)).toEqual({
+      before: 99900,
+      after: 100000,
+      delta: 100,
+    });
+  });
+
+  it('Have it raises the Pantry to the needed amount', () => {
+    expect(pantryAfterTick('have_it', rice, 300)).toEqual({ before: 300, after: 700, delta: 400 });
+    expect(pantryAfterTick('have_it', rice, 0).after).toBe(700);
+  });
+
+  it('Have it never lowers the Pantry', () => {
+    expect(pantryAfterTick('have_it', rice, 900)).toEqual({ before: 900, after: 900, delta: 0 });
+  });
+
+  it('Have it falls back to the line grams when there is no recorded need', () => {
+    expect(pantryAfterTick('have_it', { foodId: 7, grams: 150, needGrams: null }, 0).after).toBe(
+      150
+    );
+  });
+
+  it('changes nothing for a line with no food or no amount', () => {
+    expect(pantryAfterTick('bought', { foodId: null, grams: null }, 50).delta).toBe(0);
+    expect(pantryAfterTick('bought', { foodId: 7, grams: null }, 50).delta).toBe(0);
+  });
+
+  it('Undo takes back exactly what the tick changed', () => {
+    const { after, delta } = pantryAfterTick('bought', rice, 300);
+    expect(pantryAfterUndo(after, delta)).toBe(300);
+    const have = pantryAfterTick('have_it', rice, 300);
+    expect(pantryAfterUndo(have.after, have.delta)).toBe(300);
+  });
+
+  it('Undo keeps a Pantry change made in between and never goes below zero', () => {
+    expect(pantryAfterUndo(1200, 1000)).toBe(200);
+    expect(pantryAfterUndo(100, 1000)).toBe(0);
+  });
+
+  it('marks a line ticked or unticked without touching the others', () => {
+    const lines = [
+      { id: 1, purchased: false },
+      { id: 2, purchased: false },
+    ];
+    expect(withTicked(lines, 2, true)).toEqual([
+      { id: 1, purchased: false },
+      { id: 2, purchased: true },
+    ]);
+    expect(lines[1].purchased).toBe(false);
   });
 });

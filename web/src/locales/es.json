@@ -552,6 +552,18 @@
     "open": "Abrir la lista de compras",
     "added": "Agregado el {{date}}",
     "extra": "+",
+    "bought": "Comprado",
+    "haveIt": "Ya lo tengo",
+    "boughtLabel": "Comprado: {{name}}",
+    "haveItLabel": "Ya lo tengo: {{name}}",
+    "toast": {
+      "bought": "{{name}} marcado como Comprado. Despensa ahora {{mass}}.",
+      "haveIt": "{{name}} marcado como Ya lo tengo. Despensa ahora {{mass}}.",
+      "plain": "{{name}} marcado.",
+      "undo": "Deshacer",
+      "tickFailed": "No se pudo marcar esa línea. Inténtalo de nuevo.",
+      "undoFailed": "No se pudo deshacer esa marca."
+    },
     "measure": {
       "serving": "{{count}} × {{label}} ({{mass}})",
       "package": "{{count}} × paquete ({{mass}})"
