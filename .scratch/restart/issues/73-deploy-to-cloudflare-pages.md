@@ -51,10 +51,11 @@ The live project's migration history doesn't use the repo's numbers: 001–004 w
 
 - [ ] The Pages URL shows the sign-in form
 - [ ] Signing in shows "Hi, <email>" and sign-out returns to the form
-- [ ] Live database backed up, then has migrations 005–034 applied
+- [x] Live database backed up, then has migrations 005–034 applied
 - [ ] Tick the deploy box on ticket 02
 
 ## Comments
 
 - 2026-10-18: Steps written out in full. Checked the live project's migration list: it has timestamp-named versions for the 001–004 work, not the repo's 000–033 numbers, hence Part B's repair step. 69 and 79 are done.
 - 2026-10-18: Part B under way. Logged in and linked; backups in `D:/backups` (schema and data dumps). Compared live with a local build of 000–004: nothing missing on live; live has newer bodies for the USDA functions, three extra helpers (`usda_category`, `usda_portions`, `usda_refresh_servings`) and other apps' tables. Live's 10-17 barcode fix (retry 12/13/14-digit paddings) would have been lost when 006 replaced `usda_lookup_gtin`, so migration 034 carries it over (test `gtin_lookup_variants_test.sql`; 23 files, 391 tests pass).
+- 2026-10-18: Part B done. History repaired (the 15 timestamp versions marked reverted, 000–004 marked applied; old rows saved in `D:/backups/calorie-migration-history-2026-10-18.sql`). The first push stopped safely at 007: live had shared and personal rows but no login, so 006 made Household 1 with no Owner and 007 refused to guess. Sergio created his account and added himself as Owner of Household 1 (member 4); the re-run applied 007–034. Checked: 6 Meal Times, 20 Portions and the settings row are on member 4; 34 foods and 9 recipes in Household 1. Security advisors: only expected findings (signed-in RPCs, `peek_invite` open to anon for the invite page, `off_read_log` with no client policies, other apps' tables) plus leaked-password protection off. Part A (the site) is still to do.
