@@ -797,5 +797,16 @@
     "unreadable": "No se pudo leer la etiqueta. Toma otra foto con buena luz o escríbela a mano.",
     "badPhoto": "Usa una foto JPEG, PNG o WebP de menos de 5 MB.",
     "failed": "No se pudo leer la etiqueta. Inténtalo de nuevo o escríbela a mano."
+  },
+  "shell": {
+    "navLabel": "Principal",
+    "tabs": {
+      "today": "Hoy",
+      "week": "Semana",
+      "foods": "Alimentos",
+      "pantry": "Despensa",
+      "recipes": "Recetas",
+      "more": "Más"
+    }
   }
 }

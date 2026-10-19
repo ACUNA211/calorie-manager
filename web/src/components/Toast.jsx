@@ -24,7 +24,7 @@ export default function Toast({
   }, [durationMs]);
 
   return (
-    <div role="status">
+    <div role="status" className="toast">
       <span>{message}</span>
       {onAction ? (
         <>

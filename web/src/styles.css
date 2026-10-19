@@ -1,0 +1,356 @@
+/* Base style for the whole app. Tokens first, then element defaults, then the shell.
+   The look follows the old prototypes: warm grey page, white cards, blue accent. */
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f3ef;
+  --card: #ffffff;
+  --ink: #1d1d1b;
+  --mute: #6b6a65;
+  --line: #e4e2dc;
+  --good: #2f7d4f;
+  --warn: #c0572b;
+  --accent: #3056d3;
+  --on-accent: #ffffff;
+  --soft: #eef2ff;
+  --field: #ffffff;
+  --toast-bg: #111111;
+  --toast-ink: #ffffff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text: 16px;
+  --text-small: 13px;
+  --text-title: 20px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius: 14px;
+  --radius-small: 10px;
+  --tap: 44px;
+  --tabbar-h: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151514;
+    --card: #222220;
+    --ink: #f1f0ec;
+    --mute: #a2a099;
+    --line: #34332f;
+    --good: #5fbf85;
+    --warn: #e8845a;
+    --accent: #7c9bff;
+    --on-accent: #0f1530;
+    --soft: #262c45;
+    --field: #1b1b1a;
+    --toast-bg: #f1f0ec;
+    --toast-ink: #151514;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--text) / 1.4 var(--font);
+  overflow-wrap: anywhere;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--space-2);
+  line-height: 1.25;
+}
+h1 {
+  font-size: var(--text-title);
+}
+h2 {
+  font-size: 17px;
+}
+h3 {
+  font-size: var(--text);
+}
+
+p {
+  margin: 0 0 var(--space-2);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Buttons */
+button {
+  font: inherit;
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+button[type='submit'],
+button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Inputs: 16 px or larger so iPhone Safari does not zoom */
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: max(16px, 1em);
+  min-height: var(--tap);
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--field);
+  color: var(--ink);
+}
+textarea {
+  width: 100%;
+}
+input[type='checkbox'],
+input[type='radio'] {
+  min-height: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  accent-color: var(--accent);
+  flex: none;
+}
+label:has(> input[type='checkbox']),
+label:has(> input[type='radio']) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+}
+form label {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+form label > input:not([type='checkbox']):not([type='radio']),
+form label > select {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-1);
+}
+
+/* Lists */
+ul,
+ol {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+}
+li {
+  margin: var(--space-1) 0;
+}
+ul:not([class]):has(> li > button),
+ul:not([class]):has(> li > label) {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Cards and panels */
+section,
+fieldset,
+details,
+dialog,
+[role='dialog'] {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-3);
+  box-shadow: var(--shadow);
+}
+fieldset {
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+section section,
+section fieldset,
+section details,
+details details {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: var(--space-3) 0 0;
+}
+summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+[role='alert'] {
+  color: var(--warn);
+}
+
+/* Tables scroll inside themselves, never the page */
+table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: var(--space-2);
+  text-align: left;
+}
+th {
+  font-size: var(--text-small);
+  color: var(--mute);
+  font-weight: 600;
+}
+
+/* Toast: the Undo message sits just above the tab bar */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+  transform: translateX(-50%);
+  z-index: 30;
+  width: max-content;
+  max-width: calc(100% - 2 * var(--space-4));
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-small);
+  background: var(--toast-bg);
+  color: var(--toast-ink);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+}
+.toast button {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+
+/* Signed-out screens (sign-in, invite, loading) */
+body > #root > main,
+body > #root > p {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+/* The app frame: top bar, one screen, bottom tab bar */
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: calc(var(--tap) + var(--space-3));
+  padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-title {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 700;
+}
+.topbar label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-small);
+  color: var(--mute);
+}
+.topbar select {
+  min-width: 0;
+  max-width: 160px;
+  color: var(--ink);
+}
+
+.screen {
+  padding: var(--space-3) var(--space-4)
+    calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + var(--space-5));
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--card);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tabbar-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--mute);
+  font-size: 11.5px;
+  text-decoration: none;
+}
+.tab span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 700;
+}
