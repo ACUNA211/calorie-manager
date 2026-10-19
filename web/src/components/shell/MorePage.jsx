@@ -10,18 +10,22 @@ import { useI18n } from '../../i18n/I18nProvider.jsx';
 // their own yet (the Settings screen, ticket 91, will replace this).
 export default function MorePage({ user, onNavigate }) {
   const { t } = useI18n();
+  const link = (route, label) => (
+    <a
+      href={pathFor(route)}
+      onClick={(event) => {
+        if (!onNavigate || event.button !== 0 || event.metaKey || event.ctrlKey) return;
+        event.preventDefault();
+        onNavigate(route);
+      }}
+    >
+      {label}
+    </a>
+  );
   return (
     <>
-      <a
-        href={pathFor('plan')}
-        onClick={(event) => {
-          if (!onNavigate || event.button !== 0 || event.metaKey || event.ctrlKey) return;
-          event.preventDefault();
-          onNavigate('plan');
-        }}
-      >
-        {t('plan.openLink')}
-      </a>
+      {link('plan', t('plan.openLink'))}
+      {link('preferences', t('preferences.moreLink'))}
       <LanguageSwitch />
       <Home user={user} />
       <HouseholdPage user={user} />

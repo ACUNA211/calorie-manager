@@ -839,5 +839,100 @@
       "over": "Por encima de la banda"
     },
     "openLink": "Abrir el Plan"
+  },
+  "preferences": {
+    "heading": "Preferencias",
+    "intro": "Lo que el Agente usa para planear. Las Reglas firmes nunca se rompen: las Recetas que rompen una se filtran antes de que el Agente las vea.",
+    "loading": "Cargando Preferencias…",
+    "loadError": "No se pudieron cargar las Preferencias.",
+    "saving": "Guardando…",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "notSet": "Sin definir",
+    "listHint": "Separa los elementos con comas.",
+    "moreLink": "Preferencias",
+    "household": {
+      "heading": "Preferencias del Hogar",
+      "intro": "Compartidas por todos en el Hogar. Cualquier Miembro puede cambiarlas.",
+      "cuisines": "Cocinas que les gustan",
+      "weeknight": "Tiempo de cocina entre semana (minutos)",
+      "weekend": "Tiempo de cocina en fin de semana (minutos)",
+      "equipment": "Equipo",
+      "repeat": "Cada cuánto pueden repetirse las comidas",
+      "leftovers": "Cuántas sobras están bien",
+      "budget": "Sensación de presupuesto",
+      "save": "Guardar Preferencias del Hogar",
+      "saved": "Preferencias del Hogar guardadas."
+    },
+    "member": {
+      "heading": "Preferencias del Miembro",
+      "forDependent": "Estas son para {{name}}.",
+      "intro": "Los favoritos y lo que no gusta son suaves: el Agente se inclina hacia ellos o se aleja.",
+      "favourites": "Comidas favoritas",
+      "dislikes": "No me gusta",
+      "save": "Guardar Preferencias del Miembro",
+      "saved": "Preferencias del Miembro guardadas."
+    },
+    "hard": {
+      "heading": "Reglas firmes",
+      "intro": "Alergias, comidas que este Miembro no comerá y reglas de dieta. Nunca se rompen.",
+      "foods": "Comidas que nunca se sirven",
+      "groups": "Grupos de alimentos a evitar",
+      "diets": "Reglas de dieta"
+    },
+    "errors": {
+      "minutesWhole": "Escribe un número entero de minutos.",
+      "minutesRange": "Escribe entre 5 y 480 minutos.",
+      "tooManyItems": "Usa 50 elementos o menos.",
+      "itemTooLong": "Cada elemento puede tener como máximo 60 caracteres."
+    },
+    "equipment": {
+      "oven": "Horno",
+      "stovetop": "Estufa",
+      "slow_cooker": "Olla de cocción lenta",
+      "pressure_cooker": "Olla a presión",
+      "air_fryer": "Freidora de aire",
+      "microwave": "Microondas",
+      "grill": "Parrilla",
+      "blender": "Licuadora",
+      "rice_cooker": "Arrocera"
+    },
+    "repeat": {
+      "rarely": "Rara vez",
+      "sometimes": "A veces",
+      "often": "A menudo"
+    },
+    "leftovers": {
+      "none": "Ninguna",
+      "some": "Algunas",
+      "plenty": "Muchas"
+    },
+    "budget": {
+      "tight": "Ajustado",
+      "moderate": "Moderado",
+      "relaxed": "Holgado"
+    },
+    "groups": {
+      "dairy": "Lácteos",
+      "eggs": "Huevos",
+      "fish": "Pescado",
+      "shellfish": "Mariscos",
+      "peanuts": "Cacahuates",
+      "tree_nuts": "Frutos secos",
+      "wheat_gluten": "Trigo y gluten",
+      "soy": "Soya",
+      "sesame": "Ajonjolí",
+      "pork": "Cerdo",
+      "beef": "Res",
+      "poultry": "Aves"
+    },
+    "diets": {
+      "vegetarian": "Vegetariana",
+      "vegan": "Vegana",
+      "pescatarian": "Pescetariana",
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "gluten_free": "Sin gluten",
+      "dairy_free": "Sin lácteos"
+    }
   }
 }

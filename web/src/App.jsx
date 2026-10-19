@@ -12,6 +12,7 @@ import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
 import TopBar from './components/shell/TopBar.jsx';
 import TabBar from './components/shell/TabBar.jsx';
+import PreferencesPage from './components/PreferencesPage.jsx';
 import MorePage from './components/shell/MorePage.jsx';
 import { useLocation } from './lib/useLocation.js';
 import {
@@ -101,11 +102,15 @@ export default function App() {
           {route === 'pantry' && <PantryPage user={session.user} />}
           {route === 'recipes' && <RecipesPage />}
           {route === 'plan' && <PlanPage />}
+          {route === 'preferences' && <PreferencesPage user={session.user} />}
           {route === 'more' && (
             <MorePage user={session.user} onNavigate={(next) => navigate(pathFor(next))} />
           )}
         </div>
-        <TabBar current={route} onNavigate={(next) => navigate(pathFor(next))} />
+        <TabBar
+          current={route === 'preferences' || route === 'plan' ? 'more' : route}
+          onNavigate={(next) => navigate(pathFor(next))}
+        />
       </div>
     );
 

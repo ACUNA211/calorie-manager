@@ -1,8 +1,8 @@
 // The app's screens and how they map to URL paths. Pure, so it can be tested without a browser.
 
 export const ROUTES = ['today', 'week', 'foods', 'pantry', 'recipes', 'more'];
-// Screens reached from More, not from the tab bar.
-export const EXTRA_ROUTES = ['plan'];
+// Screens with a path but no tab (opened from More).
+export const EXTRA_ROUTES = ['plan', 'preferences'];
 export const DEFAULT_ROUTE = 'today';
 
 export function pathFor(route) {
