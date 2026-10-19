@@ -6,9 +6,13 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 02 (App skeleton and sign-in)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] Unit tests cover each lever, the 10% cap and the "can't fit" case
-- [ ] No option ever touches a Set Meal Time or a logged meal (tested)
-- [ ] No Planned Portion goes below its range (tested)
-- [ ] Options are ordered smallest change first
+- [x] Unit tests cover each lever, the 10% cap and the "can't fit" case
+- [x] No option ever touches a Set Meal Time or a logged meal (tested)
+- [x] No Planned Portion goes below its range (tested)
+- [x] Options are ordered smallest change first
+
+## Comments
+
+- 2026-10-18: Built `web/src/lib/rebalanceLogic.js` (+ tests, 14). Rules interpreted: (1) "Within range" is checked per Meal Time: its unlogged Planned Portions together never fall below `calMin`. (2) Options are lever sets drop / shrink / drop+shrink / spread; only those that get the day under the Calorie Target are returned (max 3, least calories removed first). (3) "Spread" means: if today's levers cannot cover the overage, each later day gives at most `maxSpreadPct` (default 10) of the Calorie Target via the same two levers, so today itself can still land over while the week absorbs it. (4) Quarter-step shrink can overshoot the need by under a quarter serving. (5) Dropped/shrunk servings are reported as `leftoverServings`; servings made is never output. Not wired to UI or Jev yet.
