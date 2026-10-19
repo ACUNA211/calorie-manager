@@ -983,5 +983,30 @@
     "recipes": {
       "makes": "How much it makes"
     }
+  },
+  "settings": {
+    "heading": "Settings",
+    "back": "Back to Settings",
+    "sections": "Settings sections",
+    "household": "Household",
+    "householdHint": "Name, Members, Invite, Dependents, sharing and AI spend",
+    "targets": "Calorie Targets and units",
+    "targetsHint": "Daily Calorie Target, macros and display units",
+    "mealTimes": "Meal Times",
+    "mealTimesHint": "When you eat and how the day splits",
+    "plan": "Meal Plan",
+    "planHint": "Open the weekly plan",
+    "preferences": "Preferences",
+    "preferencesHint": "Likes, dislikes and Hard rules for planning",
+    "intake": "Intake form",
+    "intakeHint": "Your health and diet questionnaire",
+    "createHousehold": "Create a Household",
+    "createHouseholdHint": "Start here: the other tabs need a Household.",
+    "notifications": "Notifications",
+    "notificationsSoon": "Reminders will be set up here.",
+    "language": "Language",
+    "account": "Account",
+    "signedInAs": "Signed in as {{email}}",
+    "signOut": "Sign out"
   }
 }

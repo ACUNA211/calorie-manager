@@ -36,6 +36,8 @@ const NO_ACTING = {
   options: [],
   actingUnits: DEFAULT_UNITS,
   setActingMemberId: () => {},
+  // 'unknown' until the Household has loaded, then 'none' (no Household yet) or 'ready'.
+  householdState: 'unknown',
   refresh: async () => {},
 };
 
@@ -94,7 +96,9 @@ export function ActingMemberProvider({ children }) {
   }, [userId]);
 
   const value = useMemo(() => {
-    const household = loaded.userId === userId ? loaded.household : null;
+    const isLoaded = loaded.userId === userId;
+    const household = isLoaded ? loaded.household : null;
+    const householdState = !isLoaded ? 'unknown' : household ? 'ready' : 'none';
     const options = loggingForOptions(household);
     const chosen = choice.userId === userId ? choice.memberId : null;
     const actingMemberId = resolveActingId(options, chosen);
@@ -107,6 +111,7 @@ export function ActingMemberProvider({ children }) {
       // The display units of the Member being acted as (ticket #11). US when unknown.
       actingUnits: normalizeUnits(actingRow?.display_units),
       options,
+      householdState,
       setActingMemberId: (memberId) => setChoice({ userId, memberId }),
       refresh,
     };

@@ -983,5 +983,30 @@
     "recipes": {
       "makes": "Cuánto rinde"
     }
+  },
+  "settings": {
+    "heading": "Ajustes",
+    "back": "Volver a Ajustes",
+    "sections": "Secciones de Ajustes",
+    "household": "Hogar",
+    "householdHint": "Nombre, Miembros, invitaciones, Dependientes, compartir y gasto de IA",
+    "targets": "Objetivos de calorías y unidades",
+    "targetsHint": "Objetivo diario de calorías, macros y unidades",
+    "mealTimes": "Horarios de comida",
+    "mealTimesHint": "Cuándo comes y cómo se reparte el día",
+    "plan": "Plan de comidas",
+    "planHint": "Abrir el plan semanal",
+    "preferences": "Preferencias",
+    "preferencesHint": "Gustos, rechazos y reglas firmes para planificar",
+    "intake": "Formulario de ingreso",
+    "intakeHint": "Tu cuestionario de salud y dieta",
+    "createHousehold": "Crear un Hogar",
+    "createHouseholdHint": "Empieza aquí: las otras pestañas necesitan un Hogar.",
+    "notifications": "Notificaciones",
+    "notificationsSoon": "Aquí se configurarán los recordatorios.",
+    "language": "Idioma",
+    "account": "Cuenta",
+    "signedInAs": "Sesión iniciada como {{email}}",
+    "signOut": "Cerrar sesión"
   }
 }

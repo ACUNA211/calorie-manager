@@ -14,6 +14,7 @@ import TopBar from './components/shell/TopBar.jsx';
 import TabBar from './components/shell/TabBar.jsx';
 import PreferencesPage from './components/PreferencesPage.jsx';
 import MorePage from './components/shell/MorePage.jsx';
+import { useActingMember } from './lib/actingMember.jsx';
 import { useLocation } from './lib/useLocation.js';
 import {
   dayFromSearch,
@@ -26,6 +27,7 @@ import { useI18n } from './i18n/I18nProvider.jsx';
 
 export default function App() {
   const { t } = useI18n();
+  const { householdState } = useActingMember();
   const [session, setSession] = useState(null);
   const [checked, setChecked] = useState(false);
   const [inviteToken, setInviteToken] = useState(() => readInviteToken(window.location.search));
@@ -62,6 +64,13 @@ export default function App() {
       navigate(pathFor('today'), { replace: true });
     }
   }, [signedIn, pathname, navigate]);
+
+  // No Household yet: every other screen points to More, which opens on "Create a Household".
+  useEffect(() => {
+    if (signedIn && householdState === 'none' && route !== 'more') {
+      navigate(pathFor('more'), { replace: true });
+    }
+  }, [signedIn, householdState, route, navigate]);
 
   let body;
   if (!checked) body = <p>{t('app.loading')}</p>;

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import App from './App.jsx';
 import { supabase } from './lib/supabase.js';
+import { ActingMemberContext } from './lib/actingMember.jsx';
 import { I18nProvider } from './i18n/I18nProvider.jsx';
 
 // The Household page is covered by its own tests; here it just loads as empty.
@@ -71,7 +72,7 @@ describe('signed-in / signed-out switch', () => {
     renderApp();
 
     await userEvent.click(await screen.findByRole('link', { name: 'More' }));
-    expect(await screen.findByText('Hi, sergio@example.com')).toBeInTheDocument();
+    expect(await screen.findByText('Signed in as sergio@example.com')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign out' }));
@@ -79,7 +80,7 @@ describe('signed-in / signed-out switch', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     );
-    expect(screen.queryByText(/^Hi, /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Signed in as /)).not.toBeInTheDocument();
   });
 
   it('switches the signed-in screen to Spanish without a reload', async () => {
@@ -88,14 +89,12 @@ describe('signed-in / signed-out switch', () => {
     renderApp();
 
     await userEvent.click(await screen.findByRole('link', { name: 'More' }));
-    expect(await screen.findByText('Hi, sergio@example.com')).toBeInTheDocument();
+    expect(await screen.findByText('Signed in as sergio@example.com')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Español' }));
 
-    expect(await screen.findByText('Hola, sergio@example.com')).toBeInTheDocument();
+    expect(await screen.findByText('Sesión iniciada como sergio@example.com')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: 'Todavía no estás en un hogar' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
   });
 });
 
@@ -177,6 +176,22 @@ describe('routes', () => {
     renderApp();
 
     expect(await screen.findByText('today screen 2026-10-14')).toBeInTheDocument();
+  });
+
+  it('sends every other screen to More when there is no Household yet', async () => {
+    window.history.replaceState(null, '', '/week');
+    render(
+      <ActingMemberContext.Provider
+        value={{ householdState: 'none', options: [], refresh: vi.fn() }}
+      >
+        <App />
+      </ActingMemberContext.Provider>,
+      { wrapper: I18nProvider }
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Create a Household' })).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/more');
+    expect(screen.queryByRole('button', { name: 'open day' })).not.toBeInTheDocument();
   });
 
   it('shows no tab bar when signed out', async () => {

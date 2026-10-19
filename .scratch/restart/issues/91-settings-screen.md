@@ -18,14 +18,15 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 89 (App shell and navigation)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] Every item above is reachable from More and nowhere else on the daily screens
-- [ ] With no Household, the other tabs point to More's "Create a Household"
-- [ ] Language switch and Sign out work from More
+- [x] Every item above is reachable from More and nowhere else on the daily screens
+- [x] With no Household, the other tabs point to More's "Create a Household"
+- [x] Language switch and Sign out work from More
 - [ ] Reads well at 375 px, in English and Spanish
-- [ ] Existing Vitest suites pass
+- [x] Existing Vitest suites pass
 
 ## Comments
 
 - 2026-10-18: Written during the ticket 79 review, with 89 and 90. Belongs to Release 1.
+- 2026-10-19: Built. More is now Settings: a list of sub-pages (Household incl. Members, Invite, Dependents, Sharing, AI spend; Calorie Targets and units; Meal Times), links to Plan, Preferences and Intake form, a marked Notifications spot for ticket 54, Language, and Account (email, Sign out). Decision: Weight entry stays on Week (`WeightPanel` is a repeated weigh-in tied to the week on screen), so it is the one listed item not under Settings. With no Household, `App.jsx` sends every other route to More, which opens on Create a Household (new `householdState` in the acting-Member context). `Home.jsx` removed. 375 px and Spanish layout not rendered, so those boxes are left open; Spanish switching is covered by tests only.
