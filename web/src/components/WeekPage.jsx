@@ -128,9 +128,9 @@ export default function WeekPage({ onOpenDay }) {
           <p>{t('week.summary.average', { kcal: number(summary.average.kcal) })}</p>
           <p>
             {t('week.summary.averageMacros', {
-              protein: units.formatMass(summary.average.protein),
-              carbs: units.formatMass(summary.average.carbs),
-              fat: units.formatMass(summary.average.fat),
+              protein: units.formatMacro(summary.average.protein),
+              carbs: units.formatMacro(summary.average.carbs),
+              fat: units.formatMacro(summary.average.fat),
             })}
           </p>
         </>
@@ -185,9 +185,9 @@ function DayDetail({ day, number }) {
       <span>
         {' '}
         {t('week.day.macros', {
-          protein: units.formatMass(day.totals.protein),
-          carbs: units.formatMass(day.totals.carbs),
-          fat: units.formatMass(day.totals.fat),
+          protein: units.formatMacro(day.totals.protein),
+          carbs: units.formatMacro(day.totals.carbs),
+          fat: units.formatMacro(day.totals.fat),
         })}
       </span>
       {day.totals.missingMacros > 0 ? <span> {t('week.day.missingMacros')}</span> : null}

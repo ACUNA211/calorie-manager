@@ -75,6 +75,13 @@ export function formatMass(grams, units = DEFAULT_UNITS, locale = 'en') {
   return `${formatNumber(ounces, locale, { maximumFractionDigits: digits })} oz`;
 }
 
+// A macro (protein, carbs, fat, fibre, sugars) with its unit: always grams, whatever the
+// Member's units, since macros are counted in grams everywhere, US labels included (ticket 93).
+// Sodium is milligrams and is not formatted here. Food amounts use formatMass instead.
+export function formatMacro(grams, locale = 'en') {
+  return `${formatNumber(Number(grams), locale, { maximumFractionDigits: 1 })} g`;
+}
+
 // Body weight from kilograms, with its unit: "72.5 kg" or "159.8 lb" (one decimal either way).
 export function formatWeight(kg, units = DEFAULT_UNITS, locale = 'en') {
   const value = Number(kg);

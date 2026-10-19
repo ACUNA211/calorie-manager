@@ -18,6 +18,8 @@ function Show() {
     <div>
       <p data-testid="system">{units.units}</p>
       <p data-testid="mass">{units.formatMass(150)}</p>
+      <p data-testid="macro">{units.formatMacro(150)}</p>
+      <p data-testid="macroUnit">{units.macroUnit}</p>
       <p data-testid="weight">{units.formatWeight(72.5)}</p>
       <p data-testid="input">{units.toInputMass(150)}</p>
       <p data-testid="parsed">{String(units.parseMass('5.5').grams)}</p>
@@ -61,6 +63,8 @@ describe('useUnits', () => {
       </UnitsProvider>
     );
     expect(screen.getByTestId('mass')).toHaveTextContent('5.3 oz');
+    expect(screen.getByTestId('macro')).toHaveTextContent('150 g');
+    expect(screen.getByTestId('macroUnit')).toHaveTextContent('g');
     expect(screen.getByTestId('weight')).toHaveTextContent('159.8 lb');
     expect(screen.getByTestId('input')).toHaveTextContent('5.29');
     expect(screen.getByTestId('parsed')).toHaveTextContent('155.9');

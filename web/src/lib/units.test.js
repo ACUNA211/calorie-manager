@@ -4,6 +4,7 @@ import {
   GRAMS_PER_POUND,
   basisGrams,
   basisLabel,
+  formatMacro,
   formatMass,
   formatWeight,
   gramsToOunces,
@@ -91,6 +92,24 @@ describe('formatMass', () => {
 
   it('uses the locale for the decimal mark', () => {
     expect(formatMass(4.5, 'metric', 'es')).toBe('4,5 g');
+  });
+});
+
+describe('formatMacro', () => {
+  it('is always grams, so a US macro never turns into ounces', () => {
+    expect(formatMacro(1.2)).toBe('1.2 g');
+    expect(formatMacro(150)).toBe('150 g');
+    expect(formatMacro(0)).toBe('0 g');
+    expect(formatMacro(1500)).toBe('1,500 g');
+  });
+
+  it('uses the locale for the decimal mark', () => {
+    expect(formatMacro(4.5, 'es')).toBe('4,5 g');
+  });
+
+  it('leaves food amounts to formatMass, which still follows the units', () => {
+    expect(formatMass(150, 'us')).toBe('5.3 oz');
+    expect(formatMacro(150)).toBe('150 g');
   });
 });
 

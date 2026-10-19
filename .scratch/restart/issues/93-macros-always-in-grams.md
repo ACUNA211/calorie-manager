@@ -8,12 +8,13 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] With US units, every macro shows in g (sodium in mg); food amounts still show in oz and lb
-- [ ] Targets are entered and shown in g whatever the units
-- [ ] Tests cover a macro and a food amount under US units
+- [x] With US units, every macro shows in g (sodium in mg); food amounts still show in oz and lb
+- [x] Targets are entered and shown in g whatever the units
+- [x] Tests cover a macro and a food amount under US units
 
 ## Comments
 
 - 2026-10-18: Written during the ticket 79 review. Belongs to Release 1.
+- 2026-10-18: Done. Added `formatMacro` (always g) to `units.js` and `useUnits()` (also `macroUnit`). Macros in DayBar, EditEntryPanel, FoodsPage nutrient rows, LogFoodPanel, RecipeTotals and WeekPage use it; sodium stays mg; food amounts (servings, taken, pantry, cooked weight) keep `formatMass`. Targets page and `targets.js` now read and show whole grams whatever the units. Checked by tests only, not on a phone. Lint, build, format:check pass; Vitest 938/938 (flaky timeouts at full parallelism, clean with --maxWorkers=2).

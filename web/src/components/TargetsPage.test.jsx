@@ -7,6 +7,8 @@ import { ActingMemberProvider } from '../lib/actingMember.jsx';
 import { loadHousehold } from '../lib/households.js';
 import { supabase } from '../lib/supabase.js';
 import { MetricProvider } from '../test/metricUnits.jsx';
+import { I18nProvider } from '../i18n/I18nProvider.jsx';
+import { UnitsProvider } from '../lib/useUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({
   supabase: {
@@ -87,6 +89,30 @@ describe('TargetsPage', () => {
     expect(screen.getByLabelText('Carbs low')).toHaveValue('150');
     expect(screen.getByLabelText('Fat low')).toHaveValue('');
     expect(screen.getByText('Aim: 1,800–2,000')).toBeInTheDocument();
+  });
+
+  it('shows and saves Targets in grams even with US display units', async () => {
+    const { upsert } = fakeClient({ settingsRow: storedRow });
+
+    render(<TargetsPage user={user} memberId={5} />, {
+      wrapper: ({ children }) => (
+        <I18nProvider>
+          <UnitsProvider units="us">{children}</UnitsProvider>
+        </I18nProvider>
+      ),
+    });
+
+    const protein = await screen.findByLabelText(/Protein floor/);
+    expect(protein).toHaveValue('120');
+    expect(screen.getByLabelText(/Protein floor \(g per day\)/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Carbs low')).toHaveValue('150');
+
+    await userEvent.clear(protein);
+    await userEvent.type(protein, '130');
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(upsert).toHaveBeenCalled());
+    expect(upsert.mock.calls[0][0]).toMatchObject({ protein_floor_g: 130, carb_low_g: 150 });
   });
 
   it('shows the band in Spanish with the Spanish number format', async () => {

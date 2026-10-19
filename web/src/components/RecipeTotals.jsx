@@ -21,14 +21,14 @@ export default function RecipeTotals({ totals, hasIngredients }) {
   const rows = MACRO_KEYS.map((key) => {
     const macro = totals.macros[key];
     const value = macro ? macro.perServing : null;
-    // Sodium is in milligrams; the macros are grams, shown in the Member's units.
+    // Sodium is in milligrams; the macros are grams.
     let text;
     if (value === null) text = t('recipes.unknown');
     else if (key === 'sodium') {
       text = t('recipes.totals.milligrams', {
         value: formatNumber(value, { maximumFractionDigits: 1 }),
       });
-    } else text = t('recipes.totals.grams', { value: units.formatMass(value) });
+    } else text = t('recipes.totals.grams', { value: units.formatMacro(value) });
     return { key, text, unknown: value === null };
   });
 

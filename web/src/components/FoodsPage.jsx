@@ -207,11 +207,11 @@ export default function FoodsPage() {
   }
 
   // A nutrient value in the Member's units. The per-100 g column is scaled to the display basis
-  // (per 100 g in metric, per 1 oz in US); grams show as g or oz, milligrams and kcal as numbers.
+  // (per 100 g in metric, per 1 oz in US); grams always show as g, milligrams and kcal as numbers.
   const formatValue = (value, unitKey, scaleToBasis = false) => {
     if (value === null || value === undefined) return t('foods.notReported');
     const amount = scaleToBasis ? units.perBasis(value) : Number(value);
-    if (unitKey === 'foods.grams') return units.formatMass(amount);
+    if (unitKey === 'foods.grams') return units.formatMacro(amount);
     return t(unitKey, { value: formatNumber(amount, locale, { maximumFractionDigits: 1 }) });
   };
 
