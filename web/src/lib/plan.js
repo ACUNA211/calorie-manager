@@ -65,6 +65,36 @@ export async function loadSlotMealTimes(client) {
   return (data || []).map(normalizeMealTime);
 }
 
+// What the plan validator needs beyond the grid (migration 045): each sharer's own calorie range
+// per Meal Time, the Hard-rule breaks of this plan's Recipes for the Members who eat them, and
+// which of the plan's Recipes exist. Plain data for lib/planValidator.js.
+export function normalizePlanValidation(raw) {
+  const data = raw || {};
+  return {
+    ranges: (data.ranges || []).map((range) => ({
+      mealTimeId: range.meal_time_id,
+      memberId: range.member_id,
+      calMin: asNumber(range.cal_min),
+      calMax: asNumber(range.cal_max),
+      setCalories: asNumber(range.set_calories),
+    })),
+    breaks: (data.breaks || []).map((entry) => ({
+      recipeId: entry.recipe_id,
+      memberId: entry.member_id,
+      ruleKind: entry.rule_kind,
+      rule: entry.rule,
+      foodName: entry.food_name,
+    })),
+    recipeIds: data.recipe_ids || [],
+  };
+}
+
+export async function loadPlanValidation(client, weekStart) {
+  const { data, error } = await client.rpc('plan_validation_data', { p_week_start: weekStart });
+  if (error) throw error;
+  return normalizePlanValidation(data);
+}
+
 // The Household's Recipes to pick a Cook from, starred first. Row-level security scopes them.
 export async function loadRecipeChoices(client) {
   const { data, error } = await client

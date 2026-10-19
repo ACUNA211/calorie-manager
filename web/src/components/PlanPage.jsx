@@ -5,6 +5,7 @@ import {
   approvePlan,
   deleteCook,
   loadCanApprove,
+  loadPlanValidation,
   loadPlanWeek,
   loadRecipeChoices,
   loadSlotMealTimes,
@@ -20,6 +21,7 @@ import {
   servingsMadeFor,
   stepServings,
 } from '../lib/planLogic.js';
+import { failuresForCell, failuresForDay, validatePlan } from '../lib/planValidator.js';
 import { shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic.js';
 import { dateKey, parseDateKey } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
@@ -30,11 +32,15 @@ const LOADING = { key: null, status: 'loading', data: null };
 
 // The week as the grid reads it: the plan plus every Meal Time of the Household (empty slots).
 async function fetchWeek(start) {
-  const [week, slots] = await Promise.all([
+  const [week, slots, validation] = await Promise.all([
     loadPlanWeek(supabase, start),
     loadSlotMealTimes(supabase),
+    // Warnings are a bonus: if they cannot be read the grid still shows.
+    Promise.resolve()
+      .then(() => loadPlanValidation(supabase, start))
+      .catch(() => null),
   ]);
-  return { ...week, slots };
+  return { ...week, slots, validation: validation ?? null };
 }
 
 // The Plan grid for the Household: Meal Times down the side, Sunday to Saturday across, each
@@ -132,6 +138,34 @@ export default function PlanPage() {
       ? Number(filter)
       : null;
     const grid = buildPlanGrid(data, start, memberId);
+    // Failures of the whole plan (ticket 41); the filter only limits which are shown.
+    const failures =
+      data.validation && data.plan
+        ? validatePlan({ ...data, ...data.validation, days: grid.days }).failures.filter(
+            (failure) => memberId == null || failure.memberId === memberId
+          )
+        : [];
+    const warningText = (failure) => {
+      const { params } = failure;
+      return t(`plan.validation.${failure.code}`, {
+        ...params,
+        kcal: number(params.kcal ?? 0),
+        min: params.min == null ? '' : number(params.min),
+        max: params.max == null ? '' : number(params.max),
+        low: params.low == null ? '' : number(params.low),
+        high: params.high == null ? '' : number(params.high),
+      });
+    };
+    const warningList = (list) =>
+      list.length > 0 ? (
+        <ul className="plan-warnings">
+          {list.map((failure, index) => (
+            <li key={`${failure.code}-${failure.portionId ?? index}-${failure.memberId}-${index}`}>
+              {warningText(failure)}
+            </li>
+          ))}
+        </ul>
+      ) : null;
 
     const recipeId = newCook.recipeId || String(recipes[0]?.id ?? '');
     const cookDay = grid.days.includes(newCook.day)
@@ -267,6 +301,15 @@ export default function PlanPage() {
           </label>
         ) : null}
 
+        {!grid.empty && data.validation && !failures.length ? (
+          <p className="plan-valid">{t('plan.validation.allGood')}</p>
+        ) : null}
+        {!grid.empty && failures.length ? (
+          <p className="plan-warning-count" role="status">
+            {t('plan.validation.count', { count: failures.length })}
+          </p>
+        ) : null}
+
         {grid.empty ? (
           <p>{t('plan.empty')}</p>
         ) : (
@@ -305,6 +348,13 @@ export default function PlanPage() {
                           editor && editor.rowKey === row.key && editor.day === day ? editor : null;
                         return (
                           <td key={day}>
+                            {warningList(
+                              failuresForCell(
+                                failures,
+                                row.mealTimes.map((meal) => meal.id),
+                                day
+                              )
+                            )}
                             {cell.map((cook) => (
                               <div
                                 className={`plan-cook plan-cook-${cook.colour}`}
@@ -519,6 +569,7 @@ export default function PlanPage() {
                           {day.state === 'under' || day.state === 'in' || day.state === 'over' ? (
                             <span className="plan-state">{t(`plan.state.${day.state}`)}</span>
                           ) : null}
+                          {warningList(failuresForDay(failures, member.memberId, day.key))}
                         </td>
                       ))}
                     </tr>

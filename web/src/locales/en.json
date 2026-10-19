@@ -893,6 +893,18 @@
       "noSlot": "A Member there does not share that Meal Time on that day.",
       "occupied": "A Member already has a Portion at that Meal Time."
     },
+    "validation": {
+      "allGood": "Plan check: no problems found.",
+      "count": "Plan check: {{count}} to look at.",
+      "unfilled": "{{name}} has nothing planned at {{meal}} (aim {{min}} to {{max}} kcal).",
+      "belowRange": "{{name}}: {{recipe}} at {{meal}} is {{kcal}} kcal, under the range of {{min}} to {{max}}.",
+      "aboveRange": "{{name}}: {{recipe}} at {{meal}} is {{kcal}} kcal, over the range of {{min}} to {{max}}.",
+      "setTouched": "{{name}}: {{meal}} is a Set Meal Time and should not have {{recipe}}.",
+      "hardRule": "{{name}} cannot eat {{recipe}}: {{ingredient}} breaks the rule \"{{rule}}\".",
+      "unknownRecipe": "{{recipe}} for {{name}} is not a Recipe in your Household any more.",
+      "dayUnder": "{{name}}'s day is {{kcal}} kcal, under the band of {{low}} to {{high}}.",
+      "dayOver": "{{name}}'s day is {{kcal}} kcal, over the band of {{low}} to {{high}}."
+    },
     "approveButton": "Approve plan",
     "approving": "Approving...",
     "approveAgainButton": "Approve the changes"
