@@ -787,5 +787,16 @@
       "saveError": "No se pudo guardar tu configuración de compartir. Inténtalo de nuevo.",
       "noMember": "Únete o crea un hogar primero."
     }
+  },
+  "shell": {
+    "navLabel": "Principal",
+    "tabs": {
+      "today": "Hoy",
+      "week": "Semana",
+      "foods": "Alimentos",
+      "pantry": "Despensa",
+      "recipes": "Recetas",
+      "more": "Más"
+    }
   }
 }

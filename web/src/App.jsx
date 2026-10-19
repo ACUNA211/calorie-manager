@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase.js';
 import SignInForm from './components/SignInForm.jsx';
-import Home from './components/Home.jsx';
-import HouseholdPage from './components/HouseholdPage.jsx';
-import TargetsPage from './components/TargetsPage.jsx';
-import MealTimesPage from './components/MealTimesPage.jsx';
 import TodayPage from './components/TodayPage.jsx';
 import WeekPage from './components/WeekPage.jsx';
 import FoodsPage from './components/FoodsPage.jsx';
@@ -13,7 +9,17 @@ import PantryPage from './components/PantryPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
-import LoggingForSwitch from './components/LoggingForSwitch.jsx';
+import TopBar from './components/shell/TopBar.jsx';
+import TabBar from './components/shell/TabBar.jsx';
+import MorePage from './components/shell/MorePage.jsx';
+import { useLocation } from './lib/useLocation.js';
+import {
+  dayFromSearch,
+  pathFor,
+  resolveRoute,
+  routeFromPath,
+  todayPathForDay,
+} from './lib/routes.js';
 import { useI18n } from './i18n/I18nProvider.jsx';
 
 export default function App() {
@@ -21,7 +27,11 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [checked, setChecked] = useState(false);
   const [inviteToken, setInviteToken] = useState(() => readInviteToken(window.location.search));
-  const [selectedDay, setSelectedDay] = useState(null);
+  const { pathname, search, navigate } = useLocation();
+  // Bumped each time a day is opened from Week, so opening the same day again still refreshes Today.
+  const [dayOpens, setDayOpens] = useState(0);
+  const route = resolveRoute(pathname);
+  const openDay = route === 'today' ? dayFromSearch(search) : null;
 
   useEffect(() => {
     let active = true;
@@ -43,6 +53,14 @@ export default function App() {
     };
   }, []);
 
+  // "/" and unknown paths land on Today once signed in.
+  const signedIn = checked && !inviteToken && Boolean(session);
+  useEffect(() => {
+    if (signedIn && routeFromPath(pathname) === null) {
+      navigate(pathFor('today'), { replace: true });
+    }
+  }, [signedIn, pathname, navigate]);
+
   let body;
   if (!checked) body = <p>{t('app.loading')}</p>;
   else if (inviteToken)
@@ -58,24 +76,39 @@ export default function App() {
     );
   else if (!session) body = <SignInForm />;
   else
-    body = (
-      <>
-        <Home user={session.user} />
-        <TodayPage key={selectedDay?.n ?? 0} user={session.user} day={selectedDay} />
-        <WeekPage user={session.user} onOpenDay={(key) => setSelectedDay({ key, n: Date.now() })} />
-        <HouseholdPage user={session.user} />
-        <TargetsPage user={session.user} />
-        <MealTimesPage user={session.user} />
-        <FoodsPage />
-        <RecipesPage />
-        <PantryPage user={session.user} />
-      </>
+    return (
+      <div className="app">
+        <TopBar route={route} />
+        <div className="screen">
+          {route === 'today' && (
+            <TodayPage
+              key={`${openDay ?? ''}|${dayOpens}`}
+              user={session.user}
+              day={openDay ? { key: openDay, n: dayOpens } : null}
+            />
+          )}
+          {route === 'week' && (
+            <WeekPage
+              user={session.user}
+              onOpenDay={(key) => {
+                setDayOpens((n) => n + 1);
+                navigate(todayPathForDay(key));
+              }}
+            />
+          )}
+          {route === 'foods' && <FoodsPage />}
+          {route === 'pantry' && <PantryPage user={session.user} />}
+          {route === 'recipes' && <RecipesPage />}
+          {route === 'more' && <MorePage user={session.user} />}
+        </div>
+        <TabBar current={route} onNavigate={(next) => navigate(pathFor(next))} />
+      </div>
     );
 
+  // Sign-in, invite and loading screens keep the language switch they always had.
   return (
     <>
       <LanguageSwitch />
-      <LoggingForSwitch />
       {body}
     </>
   );

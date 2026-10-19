@@ -15,17 +15,18 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 02 (App skeleton and sign-in), 03 (Home Screen install and offline app shell)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] Each screen is its own route; reload and back keep you on it
-- [ ] The bottom tab bar switches screens and shows which one is open
+- [x] Each screen is its own route; reload and back keep you on it
+- [x] The bottom tab bar switches screens and shows which one is open
 - [ ] The "Logging for" picker is in the top bar on every screen
 - [ ] At 375 px wide nothing scrolls sideways and every control is at least 44 px tall
 - [ ] Dark mode follows the phone's setting
-- [ ] Tapping a day on Week opens Today on that day
+- [x] Tapping a day on Week opens Today on that day
 - [ ] The service worker still opens the app offline (ticket 03's check)
-- [ ] Existing Vitest suites pass; page tests that render `App` are updated for routes
+- [x] Existing Vitest suites pass; page tests that render `App` are updated for routes
 
 ## Comments
 
 - 2026-10-18: Written during the ticket 79 review. On the local stack every screen sat on one unstyled page; no ticket covered styling or navigation, even though `research/built-vs-restart.md` says the old design tickets' layouts carry over. Belongs to Release 1.
+- 2026-10-19: Built (dated 2026-10-18 work): path routes (`/today` `/week` `/foods` `/pantry` `/recipes` `/more`, unknown paths go to Today) with a small history router (`lib/useLocation.js`, pure logic in `lib/routes.js`), top bar, bottom tab bar, `src/styles.css` (tokens, dark mode, safe-area), Week day opens `/today?day=YYYY-MM-DD`. Language switch and the Household, Targets and Meal Times panels now sit on More until ticket 91; sign-in/invite/loading screens keep the language switch. Ticked: routes/reload/back and tab bar and Week-to-Today (Vitest in `App.test.jsx`, `routes.test.js`) and suites. Not verified: the "Logging for" picker in the top bar on a real household, 375 px layout and 44 px targets, dark mode, and the offline service-worker check all need a phone or browser look.

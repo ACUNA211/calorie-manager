@@ -787,5 +787,16 @@
       "saveError": "Could not save your sharing setting. Try again.",
       "noMember": "Join or create a Household first."
     }
+  },
+  "shell": {
+    "navLabel": "Main",
+    "tabs": {
+      "today": "Today",
+      "week": "Week",
+      "foods": "Foods",
+      "pantry": "Pantry",
+      "recipes": "Recipes",
+      "more": "More"
+    }
   }
 }
