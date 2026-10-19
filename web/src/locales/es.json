@@ -806,7 +806,38 @@
       "foods": "Alimentos",
       "pantry": "Despensa",
       "recipes": "Recetas",
-      "more": "Más"
+      "more": "Más",
+      "plan": "Plan"
     }
+  },
+  "plan": {
+    "heading": "Plan",
+    "loading": "Cargando el plan...",
+    "loadError": "No se pudo cargar el plan. Inténtalo de nuevo.",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "range": "{{from}} al {{to}}",
+    "filterLabel": "Mostrar",
+    "everyone": "Todos",
+    "empty": "Esta semana aún no tiene plan.",
+    "gridCaption": "Plan de comidas de la semana: horarios de comida a un lado, días arriba",
+    "mealTime": "Horario de comida",
+    "shared": "Compartido",
+    "portion": "{{name}}: {{servings}} porción(es), {{kcal}} kcal",
+    "dayTotal": "Total del día de {{name}}",
+    "band": "Banda {{low}} a {{high}} kcal",
+    "noBand": "Sin meta de calorías",
+    "nothing": "Nada planeado",
+    "kcal": "{{kcal}} kcal",
+    "status": {
+      "draft": "Plan en borrador",
+      "approved": "Plan aprobado"
+    },
+    "state": {
+      "under": "Por debajo de la banda",
+      "in": "Dentro de la banda",
+      "over": "Por encima de la banda"
+    },
+    "openLink": "Abrir el Plan"
   }
 }

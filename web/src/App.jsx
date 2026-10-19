@@ -6,6 +6,7 @@ import WeekPage from './components/WeekPage.jsx';
 import FoodsPage from './components/FoodsPage.jsx';
 import RecipesPage from './components/RecipesPage.jsx';
 import PantryPage from './components/PantryPage.jsx';
+import PlanPage from './components/PlanPage.jsx';
 import InviteLanding from './components/InviteLanding.jsx';
 import { readInviteToken } from './lib/invites.js';
 import LanguageSwitch from './i18n/LanguageSwitch.jsx';
@@ -99,7 +100,10 @@ export default function App() {
           {route === 'foods' && <FoodsPage />}
           {route === 'pantry' && <PantryPage user={session.user} />}
           {route === 'recipes' && <RecipesPage />}
-          {route === 'more' && <MorePage user={session.user} />}
+          {route === 'plan' && <PlanPage />}
+          {route === 'more' && (
+            <MorePage user={session.user} onNavigate={(next) => navigate(pathFor(next))} />
+          )}
         </div>
         <TabBar current={route} onNavigate={(next) => navigate(pathFor(next))} />
       </div>
