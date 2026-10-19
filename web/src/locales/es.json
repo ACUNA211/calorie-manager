@@ -876,6 +876,18 @@
       "noSlot": "Un miembro de ahí no comparte ese horario de comida ese día.",
       "occupied": "Un miembro ya tiene una Porción en ese horario de comida."
     },
+    "validation": {
+      "allGood": "Revisión del plan: sin problemas.",
+      "count": "Revisión del plan: {{count}} por revisar.",
+      "unfilled": "{{name}} no tiene nada planeado en {{meal}} (objetivo {{min}} a {{max}} kcal).",
+      "belowRange": "{{name}}: {{recipe}} en {{meal}} tiene {{kcal}} kcal, por debajo del rango de {{min}} a {{max}}.",
+      "aboveRange": "{{name}}: {{recipe}} en {{meal}} tiene {{kcal}} kcal, por encima del rango de {{min}} a {{max}}.",
+      "setTouched": "{{name}}: {{meal}} es un horario fijo y no debería llevar {{recipe}}.",
+      "hardRule": "{{name}} no puede comer {{recipe}}: {{ingredient}} rompe la regla \"{{rule}}\".",
+      "unknownRecipe": "{{recipe}} para {{name}} ya no es una receta de tu hogar.",
+      "dayUnder": "El día de {{name}} suma {{kcal}} kcal, por debajo de la banda de {{low}} a {{high}}.",
+      "dayOver": "El día de {{name}} suma {{kcal}} kcal, por encima de la banda de {{low}} a {{high}}."
+    },
     "approveButton": "Aprobar el plan",
     "approving": "Aprobando...",
     "approveAgainButton": "Aprobar los cambios"

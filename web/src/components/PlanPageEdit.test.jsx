@@ -8,6 +8,7 @@ import { MetricProvider } from '../test/metricUnits.jsx';
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
 vi.mock('../lib/plan.js', () => ({
   loadPlanWeek: vi.fn(),
+  loadPlanValidation: vi.fn(),
   loadSlotMealTimes: vi.fn(),
   loadRecipeChoices: vi.fn(),
   loadCanApprove: vi.fn(),
