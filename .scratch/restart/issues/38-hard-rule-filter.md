@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 37 (Preferences page), 28 (Recipes page)
+**Blocked by:** 37 (Preferences page), 28 (Recipes page), 98 (Run the database tests for migrations 035 onward), 100 (Decide: how Hard rules map foods to groups and diets)
 
 **Status:** done (awaiting you to run the database tests with `supabase test db` on a local stack, push migration 040, and decide the mapping questions in the Comments)
 

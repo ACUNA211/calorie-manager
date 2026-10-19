@@ -13,3 +13,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 - [ ] The call goes through the AI cap helper and is refused over the cap
 - [ ] Tests use recorded model responses (no live AI in tests)
 - [ ] Token counts per draft are logged
+
+## Comments
+
+- 2026-10-19: From ticket 38: `allowed_recipes()` and `hard_rule_breaks()` (migration 040) are granted to `authenticated` only and refuse a service-role caller (auth.uid() is null). If the AI draft runs server-side as service role, call them as the Member or add a service-role variant.

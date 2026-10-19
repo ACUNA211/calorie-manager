@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 04 (English/Spanish switch)
+**Blocked by:** 04 (English/Spanish switch), 101 (Phone check: voice capture)
 
 **Status:** done (awaiting phone check)
 

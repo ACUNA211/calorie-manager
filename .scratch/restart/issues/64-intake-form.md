@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 01 (Research: which formula and calculator should the Intake form use?), 10 (Targets by hand)
+**Blocked by:** 01 (Research: which formula and calculator should the Intake form use?), 10 (Targets by hand), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting: you run `supabase db reset` + `supabase test db` locally for migration 042 and its pgTAP test, and check the Intake screen in the app)
 
