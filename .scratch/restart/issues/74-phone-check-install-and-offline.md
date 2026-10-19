@@ -6,12 +6,16 @@
 
 **Blocked by:** 73 (Deploy the app to Cloudflare Pages)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 03
 
-- [ ] Installable
-- [ ] Opens offline
-- [ ] iPhone hint shows once
-- [ ] New deploy picked up
-- [ ] Tick the boxes on ticket 03
+- [x] Installable
+- [x] Opens offline
+- [x] iPhone hint shows once
+- [x] New deploy picked up
+- [x] Tick the boxes on ticket 03
+
+## Comments
+
+- 2026-10-18: Sergio checked all four on the deployed URL and his phones. Ticked the boxes on ticket 03.
