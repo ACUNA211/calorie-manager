@@ -8,12 +8,13 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] Creating a Household makes Today, Week and Meal Times usable straight away
-- [ ] Joining through an invite does the same
-- [ ] A test covers the create case with the acting-Member provider in place
+- [x] Creating a Household makes Today, Week and Meal Times usable straight away
+- [x] Joining through an invite does the same
+- [x] A test covers the create case with the acting-Member provider in place
 
 ## Comments
 
 - 2026-10-18: Written during the ticket 79 review. Belongs to Release 1.
+- 2026-10-19: Done. HouseholdPage onCreated and InviteLanding JoinForm now call the acting-Member refresh (invite awaits it before onJoined). Tests: create case with real ActingMemberProvider; invite case checks refresh runs before onJoined. Not checked in a browser against the local stack.

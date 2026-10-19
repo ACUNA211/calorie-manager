@@ -39,7 +39,7 @@ const NO_ACTING = {
   refresh: async () => {},
 };
 
-const ActingMemberContext = createContext(NO_ACTING);
+export const ActingMemberContext = createContext(NO_ACTING);
 
 // Outside the provider (or before the household loads) nothing is acted as, so screens fall
 // back to the signed-in person's own Member.

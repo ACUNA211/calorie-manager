@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InviteLanding from './InviteLanding.jsx';
 import { supabase } from '../lib/supabase.js';
+import { ActingMemberContext } from '../lib/actingMember.jsx';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
 vi.mock('../lib/supabase.js', () => ({
@@ -123,6 +124,26 @@ describe('InviteLanding', () => {
       p_token: 'tok',
       p_display_name: 'Ana',
     });
+  });
+
+  it('refreshes the acting Member after joining, before reporting it', async () => {
+    mockRpc({ peek: validPeek, accept: { data: 7, error: null } });
+    const order = [];
+    const refresh = vi.fn(async () => order.push('refresh'));
+    const onJoined = vi.fn(() => order.push('joined'));
+
+    render(
+      <ActingMemberContext.Provider value={{ refresh }}>
+        <InviteLanding token="tok" user={signedIn} onJoined={onJoined} />
+      </ActingMemberContext.Provider>,
+      { wrapper: I18nProvider }
+    );
+
+    await userEvent.type(await screen.findByLabelText('Your name'), 'Ana');
+    await userEvent.click(screen.getByRole('button', { name: 'Join Household' }));
+
+    await waitFor(() => expect(onJoined).toHaveBeenCalledTimes(1));
+    expect(order).toEqual(['refresh', 'joined']);
   });
 
   it('shows the matching message and does not join when the join is refused', async () => {

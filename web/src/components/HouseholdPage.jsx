@@ -47,7 +47,11 @@ export default function HouseholdPage({ user }) {
     return (
       <CreateHousehold
         userId={user.id}
-        onCreated={(household) => setState({ status: 'ready', household })}
+        onCreated={(household) => {
+          setState({ status: 'ready', household });
+          // Today, Week and Meal Times read the acting Member, which does not know the new Household yet.
+          refreshActingMember();
+        }}
       />
     );
   }

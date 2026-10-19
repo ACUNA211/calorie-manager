@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { acceptErrorKey, acceptInvite, peekInvite } from '../lib/invites.js';
+import { useActingMember } from '../lib/actingMember.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 
 // Shown for a ?invite=<token> link. It checks the link, then either asks for an account
@@ -48,6 +49,7 @@ export default function InviteLanding({ token, user, onJoined }) {
 
 function JoinForm({ token, onJoined }) {
   const { t } = useI18n();
+  const { refresh: refreshActingMember } = useActingMember();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -58,6 +60,8 @@ function JoinForm({ token, onJoined }) {
     setBusy(true);
     try {
       await acceptInvite(supabase, token, name);
+      // The acting Member must pick up the joined Household before the app moves on.
+      await refreshActingMember();
       onJoined();
     } catch (joinError) {
       setError(t(`invite.errors.${acceptErrorKey(joinError)}`));

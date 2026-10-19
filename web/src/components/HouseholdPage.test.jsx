@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import HouseholdPage from './HouseholdPage.jsx';
+import { ActingMemberProvider, useActingMember } from '../lib/actingMember.jsx';
 import {
   addDependent,
   createHousehold,
@@ -12,7 +13,14 @@ import {
 import { createInvite } from '../lib/invites.js';
 import { I18nProvider } from '../i18n/I18nProvider.jsx';
 
-vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
+vi.mock('../lib/supabase.js', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(async () => ({ data: { session: { user: { id: 'user-1' } } } })),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+    },
+  },
+}));
 vi.mock('../lib/sharing.js', () => ({
   currentUserId: vi.fn(async () => null),
   loadHouseholdWeeks: vi.fn(async () => []),
@@ -91,6 +99,45 @@ describe('HouseholdPage', () => {
       ownerName: 'Sergio',
     });
     expect(screen.getByRole('listitem')).toHaveTextContent('Sergio (Owner)');
+  });
+
+  it('tells the acting Member about a new Household without a reload', async () => {
+    const created = {
+      id: 9,
+      name: 'Casa',
+      myRole: 'owner',
+      myMemberId: 5,
+      members: [{ id: 5, display_name: 'Sergio', role: 'owner' }],
+    };
+    let exists = false;
+    loadHousehold.mockImplementation(async () => (exists ? created : null));
+    createHousehold.mockImplementation(async () => {
+      exists = true;
+      return 9;
+    });
+
+    // Stands in for Today, Week and Meal Times, which read the acting Member.
+    function ActingProbe() {
+      const { actingMemberId } = useActingMember();
+      return <p data-testid="acting">{actingMemberId === null ? 'none' : actingMemberId}</p>;
+    }
+
+    render(
+      <ActingMemberProvider>
+        <ActingProbe />
+        <HouseholdPage user={user} />
+      </ActingMemberProvider>,
+      { wrapper: I18nProvider }
+    );
+
+    await screen.findByRole('heading', { name: 'You are not in a Household yet' });
+    expect(screen.getByTestId('acting')).toHaveTextContent('none');
+
+    await userEvent.type(screen.getByLabelText('Household name'), 'Casa');
+    await userEvent.type(screen.getByLabelText('Your name'), 'Sergio');
+    await userEvent.click(screen.getByRole('button', { name: 'Create Household' }));
+
+    await waitFor(() => expect(screen.getByTestId('acting')).toHaveTextContent('5'));
   });
 
   it('shows an error and keeps the form when creating fails', async () => {
