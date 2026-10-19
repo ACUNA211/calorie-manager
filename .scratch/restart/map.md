@@ -10,7 +10,7 @@ A Household PWA: barcode Scan into one shared Pantry, a Household Recipe library
 
 - Vocabulary: `CONTEXT.md`. Decisions: [ADR 0002](../../docs/adr/0002-household-pwa-with-cheap-ai.md) (Household PWA, bounded AI, $5 cap), [ADR 0003](../../docs/adr/0003-react-vite-pwa-on-cloudflare-and-supabase.md) (stack).
 - Costs: [research/costs.md](research/costs.md).
-- Tracker: local markdown. Tickets are `issues/NN-<slug>.md`; research goes in `research/`.
+- Tracker: GitHub Issues #1–#68 in ACUNA211/calorie-manager (issue number = ticket number), labelled `ready-for-agent`, `build`/`research` and `release-1`…`release-4`. The files in `issues/` are the original drafts; GitHub is the source of truth from here. Research goes in `research/`.
 - The old maps (`.scratch/mvp/`, `.scratch/mvp-reset/`) are background only.
 
 ## Releases
@@ -24,7 +24,9 @@ A Household PWA: barcode Scan into one shared Pantry, a Household Recipe library
 
 68 tickets in `issues/`, numbered in dependency order: 01–36 release 1, 37–56 release 2, 57–63 release 3, 64–68 release 4. Added later to release 1: 89–93 (app shell and navigation, prototype layouts, Settings screen, and two fixes from the 79 review). The frontier (no blockers): 01, 02, 15, 35, 36. What's built vs this plan: [research/built-vs-restart.md](research/built-vs-restart.md).
 
-Your tasks: 69–79 are things only you can do (run the database tests, deploy, phone checks, API keys, decisions, review). Each is `Status: ready-for-human` and is listed in the Blocked by line of the agent tickets it holds up, so a ticket isn't closed until its human task is done. Start with the ones that have no blockers: 69, 70, 71, 72, 77, 79.
+GitHub Issues #1–#68 were opened from the 01–68 drafts on 2026-10-17 and haven't been kept in step since: `issues/` here is the live tracker, and the GitHub copies still show every ticket open.
+
+Your tasks: 69–88 are things only you can do (run the database tests, deploy, phone checks, API keys, decisions, review). Each is `Status: ready-for-human` and is listed in the Blocked by line of the agent tickets it holds up, so a ticket isn't closed until its human task is done. Start with the ones that have no blockers: 69, 70, 71, 72, 77, 79.
 
 ## Grilling decisions (2026-10-17)
 
