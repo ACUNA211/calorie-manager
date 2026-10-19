@@ -838,6 +838,41 @@
       "in": "In the band",
       "over": "Over the band"
     },
-    "openLink": "Open the Plan"
+    "openLink": "Open the Plan",
+    "changedSinceApproval": "This plan was approved and has been changed since.",
+    "addCookHeading": "Add a Cook",
+    "recipe": "Recipe",
+    "cookDay": "Cook day",
+    "addCook": "Add Cook",
+    "noRecipes": "Add a Recipe first, then cook it here.",
+    "cooksHeading": "Cooks this week",
+    "cookSummary": "{{recipe}}, cooked {{day}}: {{made}} servings made, {{planned}} planned",
+    "deleteCook": "Delete Cook",
+    "deleteCookAria": "Delete the Cook of {{recipe}}",
+    "deleteConfirm": "Delete {{recipe}} and all its Portions?",
+    "deleteYes": "Yes, delete",
+    "keep": "Keep",
+    "add": "Add",
+    "addAria": "Add a Cook to {{meal}} on {{day}}",
+    "pickCook": "Cook to place",
+    "cookOption": "{{recipe}} ({{day}})",
+    "place": "Place",
+    "cancel": "Cancel",
+    "move": "Move",
+    "moveAria": "Move {{recipe}}",
+    "moveDay": "Move to day",
+    "moveMeal": "Move to Meal Time",
+    "moveHere": "Move here",
+    "smaller": "-",
+    "smallerAria": "Smaller Portion of {{recipe}} for {{name}}",
+    "bigger": "+",
+    "biggerAria": "Bigger Portion of {{recipe}} for {{name}}",
+    "remove": "x",
+    "removeAria": "Remove the Portion of {{recipe}} for {{name}}",
+    "saveError": "Could not save that change. Try again.",
+    "moveError": {
+      "noSlot": "A Member there does not share that Meal Time on that day.",
+      "occupied": "A Member already has a Portion at that Meal Time."
+    }
   }
 }

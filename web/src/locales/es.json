@@ -838,6 +838,41 @@
       "in": "Dentro de la banda",
       "over": "Por encima de la banda"
     },
-    "openLink": "Abrir el Plan"
+    "openLink": "Abrir el Plan",
+    "changedSinceApproval": "Este plan se aprobó y se ha cambiado desde entonces.",
+    "addCookHeading": "Añadir una Cocción",
+    "recipe": "Receta",
+    "cookDay": "Día de cocción",
+    "addCook": "Añadir Cocción",
+    "noRecipes": "Añade primero una Receta y luego cocínala aquí.",
+    "cooksHeading": "Cocciones de la semana",
+    "cookSummary": "{{recipe}}, cocinada {{day}}: {{made}} porciones hechas, {{planned}} planeadas",
+    "deleteCook": "Borrar Cocción",
+    "deleteCookAria": "Borrar la Cocción de {{recipe}}",
+    "deleteConfirm": "¿Borrar {{recipe}} y todas sus Porciones?",
+    "deleteYes": "Sí, borrar",
+    "keep": "Conservar",
+    "add": "Añadir",
+    "addAria": "Añadir una Cocción a {{meal}} el {{day}}",
+    "pickCook": "Cocción a colocar",
+    "cookOption": "{{recipe}} ({{day}})",
+    "place": "Colocar",
+    "cancel": "Cancelar",
+    "move": "Mover",
+    "moveAria": "Mover {{recipe}}",
+    "moveDay": "Mover al día",
+    "moveMeal": "Mover al horario de comida",
+    "moveHere": "Mover aquí",
+    "smaller": "-",
+    "smallerAria": "Porción más pequeña de {{recipe}} para {{name}}",
+    "bigger": "+",
+    "biggerAria": "Porción más grande de {{recipe}} para {{name}}",
+    "remove": "x",
+    "removeAria": "Quitar la Porción de {{recipe}} para {{name}}",
+    "saveError": "No se pudo guardar ese cambio. Inténtalo de nuevo.",
+    "moveError": {
+      "noSlot": "Un miembro de ahí no comparte ese horario de comida ese día.",
+      "occupied": "Un miembro ya tiene una Porción en ese horario de comida."
+    }
   }
 }

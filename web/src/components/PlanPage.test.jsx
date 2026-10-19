@@ -2,11 +2,22 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PlanPage from './PlanPage.jsx';
-import { loadPlanWeek } from '../lib/plan.js';
+import * as plan from '../lib/plan.js';
 import { MetricProvider } from '../test/metricUnits.jsx';
 
+const { loadPlanWeek } = plan;
+
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
-vi.mock('../lib/plan.js', () => ({ loadPlanWeek: vi.fn() }));
+vi.mock('../lib/plan.js', () => ({
+  loadPlanWeek: vi.fn(),
+  loadSlotMealTimes: vi.fn(),
+  loadRecipeChoices: vi.fn(),
+  addCook: vi.fn(),
+  deleteCook: vi.fn(),
+  setPortion: vi.fn(),
+  movePortion: vi.fn(),
+  removePortion: vi.fn(),
+}));
 
 // Today is Saturday 17 October 2026, so the week is Sunday 11 to Saturday 17 October.
 const WEEK = '2026-10-11';
@@ -48,6 +59,31 @@ const planData = {
 };
 const emptyData = { plan: null, cooks: [], portions: [], mealTimes: [], members: planData.members };
 
+const slots = [
+  { id: 100, name: 'Breakfast', time: '07:30', kind: 'planned', weekdays: null, memberIds: [1] },
+  {
+    id: 101,
+    name: 'Family dinner',
+    time: '18:30',
+    kind: 'planned',
+    weekdays: null,
+    memberIds: [1, 2],
+  },
+];
+
+// Every plan.js function is a mock: reads give the fixtures, writes succeed.
+function setupMocks() {
+  for (const fn of Object.values(plan)) fn.mockReset();
+  vi.mocked(plan.loadSlotMealTimes).mockResolvedValue(slots);
+  vi.mocked(plan.loadRecipeChoices).mockResolvedValue([
+    { id: 5, name: 'Pasta bake' },
+    { id: 6, name: 'Chili' },
+  ]);
+  for (const name of ['addCook', 'deleteCook', 'setPortion', 'movePortion', 'removePortion']) {
+    vi.mocked(plan[name]).mockResolvedValue(1);
+  }
+}
+
 function renderPage() {
   render(<PlanPage />, { wrapper: MetricProvider });
 }
@@ -61,6 +97,7 @@ describe('PlanPage', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-17T12:00:00'));
+    setupMocks();
     vi.mocked(loadPlanWeek).mockReset();
     vi.mocked(loadPlanWeek).mockImplementation(async (_client, start) =>
       start === WEEK ? planData : emptyData
