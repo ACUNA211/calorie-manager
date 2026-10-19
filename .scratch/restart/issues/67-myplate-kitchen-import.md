@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 28 (Recipes page)
+**Blocked by:** 28 (Recipes page), 95 (Run the MyPlate Kitchen import)
 
 **Status:** done (awaiting user: myplate.gov was unreachable, so the import has not been run)
 

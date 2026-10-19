@@ -13,7 +13,7 @@ The sign-in, invite, offline and install-hint behaviour must not change. This ti
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 02 (App skeleton and sign-in), 03 (Home Screen install and offline app shell)
+**Blocked by:** 02 (App skeleton and sign-in), 03 (Home Screen install and offline app shell), 97 (Phone check: app shell)
 
 **Status:** done (awaiting review)
 

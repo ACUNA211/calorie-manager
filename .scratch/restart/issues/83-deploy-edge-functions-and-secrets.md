@@ -21,14 +21,20 @@ Ticket 19 added the `off-lookup` Edge Function (Open Food Facts fallback):
 9. Check the production product URL used in `supabase/functions/_shared/off.ts` (`/api/v2/product/{code}.json`) against https://openfoodfacts.github.io/openfoodfacts-server/api/.
 10. Run `supabase functions deploy off-lookup`, then scan a product that USDA doesn't know and check the Open Food Facts credit shows.
 
+Ticket 66 added the `read-label` Edge Function (label photo, Anthropic `claude-haiku-5-5`) and migration 035 (private `label-photos` bucket):
+
+11. `supabase db push` (applies 035), then `supabase test db` locally to run `supabase/tests/label_photos_bucket_test.sql` (it deletes from `storage.objects` via `storage.allow_delete_query`, so tell an agent if it fails).
+12. `ANTHROPIC_API_KEY` is the same secret as step 5. Run `supabase functions deploy read-label`.
+
 **Blocked by:** 69 (Run the database tests locally), 76 (Get API keys and run the research tests)
 
 **Status:** ready-for-human
 
-**Unblocks:** 16, 19, 30
+**Unblocks:** 16, 19, 30, 66, 96
 
 - [ ] Secret set and function deployed
 - [ ] A newly saved food gets a Spanish name
 - [ ] Backfill returned `remaining: 0`
 - [ ] `off-lookup` deployed; an OFF-only product shows with its credit
 - [ ] `parse-recipe` deployed; a pasted recipe reaches the review screen
+- [ ] Migration 035 applied, bucket test passes, `read-label` deployed

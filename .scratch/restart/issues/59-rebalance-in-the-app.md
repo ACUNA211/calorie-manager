@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 57 (Rebalance formulas), 58 (Decision-model interface), 51 (Log Portions and Leftovers)
+**Blocked by:** 57 (Rebalance formulas), 94 (Decide: Rebalance rules left open by ticket 57), 58 (Decision-model interface), 51 (Log Portions and Leftovers)
 
 **Status:** ready-for-agent
 
