@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 09 (Move personal tables to Members)
+**Blocked by:** 09 (Move personal tables to Members), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you to run the database tests with `supabase test db` on a local stack and push migration 037)
 
