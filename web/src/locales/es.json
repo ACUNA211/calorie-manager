@@ -787,5 +787,15 @@
       "saveError": "No se pudo guardar tu configuración de compartir. Inténtalo de nuevo.",
       "noMember": "Únete o crea un hogar primero."
     }
+  },
+  "labelPhoto": {
+    "take": "Tomar una foto de la etiqueta",
+    "fileLabel": "Foto de la etiqueta",
+    "reading": "Leyendo la etiqueta…",
+    "done": "Etiqueta leída. Revisa cada valor con el empaque y luego guarda.",
+    "cap": "Se alcanzó el límite de IA de este mes. Escribe la etiqueta a mano.",
+    "unreadable": "No se pudo leer la etiqueta. Toma otra foto con buena luz o escríbela a mano.",
+    "badPhoto": "Usa una foto JPEG, PNG o WebP de menos de 5 MB.",
+    "failed": "No se pudo leer la etiqueta. Inténtalo de nuevo o escríbela a mano."
   }
 }
