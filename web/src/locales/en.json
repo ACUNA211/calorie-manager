@@ -552,6 +552,18 @@
     "open": "Open the Shopping list",
     "added": "Added {{date}}",
     "extra": "+",
+    "bought": "Bought",
+    "haveIt": "Have it",
+    "boughtLabel": "Bought: {{name}}",
+    "haveItLabel": "Have it: {{name}}",
+    "toast": {
+      "bought": "{{name}} ticked Bought. Pantry now {{mass}}.",
+      "haveIt": "{{name}} ticked Have it. Pantry now {{mass}}.",
+      "plain": "{{name}} ticked.",
+      "undo": "Undo",
+      "tickFailed": "Could not tick that line. Try again.",
+      "undoFailed": "Could not undo that tick."
+    },
     "measure": {
       "serving": "{{count}} × {{label}} ({{mass}})",
       "package": "{{count}} × package ({{mass}})"

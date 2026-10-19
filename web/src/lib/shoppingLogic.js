@@ -68,6 +68,8 @@ export function lineFromRow(row) {
     source: row.source || 'hand',
     purchased: Boolean(row.purchased),
     grams: row.grams === null || row.grams === undefined ? null : Number(row.grams),
+    needGrams:
+      row.need_grams === null || row.need_grams === undefined ? null : Number(row.need_grams),
     text: row.quantity_needed || '',
     storeSection: row.store_section || 'Other',
     measureKind: row.measure_kind || null,
@@ -117,4 +119,48 @@ export function addedDate(line) {
   if (!line.addedAt) return null;
   const date = new Date(line.addedAt);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+// ---- Bought / Have it (ticket 47). The database (migration 046) does the same sums. ----
+
+// How long Undo stays on screen. The database allows a little longer (10 s) for slow phones.
+export const UNDO_MS = 5000;
+export const PANTRY_MAX_GRAMS = 100000;
+
+const round1 = (value) => Math.round(value * 10) / 10;
+
+// The two ticks a line offers. A line with no food (a hand-added "foil") has nothing to put in
+// the Pantry, so it only offers one plain tick, sent as Bought.
+export function tickOptions(line) {
+  return line.foodId === null || line.foodId === undefined ? ['bought'] : ['bought', 'have_it'];
+}
+
+// What a tick does to the Pantry. `held` is the grams there now. Bought adds the line's grams (or
+// `scannedGrams`, the real package weight from a Scan, which replaces the planned amount); Have it
+// raises the Pantry to at least what the line needs and never lowers it. Returns
+// { before, after, delta }; delta is what the tick really changed, and is what Undo takes back.
+export function pantryAfterTick(kind, line, held = 0, scannedGrams = null) {
+  const before = Number(held) || 0;
+  if (line.foodId === null || line.foodId === undefined) return { before, after: before, delta: 0 };
+  const planned = scannedGrams ?? line.grams;
+  if (!(planned > 0)) return { before, after: before, delta: 0 };
+  let after;
+  if (kind === 'bought') {
+    after = Math.min(before + round1(planned), PANTRY_MAX_GRAMS);
+  } else {
+    const needed = scannedGrams ?? line.needGrams ?? line.grams;
+    after = Math.max(before, Math.min(round1(needed), PANTRY_MAX_GRAMS));
+  }
+  return { before, after, delta: round1(after - before) };
+}
+
+// Undo takes back exactly the amount the tick added, so a Pantry change somebody else made in
+// between stays. It never goes below zero.
+export function pantryAfterUndo(held, delta) {
+  return Math.max(round1((Number(held) || 0) - delta), 0);
+}
+
+// The list with one line marked ticked (or unticked again, for Undo).
+export function withTicked(lines, lineId, purchased) {
+  return lines.map((line) => (line.id === lineId ? { ...line, purchased } : line));
 }
