@@ -983,5 +983,91 @@
     "recipes": {
       "makes": "Cuánto rinde"
     }
+  },
+  "intake": {
+    "heading": "Cuestionario inicial",
+    "loading": "Cargando tu cuestionario…",
+    "loadError": "No se pudo cargar tu cuestionario.",
+    "intro": "Responde estas preguntas y la app sugiere Objetivos. No se guarda nada hasta que los aceptes, o los edites y los guardes. La sugerencia es un punto de partida, con un error de entre 10 y 20 por ciento para una persona típica; la tendencia de tu peso durante 3 a 4 semanas es la verdadera comprobación.",
+    "dependent": "El cuestionario es para adultos. {{name}} no tiene Objetivos sugeridos; defínelos a mano en la pantalla de Objetivos.",
+    "formLabel": "Preguntas del cuestionario",
+    "choose": "Elige…",
+    "sex": {
+      "label": "Sexo, como lo usa la fórmula",
+      "hint": "La fórmula lo usa porque la energía en reposo cambia según el sexo.",
+      "female": "Mujer",
+      "male": "Hombre"
+    },
+    "birthDate": "Fecha de nacimiento",
+    "height": {
+      "cm": "Estatura (cm)",
+      "feet": "Estatura (pies)",
+      "inches": "Pulgadas"
+    },
+    "weight": "Peso ({{unit}})",
+    "work": {
+      "label": "Tu trabajo",
+      "sitting": "Casi siempre sentado",
+      "on_feet": "Casi siempre de pie o caminando",
+      "heavy": "Trabajo físico pesado"
+    },
+    "exercise": {
+      "legend": "Ejercicio planeado",
+      "hint": "Cuenta las sesiones que planeas cada semana, no cuán activo te sientes. Déjalo vacío si no haces.",
+      "sessions": "Sesiones por semana",
+      "minutes": "Minutos por sesión"
+    },
+    "goal": {
+      "label": "Meta",
+      "lose": "Bajar de peso",
+      "maintain": "Mantener el peso",
+      "hand": "Otra cosa: definiré los Objetivos a mano"
+    },
+    "pace": {
+      "label": "Ritmo",
+      "option": "{{kcal}} kcal al día por debajo de lo que necesitas"
+    },
+    "pregnant": "Estoy embarazada o amamantando",
+    "floor": {
+      "legend": "Mínimo de la sugerencia",
+      "hint": "Un Objetivo de calorías sugerido nunca baja de este valor. No se aplica a los Objetivos que escribes tú.",
+      "on": "Usar un mínimo en la sugerencia",
+      "kcal": "Mínimo (kcal al día)",
+      "default": "Si lo dejas vacío, el mínimo es {{kcal}} kcal."
+    },
+    "suggestButton": "Sugerir Objetivos",
+    "noSuggestion": {
+      "dependent": "Las personas a cargo no reciben Objetivos sugeridos. Defínelos a mano.",
+      "underage": "Las sugerencias son para adultos, de 18 años en adelante. Define los Objetivos a mano.",
+      "pregnant": "No hay sugerencia durante el embarazo o la lactancia. Define los Objetivos a mano.",
+      "hand": "Elegiste definir los Objetivos a mano. Usa la pantalla de Objetivos.",
+      "missing": "Responde todas las preguntas de arriba para recibir una sugerencia."
+    },
+    "targets": {
+      "heading": "Objetivos sugeridos",
+      "formLabel": "Objetivos sugeridos",
+      "explain": "Energía en reposo {{rmr}} kcal, con actividad {{tdee}} kcal, menos {{deficit}} kcal al día.",
+      "notSaved": "Aún no se guardó. Edita cualquier número y luego guarda.",
+      "calorie": "Objetivo de calorías (kcal al día)",
+      "protein": "Mínimo de proteína (g al día)",
+      "carbLow": "Carbohidratos, mínimo (g)",
+      "carbHigh": "Carbohidratos, máximo (g)",
+      "fatLow": "Grasa, mínimo (g)",
+      "fatHigh": "Grasa, máximo (g)",
+      "saveButton": "Guardar estos Objetivos",
+      "saving": "Guardando…",
+      "saved": "Objetivos guardados.",
+      "saveError": "No se pudieron guardar tus Objetivos."
+    },
+    "errors": {
+      "sex": "Elige mujer u hombre.",
+      "birthDate": "Escribe una fecha de nacimiento real.",
+      "heightNumber": "Escribe tu estatura como un número.",
+      "heightRange": "Esa estatura parece incorrecta. Revísala.",
+      "goal": "Elige una meta.",
+      "sessions": "Escribe de 0 a 21 sesiones.",
+      "minutes": "Escribe de 0 a 600 minutos.",
+      "floor": "Escribe un número entero de 500 a 5000, o déjalo vacío."
+    }
   }
 }

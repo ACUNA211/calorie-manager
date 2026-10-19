@@ -19,6 +19,7 @@ describe('routes', () => {
 
   it('accepts the Preferences path without making it a tab', () => {
     expect(routeFromPath('/preferences')).toBe('preferences');
+    expect(routeFromPath('/intake')).toBe('intake');
     expect(ROUTES).not.toContain('preferences');
   });
 
