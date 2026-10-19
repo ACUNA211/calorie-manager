@@ -16,3 +16,7 @@ web/.env.*
 # Editors and OS
 .DS_Store
 *.log
+
+# MyPlate import: page cache and output (ticket 67)
+scripts/myplate/.cache/
+scripts/myplate/out/
