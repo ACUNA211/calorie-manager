@@ -6,13 +6,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** decided (dashboard check waits on 73)
+**Status:** done
 
 **Unblocks:** 06
 
 - [x] Option chosen and written in ticket 06's Comments
-- [ ] The Supabase dashboard setting matches the choice (once 73 is done)
+- [x] The Supabase dashboard setting matches the choice (once 73 is done)
 
 ## Comments
 
 2026-10-17: (a) for now: sign-ups off, accounts by hand. Soft launch → (c) invite-only Auth hook; product → (b) open sign-ups. When 73 is done, check "Allow new users to sign up" is **off** in Supabase → Authentication → Sign In / Providers.
+
+2026-10-18: Checked live (`/auth/v1/settings`): `disable_signup` is **false**, so sign-ups are still on. Needs switching off in the dashboard; the app has no `signUp` call, so nothing breaks.
+
+2026-10-18: Rechecked live: `disable_signup` is **true**. Sign-ups are off; ticket done.
