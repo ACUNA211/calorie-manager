@@ -40,7 +40,7 @@ The live project's migration history doesn't use the repo's numbers: 001–004 w
    `npx supabase db dump --linked -f D:/backups/calorie-schema-2026-10-18.sql` and
    `npx supabase db dump --linked --data-only -f D:/backups/calorie-data-2026-10-18.sql`.
 3. Claude checks that what's live matches 000–004 (and where `gtin_lookup_variants` fits), then marks those as applied with `npx supabase migration repair --status applied <versions>`.
-4. `npx supabase db push --dry-run`: it should list 005–033 and nothing else.
+4. `npx supabase db push --dry-run`: it should list 005–034 and nothing else.
 5. `npx supabase db push`, then sign in on the Pages URL again and check Today, Week and Foods load.
 
 **Blocked by:** 69 (Run the database tests locally), 79 (Review Release 1 work and push it)
@@ -51,9 +51,10 @@ The live project's migration history doesn't use the repo's numbers: 001–004 w
 
 - [ ] The Pages URL shows the sign-in form
 - [ ] Signing in shows "Hi, <email>" and sign-out returns to the form
-- [ ] Live database backed up, then has migrations 005–033 applied
+- [ ] Live database backed up, then has migrations 005–034 applied
 - [ ] Tick the deploy box on ticket 02
 
 ## Comments
 
 - 2026-10-18: Steps written out in full. Checked the live project's migration list: it has timestamp-named versions for the 001–004 work, not the repo's 000–033 numbers, hence Part B's repair step. 69 and 79 are done.
+- 2026-10-18: Part B under way. Logged in and linked; backups in `D:/backups` (schema and data dumps). Compared live with a local build of 000–004: nothing missing on live; live has newer bodies for the USDA functions, three extra helpers (`usda_category`, `usda_portions`, `usda_refresh_servings`) and other apps' tables. Live's 10-17 barcode fix (retry 12/13/14-digit paddings) would have been lost when 006 replaced `usda_lookup_gtin`, so migration 034 carries it over (test `gtin_lookup_variants_test.sql`; 23 files, 391 tests pass).
