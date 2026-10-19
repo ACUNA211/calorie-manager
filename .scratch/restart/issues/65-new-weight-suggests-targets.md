@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 64 (Intake form), 32 (Weight log and trend)
+**Blocked by:** 64 (Intake form), 32 (Weight log and trend), 104 (Check and decide: Targets suggested after a new weight)
 
 **Status:** done (awaiting review)
 
