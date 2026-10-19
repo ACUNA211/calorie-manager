@@ -9,7 +9,9 @@ import {
   addDays,
   calorieBar,
   canLogOn,
+  clockMinutes,
   dateKey,
+  dueMealId,
   entryValues,
   isFutureDay,
   macroBar,
@@ -47,6 +49,8 @@ export default function TodayPage({ day: openDay = null }) {
   const [setup, setSetup] = useState({ memberId: null, status: 'loading' });
   const [dayState, setDayState] = useState({ key: null, status: 'loading', entries: [] });
   const [logOpen, setLogOpen] = useState(false);
+  // The Meal Time Log food starts on when opened from the due card; null means the nearest.
+  const [logMealId, setLogMealId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   // The toast: { id, text, undo } where undo is an async function, or null for a message only.
   const [toast, setToast] = useState(null);
@@ -134,6 +138,8 @@ export default function TodayPage({ day: openDay = null }) {
   const dayMeals = mealsOnDay(meals, weekday);
   const future = isFutureDay(day, todayKey);
   const logAllowed = canLogOn(day, todayKey);
+  // The meal that is due is only picked on today; other days are a plain list.
+  const dueId = day === todayKey ? dueMealId(sections.sections, clockMinutes(new Date())) : null;
   const editingEntry = editingId == null ? null : entries.find((e) => e.id === editingId) || null;
 
   // Changes the entries of the day on screen. A late answer for another day is ignored.
@@ -155,6 +161,7 @@ export default function TodayPage({ day: openDay = null }) {
 
   function closePanels() {
     setLogOpen(false);
+    setLogMealId(null);
     setEditingId(null);
     setToast(null);
   }
@@ -242,7 +249,9 @@ export default function TodayPage({ day: openDay = null }) {
 
   return (
     <div>
-      <h2 id="today-heading">{t('today.heading')}</h2>
+      <h2 id="today-heading" className="visually-hidden">
+        {t('today.heading')}
+      </h2>
       <DayBar
         dateKey={day}
         todayKey={todayKey}
@@ -256,32 +265,11 @@ export default function TodayPage({ day: openDay = null }) {
         }}
       />
 
-      {missingMacros > 0 ? <p>{t('today.meals.missingMacros', { count: missingMacros })}</p> : null}
+      {missingMacros > 0 ? (
+        <p className="small mute">{t('today.meals.missingMacros', { count: missingMacros })}</p>
+      ) : null}
 
       {future ? <p>{t('today.futureReadOnly')}</p> : null}
-      {logAllowed ? (
-        <button
-          type="button"
-          onClick={() => {
-            setEditingId(null);
-            setLogOpen((open) => !open);
-          }}
-        >
-          {t('today.log.button')}
-        </button>
-      ) : null}
-      {logAllowed ? (
-        <TodayScan
-          key={day}
-          memberId={actingMemberId}
-          logDate={day}
-          todayKey={todayKey}
-          meals={dayMeals}
-          weekday={weekday}
-          online={offline.online}
-          onEaten={handleScanEaten}
-        />
-      ) : null}
       {toast ? (
         <Toast
           key={toast.id}
@@ -292,17 +280,23 @@ export default function TodayPage({ day: openDay = null }) {
         />
       ) : null}
 
-      {logAllowed && logOpen ? (
-        <LogFoodPanel
-          memberId={actingMemberId}
-          logDate={day}
-          todayKey={todayKey}
-          meals={dayMeals}
-          weekday={weekday}
-          onLogged={handleLogged}
-          offline={offline}
-        />
-      ) : null}
+      <TodayMeals
+        sections={sections.sections}
+        other={sections.other}
+        dueId={logAllowed ? dueId : null}
+        onLogDue={
+          logAllowed
+            ? (meal) => {
+                setEditingId(null);
+                setLogMealId(meal.id);
+                setLogOpen(true);
+              }
+            : undefined
+        }
+        onEdit={openEdit}
+        onRetry={offline.retry}
+        onDiscard={offline.discard}
+      />
 
       {logAllowed && editingEntry ? (
         <EditEntryPanel
@@ -315,13 +309,44 @@ export default function TodayPage({ day: openDay = null }) {
         />
       ) : null}
 
-      <TodayMeals
-        sections={sections.sections}
-        other={sections.other}
-        onEdit={openEdit}
-        onRetry={offline.retry}
-        onDiscard={offline.discard}
-      />
+      {logAllowed ? (
+        <div className="logbox-wrap">
+          <button
+            type="button"
+            className="btn-primary btn-block"
+            onClick={() => {
+              setEditingId(null);
+              setLogMealId(null);
+              setLogOpen((open) => !open);
+            }}
+          >
+            {t('today.log.button')}
+          </button>
+          {logOpen ? (
+            <LogFoodPanel
+              key={logMealId ?? 'nearest'}
+              memberId={actingMemberId}
+              logDate={day}
+              todayKey={todayKey}
+              meals={dayMeals}
+              weekday={weekday}
+              initialMealId={logMealId}
+              onLogged={handleLogged}
+              offline={offline}
+            />
+          ) : null}
+          <TodayScan
+            key={day}
+            memberId={actingMemberId}
+            logDate={day}
+            todayKey={todayKey}
+            meals={dayMeals}
+            weekday={weekday}
+            online={offline.online}
+            onEaten={handleScanEaten}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

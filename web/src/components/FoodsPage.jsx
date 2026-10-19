@@ -275,7 +275,7 @@ export default function FoodsPage() {
           {displayName(result, locale)}
           {result.brand ? ` · ${result.brand}` : ''}
         </h3>
-        <p>
+        <p className="small mute">
           {t(
             result.source === 'library'
               ? result.typedFromLabel
@@ -317,7 +317,7 @@ export default function FoodsPage() {
         {results.length === 0 ? (
           <p>{t('foods.noResults', { query: text })}</p>
         ) : (
-          <ul>{results.map((result) => renderResultItem(result))}</ul>
+          <ul className="rows">{results.map((result) => renderResultItem(result))}</ul>
         )}
       </>
     );
@@ -352,7 +352,7 @@ export default function FoodsPage() {
       return (
         <>
           <p role="status">{t('foods.scanFound', { code: scan.code })}</p>
-          <ul>{renderResultItem(scan.result)}</ul>
+          <ul className="rows">{renderResultItem(scan.result)}</ul>
           <button type="button" onClick={openScan}>
             {t('foods.scanAgain')}
           </button>
@@ -401,7 +401,7 @@ export default function FoodsPage() {
   return (
     <section aria-labelledby="foods-heading">
       <h2 id="foods-heading">{t('foods.heading')}</h2>
-      <form role="search" onSubmit={(event) => event.preventDefault()}>
+      <form role="search" className="search-stack" onSubmit={(event) => event.preventDefault()}>
         <label>
           {t('foods.searchLabel')}
           <input
@@ -412,8 +412,8 @@ export default function FoodsPage() {
           />
         </label>
       </form>
-      <p>{t('foods.searchHint')}</p>
-      <button type="button" onClick={openScan}>
+      <p className="small mute">{t('foods.searchHint')}</p>
+      <button type="button" className="btn-primary btn-block" onClick={openScan}>
         {t('foods.scanButton')}
       </button>
       {scan && renderScan()}

@@ -127,11 +127,11 @@ export default function RecipeEditor({
   return (
     <section aria-labelledby={fieldId('heading')}>
       <h2 id={fieldId('heading')}>{recipe ? t('recipes.editorEdit') : t('recipes.editorNew')}</h2>
-      <button type="button" onClick={() => onClose(false)}>
+      <button type="button" className="btn-quiet" onClick={() => onClose(false)}>
         {t('recipes.back')}
       </button>
 
-      <form onSubmit={handleSave} noValidate>
+      <form onSubmit={handleSave} noValidate className="editor">
         <div>
           <label htmlFor={fieldId('name')}>{t('recipes.fields.name')}</label>
           <input
@@ -158,6 +158,41 @@ export default function RecipeEditor({
           <label htmlFor={fieldId('starred')}>{t('recipes.fields.starred')}</label>
         </div>
 
+        <fieldset>
+          <legend>{t('recipes.tags.heading')}</legend>
+          <p>{t('recipes.tags.hint')}</p>
+          {tagOptions.length === 0 ? (
+            <p>{t('recipes.tags.none')}</p>
+          ) : (
+            tagOptions.map((option) => (
+              <div key={option.id} className="tag-pick">
+                <input
+                  id={fieldId(`tag-${option.id}`)}
+                  type="checkbox"
+                  checked={draft.mealTimeIds.includes(option.id)}
+                  onChange={(event) =>
+                    setDraft(toggleMealTime(draft, option.id, event.target.checked))
+                  }
+                />{' '}
+                <label htmlFor={fieldId(`tag-${option.id}`)}>
+                  {option.name ?? t('recipes.tags.unavailable')}
+                </label>
+              </div>
+            ))
+          )}
+        </fieldset>
+
+        <RecipeTotals totals={totals} hasIngredients={draft.ingredients.length > 0} />
+
+        <RecipeIngredientsField
+          ingredients={draft.ingredients}
+          errors={errors}
+          onAdd={(food) => setDraft(addIngredient(draft, food))}
+          onRemove={(key) => setDraft(removeIngredient(draft, key))}
+          onGrams={(key, grams) => setDraft(setIngredientGrams(draft, key, grams))}
+        />
+
+        <h3>{t('layout.recipes.makes')}</h3>
         <div>
           <label htmlFor={fieldId('servings')}>{t('recipes.fields.servings')}</label>
           <input
@@ -204,16 +239,6 @@ export default function RecipeEditor({
           )}
         </div>
 
-        <RecipeIngredientsField
-          ingredients={draft.ingredients}
-          errors={errors}
-          onAdd={(food) => setDraft(addIngredient(draft, food))}
-          onRemove={(key) => setDraft(removeIngredient(draft, key))}
-          onGrams={(key, grams) => setDraft(setIngredientGrams(draft, key, grams))}
-        />
-
-        <RecipeTotals totals={totals} hasIngredients={draft.ingredients.length > 0} />
-
         <div>
           <label htmlFor={fieldId('notes')}>{t('recipes.fields.notes')}</label>
           <textarea
@@ -231,36 +256,12 @@ export default function RecipeEditor({
           )}
         </div>
 
-        <fieldset>
-          <legend>{t('recipes.tags.heading')}</legend>
-          <p>{t('recipes.tags.hint')}</p>
-          {tagOptions.length === 0 ? (
-            <p>{t('recipes.tags.none')}</p>
-          ) : (
-            tagOptions.map((option) => (
-              <div key={option.id}>
-                <input
-                  id={fieldId(`tag-${option.id}`)}
-                  type="checkbox"
-                  checked={draft.mealTimeIds.includes(option.id)}
-                  onChange={(event) =>
-                    setDraft(toggleMealTime(draft, option.id, event.target.checked))
-                  }
-                />{' '}
-                <label htmlFor={fieldId(`tag-${option.id}`)}>
-                  {option.name ?? t('recipes.tags.unavailable')}
-                </label>
-              </div>
-            ))
-          )}
-        </fieldset>
-
         {notice && <p role="alert">{notice}</p>}
 
-        <div>
-          <button type="submit" disabled={busy}>
+        <div className="actions">
+          <button type="submit" className="btn-primary" disabled={busy}>
             {t('recipes.actions.save')}
-          </button>{' '}
+          </button>
           <button type="button" onClick={() => onClose(false)} disabled={busy}>
             {t('recipes.actions.cancel')}
           </button>
@@ -285,7 +286,7 @@ export default function RecipeEditor({
           {confirmDelete ? (
             <>
               <p>{t('recipes.actions.deleteConfirm', { name: draft.name })}</p>
-              <button type="button" onClick={handleDelete} disabled={busy}>
+              <button type="button" className="btn-danger" onClick={handleDelete} disabled={busy}>
                 {t('recipes.actions.deleteYes')}
               </button>{' '}
               <button type="button" onClick={() => setConfirmDelete(false)} disabled={busy}>
@@ -293,7 +294,12 @@ export default function RecipeEditor({
               </button>
             </>
           ) : (
-            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy}>
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={() => setConfirmDelete(true)}
+              disabled={busy}
+            >
               {t('recipes.actions.delete')}
             </button>
           )}

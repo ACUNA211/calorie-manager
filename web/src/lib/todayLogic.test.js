@@ -10,6 +10,7 @@ import {
   clockTime,
   dateKey,
   defaultMealTimeId,
+  dueMealId,
   entryNutrition,
   floorStatus,
   isDateKey,
@@ -602,5 +603,31 @@ describe('logProblem', () => {
         todayKey: '2026-10-17',
       })
     ).toBe('today.log.errors.noKcal');
+  });
+});
+
+describe('dueMealId', () => {
+  const section = (id, time, logged = 0) => ({
+    meal: { id, time_of_day: time },
+    entries: Array.from({ length: logged }, () => ({})),
+  });
+  const sections = [section(1, '08:00', 1), section(2, '12:30'), section(3, '19:00')];
+
+  it('picks the first unlogged Meal Time that is not over an hour old', () => {
+    expect(dueMealId(sections, 12 * 60 + 40)).toBe(2);
+    expect(dueMealId(sections, 13 * 60 + 25)).toBe(2);
+  });
+
+  it('moves on to the next one once the hour has passed', () => {
+    expect(dueMealId(sections, 14 * 60)).toBe(3);
+  });
+
+  it('falls back to the latest unlogged one when all have passed', () => {
+    expect(dueMealId(sections, 22 * 60)).toBe(3);
+  });
+
+  it('is null when everything has something logged or there are no Meal Times', () => {
+    expect(dueMealId([section(1, '08:00', 2)], 9 * 60)).toBeNull();
+    expect(dueMealId([], 9 * 60)).toBeNull();
   });
 });

@@ -32,7 +32,7 @@ export default function HouseholdDays({ start, todayKey }) {
   const view = loaded.key === requestKey ? loaded : LOADING;
 
   return (
-    <section aria-labelledby="household-days-heading">
+    <section aria-labelledby="household-days-heading" className="household-days">
       <h3 id="household-days-heading">{t('sharing.daysHeading')}</h3>
       {view.status === 'loading' ? <p>{t('sharing.loading')}</p> : null}
       {view.status === 'error' ? <p role="alert">{t('sharing.loadError')}</p> : null}

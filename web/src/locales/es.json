@@ -934,5 +934,19 @@
       "gluten_free": "Sin gluten",
       "dairy_free": "Sin lácteos"
     }
+  },
+  "layout": {
+    "today": {
+      "nextMeal": "Próxima comida",
+      "logForMeal": "Registrar comida en {{name}}"
+    },
+    "mealTimes": {
+      "everyDay": "Todos los días",
+      "weekdays": "Lun–Vie",
+      "weekend": "Fin de semana"
+    },
+    "recipes": {
+      "makes": "Cuánto rinde"
+    }
   }
 }

@@ -39,6 +39,7 @@ export default function LogFoodPanel({
   todayKey,
   meals,
   weekday,
+  initialMealId = null,
   onLogged,
   offline,
 }) {
@@ -53,9 +54,11 @@ export default function LogFoodPanel({
   const [unit, setUnit] = useState('grams');
   // The nearest Meal Time to the clock when the panel opens; "another time" when none applies.
   const [nearestId] = useState(() => defaultMealTimeId(meals, weekday, new Date()));
-  const [mealChoice, setMealChoice] = useState(() =>
-    nearestId == null ? OTHER : String(nearestId)
-  );
+  // Opened from the due meal's card, the panel starts on that Meal Time instead.
+  const [mealChoice, setMealChoice] = useState(() => {
+    const startId = initialMealId ?? nearestId;
+    return startId == null ? OTHER : String(startId);
+  });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -200,15 +203,15 @@ export default function LogFoodPanel({
   }
 
   return (
-    <section aria-labelledby="log-food-heading">
+    <section aria-labelledby="log-food-heading" className="logbox">
       <h2 id="log-food-heading">{t('today.log.heading')}</h2>
       {offline.online ? null : <p>{t('today.offline.banner')}</p>}
 
-      <form onSubmit={handleSearch}>
+      <form onSubmit={handleSearch} className="search-box">
         <label>
           {t('today.log.searchLabel')}{' '}
           <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>{' '}
+        </label>
         <button type="submit" disabled={search.status === 'searching'}>
           {search.status === 'searching' ? t('today.log.searching') : t('today.log.search')}
         </button>
@@ -222,14 +225,14 @@ export default function LogFoodPanel({
       ) : null}
 
       {search.results.length > 0 ? (
-        <ul>
+        <ul className="rows">
           {search.results.map((result) => (
-            <li key={result.key}>
-              <span>
+            <li key={result.key} className="row">
+              <span className="grow">
                 {result.name}
                 {result.brand ? ` (${result.brand})` : ''}
               </span>{' '}
-              <span>
+              <span className="tag">
                 {result.source === 'library'
                   ? t('today.log.sourceLibrary')
                   : t('today.log.sourceUsda')}
@@ -250,24 +253,28 @@ export default function LogFoodPanel({
               {t('today.log.change')}
             </button>
           </p>
-          <label>
-            {t('today.log.amount')}{' '}
-            <input
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
-          </label>{' '}
-          {selected.servingGrams > 0 ? (
+          <div className="fields">
             <label>
-              {t('today.log.unit')}{' '}
-              <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-                <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
-                <option value="servings">{t('today.log.unitServings')}</option>
-              </select>
+              {t('today.log.amount')}{' '}
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+              />
             </label>
-          ) : null}
+            {selected.servingGrams > 0 ? (
+              <label>
+                {t('today.log.unit')}{' '}
+                <select value={unit} onChange={(event) => setUnit(event.target.value)}>
+                  <option value="grams">
+                    {t('today.log.unitGrams', { unit: units.massUnit })}
+                  </option>
+                  <option value="servings">{t('today.log.unitServings')}</option>
+                </select>
+              </label>
+            ) : null}
+          </div>
           {selected.servingGrams > 0 ? (
             <p>{t('today.log.servingHint', { grams: units.formatMass(selected.servingGrams) })}</p>
           ) : null}
@@ -303,7 +310,7 @@ export default function LogFoodPanel({
             </div>
           ) : null}
           {error ? <p role="alert">{error}</p> : null}
-          <button type="submit" disabled={busy}>
+          <button type="submit" className="btn-primary" disabled={busy}>
             {busy ? t('today.log.saving') : t('today.log.submit')}
           </button>
         </form>

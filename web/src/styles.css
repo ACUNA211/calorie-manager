@@ -354,3 +354,714 @@ body > #root > p {
   color: var(--accent);
   font-weight: 700;
 }
+
+/* ==== Screen layout (ticket 90) ====================================================
+   Shared building blocks for Today, Meal Times, Recipes, Week, Foods and Pantry, taken
+   from the resolved prototypes: white cards on the warm page, a blue accent for the thing
+   to do next, compact rows with hairlines, chips for filters. Screens add their own
+   sections below. */
+
+/* Small helpers */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.mute {
+  color: var(--mute);
+}
+.small {
+  font-size: var(--text-small);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.eyebrow {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.plain {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Button kinds */
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.btn-quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--accent);
+}
+.btn-danger {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* Chips and tags */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-small);
+}
+.chip[aria-pressed='true'],
+.chip.on {
+  background: var(--soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tag {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--mute);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* A search box with a chip row under it (Recipes, Foods) */
+.search-box {
+  margin-bottom: var(--space-3);
+}
+.search-box input {
+  width: 100%;
+  border-radius: 999px;
+  padding-inline: var(--space-4);
+}
+form label.chip {
+  display: inline-flex;
+  margin-bottom: 0;
+}
+
+/* Rows: a list of tappable lines with hairlines between them */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rows > li {
+  margin: 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.rows > li:first-child {
+  border-top: 0;
+}
+.rows .row-button {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+}
+
+/* Page header with arrows either side (Today days, Week weeks) */
+.pager {
+  display: grid;
+  grid-template-columns: var(--tap) minmax(0, 1fr) var(--tap);
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+}
+.pager h2,
+.pager p {
+  margin: 0;
+}
+.pager button {
+  width: var(--tap);
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+.pager .sub {
+  font-size: var(--text-small);
+  color: var(--mute);
+}
+.back-link {
+  display: block;
+  margin: var(--space-1) auto 0;
+}
+
+/* Calorie counter and bar */
+.counter {
+  margin-top: var(--space-3);
+}
+.counter .big {
+  display: block;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.counter .big.over {
+  color: var(--warn);
+}
+.meter {
+  position: relative;
+  margin: var(--space-2) 0;
+}
+.meter progress {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--line);
+  overflow: hidden;
+}
+.meter progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.meter progress::-webkit-progress-value {
+  background: var(--accent);
+}
+.meter progress::-moz-progress-bar {
+  background: var(--accent);
+}
+.meter.over progress::-webkit-progress-value {
+  background: var(--warn);
+}
+.meter.over progress::-moz-progress-bar {
+  background: var(--warn);
+}
+/* The aim shaded over the bar, the Calorie Target as a line at the end */
+.meter .aim {
+  position: absolute;
+  top: 0;
+  height: 14px;
+  background: color-mix(in srgb, var(--good) 28%, transparent);
+  pointer-events: none;
+}
+.meter .goal {
+  position: absolute;
+  top: -3px;
+  right: 0;
+  width: 2px;
+  height: 20px;
+  background: var(--warn);
+  pointer-events: none;
+}
+
+/* Macro columns under the bar */
+.macros {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.macros li {
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--bg);
+  font-size: var(--text-small);
+}
+
+/* Meal cards: the one that is due is large, the rest of the day is a compact list */
+.meal-due {
+  border: 2px solid var(--accent);
+}
+.meal-due h3 {
+  font-size: 18px;
+}
+.meal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.meal-head h3 {
+  margin: 0;
+}
+.meal-list > article {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.meal-list > article:first-of-type {
+  border-top: 0;
+}
+.meal-list ul,
+.meal-due ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-1) 0 0;
+}
+.meal-list li,
+.meal-due li {
+  margin: 0;
+}
+.meal-list li > button,
+.meal-due li > button {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--space-1) 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+}
+
+/* The log box sits last on Today */
+.logbox {
+  border: 1px solid var(--accent);
+}
+
+/* Forms inside panels: label above field, actions in a row */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0 var(--space-3);
+}
+.fieldset-plain {
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* Meal Times: one row per Meal Time, one column per weekday */
+.grid-scroll {
+  overflow-x: auto;
+}
+.week-grid {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  font-size: var(--text-small);
+}
+.week-grid th,
+.week-grid td {
+  padding: var(--space-1);
+  text-align: center;
+}
+.week-grid th:first-child,
+.week-grid td:first-child {
+  width: 34%;
+  text-align: left;
+}
+.week-grid .cell {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0;
+}
+.week-grid .cell[aria-pressed='true'] {
+  background: var(--accent);
+}
+
+/* Week: seven day rows with a bar each */
+.day-row {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  text-align: left;
+  padding: var(--space-3);
+}
+.day-row .meter {
+  margin: var(--space-2) 0 var(--space-1);
+}
+.day-row.today {
+  border-color: var(--accent);
+}
+.week-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.week-summary p {
+  margin: 0;
+}
+
+/* Recipe Facts, in the manner of a Nutrition Facts label */
+.facts {
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-small);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+}
+.facts .kcal {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.facts table {
+  width: 100%;
+  display: table;
+}
+.facts th,
+.facts td {
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--line);
+}
+
+/* Pantry sections */
+.store-section > h3 {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+}
+.item-card {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.item-card:first-child {
+  border-top: 0;
+}
+
+/* Narrow phones: tighter cards, bigger numbers stay readable */
+@media (max-width: 380px) {
+  .screen {
+    padding-inline: var(--space-3);
+  }
+  .counter .big {
+    font-size: 26px;
+  }
+  section,
+  fieldset,
+  details {
+    padding: var(--space-3);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.logbox-wrap {
+  margin-top: var(--space-4);
+}
+.logbox-wrap > .btn-block {
+  margin-bottom: var(--space-3);
+}
+.search-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+.search-box label {
+  margin: 0;
+}
+
+/* Meal Times grid and editor */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+.toolbar p {
+  margin: 0 0 var(--space-2);
+}
+.panel {
+  margin: var(--space-3) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  border: 2px solid var(--accent);
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  column-gap: var(--space-3);
+}
+.grid-scroll {
+  margin: 0 calc(-1 * var(--space-2));
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+table.week-grid {
+  display: table;
+  width: 100%;
+  min-width: 470px;
+  border-collapse: separate;
+  border-spacing: 2px;
+  table-layout: fixed;
+}
+.week-grid th:first-child,
+.week-grid td:first-child {
+  width: 126px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+}
+.week-grid .row-name {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  text-align: left;
+  font-weight: 700;
+}
+.week-grid th[scope='row'] {
+  font-weight: 400;
+  color: var(--ink);
+  font-size: var(--text-small);
+}
+.week-grid td.totals {
+  vertical-align: top;
+  font-size: 11.5px;
+  line-height: 1.25;
+}
+.week-grid .over {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* Recipes */
+.head-row h2 {
+  margin: 0;
+}
+.head-row {
+  margin-bottom: var(--space-3);
+}
+.search-stack {
+  margin-bottom: var(--space-2);
+}
+.search-stack input,
+.search-stack + input {
+  width: 100%;
+}
+.chip-row {
+  margin-bottom: var(--space-3);
+}
+.chip-row label {
+  display: inline-flex;
+}
+.editor > div,
+.editor fieldset {
+  margin-bottom: var(--space-3);
+}
+.editor input[type='text'],
+.editor input[type='search'] {
+  width: 100%;
+}
+.editor > div > label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+.editor .tag-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-2) var(--space-2) 0;
+  padding: 0 var(--space-3) 0 var(--space-2);
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.editor .tag-pick label {
+  display: inline;
+  margin: 0;
+  font-weight: 400;
+}
+.facts .kcal-line {
+  margin: 0 0 var(--space-2);
+}
+.facts .kcal {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.facts-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2);
+}
+.facts-rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--line);
+}
+.ingredient {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+.ingredient .ing-name {
+  font-weight: 600;
+}
+.ingredient .ing-grams {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--mute);
+}
+.ingredient .ing-grams input {
+  width: 100%;
+}
+.paste-rows {
+  list-style: none;
+  padding: 0;
+}
+.paste-row {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--card);
+}
+.paste-row[data-needs-check='true'] {
+  border-color: var(--warn);
+}
+.paste-row select,
+.paste-row input[type='search'],
+.paste-row input[type='text'] {
+  width: 100%;
+  margin: var(--space-1) 0 var(--space-2);
+}
+.field-error {
+  color: var(--warn);
+}
+
+/* Week */
+.summary {
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.summary p {
+  margin: 0 0 var(--space-1);
+}
+.days-list li {
+  margin: 0 0 var(--space-2);
+}
+.day-row .day-detail {
+  display: block;
+}
+.day-row .day-detail > span {
+  display: inline;
+}
+.day-row .day-detail > .meter {
+  display: block;
+}
+.day-row .day-detail > .meter > span {
+  display: block;
+}
+.day-row .macro-line {
+  display: block;
+}
+.day-row .status {
+  font-weight: 600;
+}
+.household-days ul,
+.household-days ol {
+  list-style: none;
+  padding-left: 0;
+}
+.household-days ol {
+  padding-left: var(--space-3);
+  font-size: var(--text-small);
+}
+.weight-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0 var(--space-3);
+  align-items: end;
+}
+.weight-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.weight-list li > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+figure {
+  margin: var(--space-3) 0;
+  color: var(--accent);
+}
+figure figcaption,
+figure p {
+  color: var(--ink);
+}
+
+/* Foods and Pantry */
+.rows h3,
+.rows h4 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text);
+}
+.pantry-add {
+  margin-bottom: var(--space-4);
+}
+.pantry-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+.pantry-row .actions {
+  margin-top: var(--space-2);
+}
+.set-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+  margin-top: var(--space-2);
+}
+.set-form label {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--mute);
+}
+.weight-form > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}

@@ -43,25 +43,25 @@ export default function RecipeIngredientsField({ ingredients, errors, onAdd, onR
 
       {ingredients.length === 0 && <p>{t('recipes.ingredients.empty')}</p>}
 
-      <ul>
+      <ul className="rows">
         {ingredients.map((item) => {
           const name = item.food.name;
           const error = errors[`ingredient:${item.key}`];
           const gramsId = `${searchId}-grams-${item.key}`;
           return (
-            <li key={item.key}>
-              <label htmlFor={gramsId}>
+            <li key={item.key} className="ingredient">
+              <span className="ing-name">{name}</span>
+              <label htmlFor={gramsId} className="ing-grams">
                 {t('recipes.ingredients.gramsLabel', { name, unit: units.massUnit })}
-              </label>{' '}
-              <input
-                id={gramsId}
-                type="text"
-                inputMode="decimal"
-                value={item.grams}
-                onChange={(event) => onGrams(item.key, event.target.value)}
-              />{' '}
-              <span>{name}</span>{' '}
-              <button type="button" onClick={() => onRemove(item.key)}>
+                <input
+                  id={gramsId}
+                  type="text"
+                  inputMode="decimal"
+                  value={item.grams}
+                  onChange={(event) => onGrams(item.key, event.target.value)}
+                />
+              </label>
+              <button type="button" className="btn-quiet" onClick={() => onRemove(item.key)}>
                 {t('recipes.ingredients.remove', { name })}
               </button>
               {error && (
@@ -74,21 +74,23 @@ export default function RecipeIngredientsField({ ingredients, errors, onAdd, onR
         })}
       </ul>
 
-      <label htmlFor={searchId}>{t('recipes.ingredients.searchLabel')}</label>
-      <input
-        id={searchId}
-        type="search"
-        value={query}
-        autoComplete="off"
-        onChange={(event) => setQuery(event.target.value)}
-      />
+      <div className="search-stack">
+        <label htmlFor={searchId}>{t('recipes.ingredients.searchLabel')}</label>
+        <input
+          id={searchId}
+          type="search"
+          value={query}
+          autoComplete="off"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
 
       {searchFailed && <p role="alert">{t('recipes.ingredients.searchError')}</p>}
       {!searchFailed && query.trim() !== '' && results.length === 0 && (
         <p>{t('recipes.ingredients.searchEmpty')}</p>
       )}
       {results.length > 0 && (
-        <ul>
+        <ul className="rows">
           {results.map((food) => (
             <li key={food.id}>
               <button type="button" onClick={() => onAdd(food)}>

@@ -134,13 +134,15 @@ export default function PantryScan({ onAdded }) {
             value={weightText}
             onChange={(event) => setWeightText(event.target.value)}
           />
-        </label>{' '}
-        <button type="submit" disabled={busy}>
-          {busy ? t('pantry.scan.weightSaving') : t('pantry.scan.weightSave')}
-        </button>{' '}
-        <button type="button" disabled={busy} onClick={closeScan}>
-          {t('pantry.scan.cancel')}
-        </button>
+        </label>
+        <div className="actions">
+          <button type="submit" className="btn-primary" disabled={busy}>
+            {busy ? t('pantry.scan.weightSaving') : t('pantry.scan.weightSave')}
+          </button>
+          <button type="button" disabled={busy} onClick={closeScan}>
+            {t('pantry.scan.cancel')}
+          </button>
+        </div>
         {weightError && <p role="alert">{t(weightError)}</p>}
       </form>
     );
@@ -200,7 +202,7 @@ export default function PantryScan({ onAdded }) {
   return (
     <div>
       {scan === null ? (
-        <button type="button" onClick={openCamera}>
+        <button type="button" className="btn-block" onClick={openCamera}>
           {t('pantry.scan.button')}
         </button>
       ) : (

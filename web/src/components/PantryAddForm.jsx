@@ -65,9 +65,9 @@ export default function PantryAddForm({ onAdded }) {
   const ready = search.status === 'ready' ? search : null;
 
   return (
-    <div>
+    <div className="pantry-add">
       <h3>{t('pantry.add.heading')}</h3>
-      <form onSubmit={handleSearch}>
+      <form onSubmit={handleSearch} className="search-box">
         <label>
           {t('pantry.add.searchLabel')}
           <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -84,7 +84,7 @@ export default function PantryAddForm({ onAdded }) {
           {ready.results.length === 0 ? (
             <p>{t('pantry.add.noResults', { query: ready.query })}</p>
           ) : (
-            <ul>
+            <ul className="rows">
               {ready.results.map((result) => {
                 const isThis = add.key === result.key;
                 return (
@@ -93,7 +93,7 @@ export default function PantryAddForm({ onAdded }) {
                       {result.name}
                       {result.brand ? ` · ${result.brand}` : ''}
                     </h4>
-                    <p>
+                    <p className="small mute">
                       {t(
                         result.source === 'library' ? 'pantry.add.inLibrary' : 'pantry.add.fromUsda'
                       )}
@@ -114,6 +114,7 @@ export default function PantryAddForm({ onAdded }) {
                     </label>
                     <button
                       type="button"
+                      className="btn-primary"
                       disabled={isThis && add.status === 'saving'}
                       onClick={() => handleAdd(result)}
                     >

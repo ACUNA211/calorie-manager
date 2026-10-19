@@ -130,6 +130,17 @@ export function mealSections(meals, entries, weekday) {
   return { sections, other: { entries: other, kcal: sumKcal(other) } };
 }
 
+// The Meal Time that is due on today's screen (layout B, "next meal first"): the first Meal
+// Time with nothing logged yet that starts within the last hour or later. When every unlogged
+// one has already passed, the latest of them. Null when each Meal Time has something logged.
+// `sections` come from mealSections() in time order; `nowMinutes` is clockMinutes(now).
+export function dueMealId(sections, nowMinutes) {
+  const open = sections.filter((section) => section.entries.length === 0);
+  if (open.length === 0) return null;
+  const upcoming = open.find((section) => minutesOf(section.meal.time_of_day) >= nowMinutes - 60);
+  return (upcoming || open[open.length - 1]).meal.id;
+}
+
 // ---- Totals and the day bar ------------------------------------------------------------
 
 const number = (value) => (value == null ? 0 : Number(value));

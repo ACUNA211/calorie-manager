@@ -99,52 +99,64 @@ export default function WeekPage({ onOpenDay }) {
 
   return (
     <section aria-labelledby="week-heading">
-      <h2 id="week-heading">{t('week.heading')}</h2>
-      <div>
+      <h2 id="week-heading" className="visually-hidden">
+        {t('week.heading')}
+      </h2>
+      <div className="pager">
         <button
           type="button"
           aria-label={t('week.previousWeek')}
           onClick={() => setStart((current) => shiftWeek(current, -1))}
         >
-          {'<'}
+          {'‹'}
         </button>
-        <p>{t('week.range', range)}</p>
+        <p>
+          <strong>{t('week.range', range)}</strong>
+        </p>
         <button
           type="button"
           aria-label={t('week.nextWeek')}
           onClick={() => setStart((current) => shiftWeek(current, 1))}
         >
-          {'>'}
+          {'›'}
         </button>
       </div>
 
-      {targets.calorieTarget == null ? <p>{t('week.noTarget')}</p> : null}
-      {summary.loggedCount === 0 ? <p>{t('week.summary.noLogged')}</p> : null}
-      {targets.calorieTarget != null && summary.loggedCount > 0 ? (
-        <p>{t('week.summary.under', { under: summary.underCount, logged: summary.loggedCount })}</p>
-      ) : null}
-      {summary.average.kcal != null ? (
-        <>
-          <p>{t('week.summary.average', { kcal: number(summary.average.kcal) })}</p>
+      <div className="summary">
+        {targets.calorieTarget == null ? <p>{t('week.noTarget')}</p> : null}
+        {summary.loggedCount === 0 ? <p>{t('week.summary.noLogged')}</p> : null}
+        {targets.calorieTarget != null && summary.loggedCount > 0 ? (
           <p>
-            {t('week.summary.averageMacros', {
-              protein: units.formatMacro(summary.average.protein),
-              carbs: units.formatMacro(summary.average.carbs),
-              fat: units.formatMacro(summary.average.fat),
-            })}
+            {t('week.summary.under', { under: summary.underCount, logged: summary.loggedCount })}
           </p>
-        </>
-      ) : null}
-      {summary.missingMacroDays > 0 ? (
-        <p>{t('week.summary.missingMacros', { count: summary.missingMacroDays })}</p>
-      ) : null}
+        ) : null}
+        {summary.average.kcal != null ? (
+          <>
+            <p>{t('week.summary.average', { kcal: number(summary.average.kcal) })}</p>
+            <p>
+              {t('week.summary.averageMacros', {
+                protein: units.formatMacro(summary.average.protein),
+                carbs: units.formatMacro(summary.average.carbs),
+                fat: units.formatMacro(summary.average.fat),
+              })}
+            </p>
+          </>
+        ) : null}
+        {summary.missingMacroDays > 0 ? (
+          <p>{t('week.summary.missingMacros', { count: summary.missingMacroDays })}</p>
+        ) : null}
+      </div>
 
-      <ol>
+      <ol className="plain days-list">
         {view.days.map((day) => {
           const isToday = day.key === todayKey;
           return (
             <li key={day.key}>
-              <button type="button" onClick={() => onOpenDay(day.key)}>
+              <button
+                type="button"
+                className={isToday ? 'day-row today' : 'day-row'}
+                onClick={() => onOpenDay(day.key)}
+              >
                 <strong>
                   {formatDate(parseDateKey(day.key))}
                   {isToday ? ` (${t('week.todayTag')})` : ''}
@@ -152,7 +164,7 @@ export default function WeekPage({ onOpenDay }) {
                 {day.logged ? (
                   <DayDetail day={day} number={number} />
                 ) : (
-                  <span> {t('week.day.empty')}</span>
+                  <span className="mute"> {t('week.day.empty')}</span>
                 )}
               </button>
             </li>
@@ -172,7 +184,7 @@ function DayDetail({ day, number }) {
   const units = useUnits();
   const target = day.bar.target;
   return (
-    <span>
+    <span className="day-detail">
       {target == null ? (
         <span> {t('week.day.kcalNoTarget', { kcal: number(day.totals.kcal) })}</span>
       ) : (
@@ -181,8 +193,21 @@ function DayDetail({ day, number }) {
           {t('week.day.kcal', { kcal: number(day.totals.kcal), target: number(target) })}
         </span>
       )}
-      <span> {t(`week.status.${day.bar.status}`)}</span>
-      <span>
+      <span className="status"> {t(`week.status.${day.bar.status}`)}</span>
+      {target == null ? null : (
+        <span className={day.bar.status === 'over' ? 'meter over' : 'meter'} aria-hidden="true">
+          <progress max="1" value={day.bar.fraction} />
+          <span
+            className="aim"
+            style={{
+              left: `${Math.round((day.bar.aimLow / target) * 100)}%`,
+              width: `${Math.max(0, Math.round(((day.bar.aimHigh - day.bar.aimLow) / target) * 100))}%`,
+            }}
+          />
+          <span className="goal" />
+        </span>
+      )}
+      <span className="small mute macro-line">
         {' '}
         {t('week.day.macros', {
           protein: units.formatMacro(day.totals.protein),
