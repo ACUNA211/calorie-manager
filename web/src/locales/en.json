@@ -806,7 +806,103 @@
       "foods": "Foods",
       "pantry": "Pantry",
       "recipes": "Recipes",
-      "more": "More"
+      "more": "More",
+      "preferences": "Preferences"
+    }
+  },
+  "preferences": {
+    "heading": "Preferences",
+    "intro": "What the Agent plans from. Hard rules are never broken: Recipes that break one are filtered out before the Agent sees them.",
+    "loading": "Loading Preferences…",
+    "loadError": "Could not load Preferences.",
+    "saving": "Saving…",
+    "saveError": "Could not save. Try again.",
+    "notSet": "Not set",
+    "listHint": "Separate items with commas.",
+    "moreLink": "Preferences",
+    "household": {
+      "heading": "Household Preferences",
+      "intro": "Shared by everyone in the Household. Any Member can change them.",
+      "cuisines": "Cuisines you like",
+      "weeknight": "Cooking time on weeknights (minutes)",
+      "weekend": "Cooking time on weekends (minutes)",
+      "equipment": "Equipment",
+      "repeat": "How often meals can repeat",
+      "leftovers": "How many leftovers are fine",
+      "budget": "Budget feel",
+      "save": "Save Household Preferences",
+      "saved": "Household Preferences saved."
+    },
+    "member": {
+      "heading": "Member Preferences",
+      "forDependent": "These are for {{name}}.",
+      "intro": "Favourites and dislikes are soft: the Agent leans toward and away from them.",
+      "favourites": "Favourite foods",
+      "dislikes": "Dislikes",
+      "save": "Save Member Preferences",
+      "saved": "Member Preferences saved."
+    },
+    "hard": {
+      "heading": "Hard rules",
+      "intro": "Allergies, foods this Member will not eat, and diet rules. These are never broken.",
+      "foods": "Foods to never serve",
+      "groups": "Food groups to avoid",
+      "diets": "Diet rules"
+    },
+    "errors": {
+      "minutesWhole": "Enter a whole number of minutes.",
+      "minutesRange": "Enter between 5 and 480 minutes.",
+      "tooManyItems": "Use 50 items or fewer.",
+      "itemTooLong": "Each item can be at most 60 characters."
+    },
+    "equipment": {
+      "oven": "Oven",
+      "stovetop": "Stovetop",
+      "slow_cooker": "Slow cooker",
+      "pressure_cooker": "Pressure cooker",
+      "air_fryer": "Air fryer",
+      "microwave": "Microwave",
+      "grill": "Grill",
+      "blender": "Blender",
+      "rice_cooker": "Rice cooker"
+    },
+    "repeat": {
+      "rarely": "Rarely",
+      "sometimes": "Sometimes",
+      "often": "Often"
+    },
+    "leftovers": {
+      "none": "None",
+      "some": "Some",
+      "plenty": "Plenty"
+    },
+    "budget": {
+      "tight": "Tight",
+      "moderate": "Moderate",
+      "relaxed": "Relaxed"
+    },
+    "groups": {
+      "dairy": "Dairy",
+      "eggs": "Eggs",
+      "fish": "Fish",
+      "shellfish": "Shellfish",
+      "peanuts": "Peanuts",
+      "tree_nuts": "Tree nuts",
+      "wheat_gluten": "Wheat and gluten",
+      "soy": "Soy",
+      "sesame": "Sesame",
+      "pork": "Pork",
+      "beef": "Beef",
+      "poultry": "Poultry"
+    },
+    "diets": {
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "pescatarian": "Pescatarian",
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "gluten_free": "Gluten free",
+      "dairy_free": "Dairy free"
     }
   }
 }

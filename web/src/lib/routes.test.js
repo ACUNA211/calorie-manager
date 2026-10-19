@@ -17,6 +17,11 @@ describe('routes', () => {
     for (const route of ROUTES) expect(routeFromPath(pathFor(route))).toBe(route);
   });
 
+  it('accepts the Preferences path without making it a tab', () => {
+    expect(routeFromPath('/preferences')).toBe('preferences');
+    expect(ROUTES).not.toContain('preferences');
+  });
+
   it('ignores a trailing slash', () => {
     expect(routeFromPath('/week/')).toBe('week');
   });

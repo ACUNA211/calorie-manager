@@ -2,6 +2,8 @@
 
 export const ROUTES = ['today', 'week', 'foods', 'pantry', 'recipes', 'more'];
 export const DEFAULT_ROUTE = 'today';
+// Screens with a path but no tab (opened from More).
+export const EXTRA_ROUTES = ['preferences'];
 
 export function pathFor(route) {
   return `/${route}`;
@@ -10,7 +12,7 @@ export function pathFor(route) {
 // The route a path belongs to, or null for "/" and unknown paths. A trailing slash is ignored.
 export function routeFromPath(pathname) {
   const name = String(pathname ?? '').replace(/^\/+|\/+$/g, '');
-  return ROUTES.includes(name) ? name : null;
+  return ROUTES.includes(name) || EXTRA_ROUTES.includes(name) ? name : null;
 }
 
 // The route to show for a path: unknown paths fall back to Today.
