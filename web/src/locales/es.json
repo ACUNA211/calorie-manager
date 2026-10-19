@@ -595,6 +595,33 @@
       "aTick": "Una marca",
       "retry": "Intentar de nuevo",
       "discard": "Descartar"
+    },
+    "scan": {
+      "button": "Escanear un producto",
+      "needsConnection": "Escanear necesita conexión. Marca la línea a mano por ahora.",
+      "looking": "Buscando {{code}}…",
+      "ticking": "Marcando la línea…",
+      "adding": "Añadiendo a la despensa…",
+      "askWeight": "¿Cuánto pesa un envase de {{name}}? La app lo recuerda para la próxima vez.",
+      "weightLabel": "Peso de un envase de {{name}} ({{unit}})",
+      "weightSave": "Guardar peso y continuar",
+      "weightSaving": "Guardando…",
+      "weightError": "No se pudo guardar ese peso. Inténtalo de nuevo.",
+      "notOnList": "{{name}} no está en la lista de la compra. ¿Añadir un envase a la despensa?",
+      "alreadyTicked": "{{name}} ya está marcado en la lista. ¿Añadir otro envase a la despensa?",
+      "addToPantry": "Añadir a la despensa",
+      "ticked": "{{name}} marcado como comprado con su peso real, {{grams}}.",
+      "pantryAdded": "Añadido un envase de {{name}} ({{grams}}) a la despensa. No estaba en la lista de la compra.",
+      "notFound": "Ningún alimento coincide con el código de barras {{code}}.",
+      "typeInLabel": "Escribir la etiqueta",
+      "offBusy": "Open Food Facts está ocupado. Vuelve a escanear en un minuto.",
+      "offError": "No se pudo conectar con Open Food Facts. Vuelve a escanear.",
+      "offOnly": "{{name}} se encontró en Open Food Facts, pero aún no se puede marcar ni añadir.",
+      "error": "No se pudo buscar este producto. Revisa tu conexión e inténtalo de nuevo.",
+      "addError": "No se pudo añadir este producto a la despensa. Inténtalo de nuevo.",
+      "tickError": "No se pudo marcar esa línea. Inténtalo de nuevo.",
+      "scanAgain": "Escanear otro producto",
+      "cancel": "Cerrar"
     }
   },
   "today": {

@@ -595,6 +595,33 @@
       "aTick": "A tick",
       "retry": "Try again",
       "discard": "Discard"
+    },
+    "scan": {
+      "button": "Scan a product",
+      "needsConnection": "Scanning needs a connection. Tick the line by hand for now.",
+      "looking": "Looking up {{code}}…",
+      "ticking": "Ticking the line…",
+      "adding": "Adding to the Pantry…",
+      "askWeight": "How much does one package of {{name}} weigh? The app remembers it for next time.",
+      "weightLabel": "Weight of one package of {{name}} ({{unit}})",
+      "weightSave": "Save weight and continue",
+      "weightSaving": "Saving…",
+      "weightError": "Could not save that weight. Try again.",
+      "notOnList": "{{name}} is not on the Shopping list. Add one package to the Pantry?",
+      "alreadyTicked": "{{name}} is already ticked on the list. Add another package to the Pantry?",
+      "addToPantry": "Add to the Pantry",
+      "ticked": "{{name}} ticked Bought at its real weight, {{grams}}.",
+      "pantryAdded": "Added one package of {{name}} ({{grams}}) to the Pantry. It was not on the Shopping list.",
+      "notFound": "No food matches the barcode {{code}}.",
+      "typeInLabel": "Type in the label",
+      "offBusy": "Open Food Facts is busy. Try scanning again in a minute.",
+      "offError": "Could not reach Open Food Facts. Try scanning again.",
+      "offOnly": "{{name}} was found on Open Food Facts, but it can't be ticked or added yet.",
+      "error": "Could not look this product up. Check your connection and try again.",
+      "addError": "Could not add this product to the Pantry. Try again.",
+      "tickError": "Could not tick that line. Try again.",
+      "scanAgain": "Scan another product",
+      "cancel": "Close"
     }
   },
   "today": {

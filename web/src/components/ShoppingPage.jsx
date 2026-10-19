@@ -11,6 +11,7 @@ import {
 } from '../lib/shoppingLogic.js';
 import { useOfflineShopping } from '../lib/useOfflineShopping.js';
 import ShoppingAddForm from './ShoppingAddForm.jsx';
+import ShoppingScan from './ShoppingScan.jsx';
 import Toast from './Toast.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { useUnits } from '../lib/useUnits.jsx';
@@ -62,22 +63,24 @@ export default function ShoppingPage() {
     setState((current) => ({ ...current, lines: withTicked(current.lines, lineId, purchased) }));
   }
 
-  // One call per tick. The line moves to Done at once and goes back if the call fails.
-  async function tick(line, kind) {
+  // One call per tick (the buttons and the scan both use it). The line moves to Done at once and
+  // goes back if the call fails. `grams` is a scanned package weight. Resolves true when the tick
+  // was made or kept on the phone, false when it failed.
+  async function tick(line, kind, grams = null) {
     setTicked(line.id, true);
     try {
-      const outcome = await shopping.tick(line.id, kind);
+      const outcome = await shopping.tick(line.id, kind, grams);
       if (outcome.queued) {
         showToast(t('shopping.toast.queued', { name: line.name }), async () => {
           shopping.cancelTick(line.id);
           setTicked(line.id, false);
         });
-        return;
+        return true;
       }
       const result = outcome.result;
       if (!result.applied) {
         setToast(null);
-        return;
+        return true;
       }
       const key = kind === 'have_it' ? 'haveIt' : 'bought';
       const text =
@@ -91,9 +94,11 @@ export default function ShoppingPage() {
         await untickLine(supabase, line.id);
         setTicked(line.id, false);
       });
+      return true;
     } catch {
       setTicked(line.id, false);
       showToast(t('shopping.toast.tickFailed'), null);
+      return false;
     }
   }
 
@@ -209,6 +214,11 @@ export default function ShoppingPage() {
       {state.status === 'ready' && state.lines.length > 0 && open.length === 0 && (
         <p>{t('shopping.allDone')}</p>
       )}
+      <ShoppingScan
+        lines={withQueued(state.lines, shopping.items)}
+        online={shopping.online}
+        onTick={(line, grams) => tick(line, 'bought', grams)}
+      />
       <ShoppingAddForm online={shopping.online} onAdd={addLine} />
       {open.map((group) => (
         <section key={group.section} className="store-section">
