@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 20 (Type in a label for an unknown barcode), 12 (AI cap counter), 83 (Deploy the Edge Functions and set their secrets), 96 (Phone check: label photo)
+**Blocked by:** 20 (Type in a label for an unknown barcode), 12 (AI cap counter), 83 (Deploy the Edge Functions and set their secrets), 96 (Phone check: label photo), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting: apply migration 035, set the AI key, deploy read-label, photograph a real label on the phone)
 

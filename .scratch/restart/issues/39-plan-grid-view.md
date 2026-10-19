@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 08 (Move shared tables into the Household), 22 (Shared Meal Times), 28 (Recipes page)
+**Blocked by:** 08 (Move shared tables into the Household), 22 (Shared Meal Times), 28 (Recipes page), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you: run the database tests with `supabase test db` and push migration 038, then open Plan from More with real data)
 
