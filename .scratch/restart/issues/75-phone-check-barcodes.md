@@ -6,9 +6,13 @@
 
 **Blocked by:** 73 (Deploy the app to Cloudflare Pages)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 17
 
-- [ ] UPC-A and EAN-13 read on every phone
-- [ ] Results table in ticket 17 filled in
+- [x] UPC-A and EAN-13 read on every phone
+- [x] Results table in ticket 17 filled in
+
+## Comments
+
+- 2026-10-18: Sergio ran the test on both Household Android phones and the iPhone: UPC-A and EAN-13 read on every phone. Per-phone numbers (engine, read time, misses) were not recorded, by his choice; see ticket 17.

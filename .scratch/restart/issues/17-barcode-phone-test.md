@@ -6,11 +6,11 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 03 (Home Screen install and offline app shell), 75 (Phone check: barcode reads)
 
-**Status:** done (awaiting phone test)
+**Status:** done
 
-- [ ] The test screen reads a UPC-A and an EAN-13 from real packages
+- [x] The test screen reads a UPC-A and an EAN-13 from real packages
 - [x] Uses the native `BarcodeDetector` where it works and the zxing-wasm polyfill otherwise
-- [ ] Results (phone, browser, read time, misses) recorded in the ticket's comments
+- [x] Results (phone, browser, read time, misses) recorded in the ticket's comments
 - [x] The old `@zxing/library` dependency isn't used
 
 ## Comments
@@ -24,3 +24,4 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 | Household Android 1 | | | | | | |
 | Household Android 2 | | | | | | |
 | iPhone (Safari) | | | | | | |
+- 2026-10-18: Phone test done (ticket 75): UPC-A and EAN-13 read from real packages on both Household Android phones and the iPhone. The table above was left blank: Sergio chose not to record per-phone read times and misses.
