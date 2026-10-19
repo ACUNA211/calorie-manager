@@ -24,7 +24,7 @@ A Household PWA: barcode Scan into one shared Pantry, a Household Recipe library
 
 68 tickets in `issues/`, numbered in dependency order: 01–36 release 1, 37–56 release 2, 57–63 release 3, 64–68 release 4. Added later to release 1: 89–93 (app shell and navigation, prototype layouts, Settings screen, and two fixes from the 79 review). The frontier (no blockers): 01, 02, 15, 35, 36. What's built vs this plan: [research/built-vs-restart.md](research/built-vs-restart.md).
 
-GitHub Issues #1–#68 were opened from the 01–68 drafts on 2026-10-17 and haven't been kept in step since: `issues/` here is the live tracker, and the GitHub copies still show every ticket open.
+GitHub Issues #1–#68 mirror tickets 01–68; `issues/` here is the live tracker. Last synced 2026-10-18: tickets marked plain "done" are closed, ones built but waiting on a human ticket carry the `waiting-on-human` label, the rest stay `ready-for-agent`. Tickets 69–93 exist only here.
 
 Your tasks: 69–88 are things only you can do (run the database tests, deploy, phone checks, API keys, decisions, review). Each is `Status: ready-for-human` and is listed in the Blocked by line of the agent tickets it holds up, so a ticket isn't closed until its human task is done. Start with the ones that have no blockers: 69, 70, 71, 72, 77, 79.
 
