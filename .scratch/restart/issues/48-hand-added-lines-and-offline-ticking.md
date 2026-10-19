@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 46 (Shopping list from approve), 34 (Offline logging)
+**Blocked by:** 46 (Shopping list from approve), 34 (Offline logging), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you to run `supabase db reset` then `supabase test db` on a local stack, which checks migration 047 and shopping_hand_lines_test.sql, then tick the first and third boxes)
 
