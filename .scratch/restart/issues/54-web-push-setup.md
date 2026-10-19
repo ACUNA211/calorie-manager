@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 03 (Home Screen install and offline app shell)
+**Blocked by:** 03 (Home Screen install and offline app shell), 102 (Set up Web Push keys, deploy and test on phones)
 
 **Status:** done (awaiting you: create the VAPID keys and set them, deploy migration 043 and the send-push function, then test on an Android phone and an installed iPhone; steps in Comments)
 
