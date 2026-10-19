@@ -1,0 +1,18 @@
+{
+  "_note": "Hand-written in the Anthropic Messages API response shape for tests (ticket #66). Not captured from a live call; re-record after the key is set and a real label has been photographed.",
+  "id": "msg_recorded_label_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"readable\":true,\"name\":\"Oat drink\",\"brand\":\"Oatly\",\"servingGrams\":250,\"kcal\":92,\"protein\":1,\"carbs\":15,\"fat\":3,\"fibre\":null,\"sugars\":7,\"sodium\":100}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 1650,
+    "output_tokens": 62
+  }
+}

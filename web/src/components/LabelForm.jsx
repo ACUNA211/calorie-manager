@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js';
 import { parseLabelForm, saveLabelFood } from '../lib/label.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { useUnits } from '../lib/useUnits.jsx';
+import LabelPhotoPicker from './LabelPhotoPicker.jsx';
 
 // The fields, in the order a Nutrition Facts label reads. Each is a text box so a comma
 // works as the decimal mark; lib/label.js reads the numbers.
@@ -96,6 +97,14 @@ export default function LabelForm({ code, onSaved, onCancel }) {
       <h4>{t('foods.labelTitle')}</h4>
       <p>{t('foods.labelIntro')}</p>
       <p>{t('foods.labelBlankNote')}</p>
+      <LabelPhotoPicker
+        onValues={(photoValues) => {
+          // Pre-fill only: the Member still checks and presses Save (ticket 66)
+          setValues(photoValues);
+          setErrors({});
+          setStatus(null);
+        }}
+      />
       {FIELDS.map(([field, labelKey, mode]) => {
         const errorKey = errors[field];
         const id = `label-${field}`;

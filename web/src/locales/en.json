@@ -787,5 +787,15 @@
       "saveError": "Could not save your sharing setting. Try again.",
       "noMember": "Join or create a Household first."
     }
+  },
+  "labelPhoto": {
+    "take": "Take a photo of the label",
+    "fileLabel": "Label photo",
+    "reading": "Reading the label…",
+    "done": "Label read. Check every value against the package, then save.",
+    "cap": "The AI limit for this month is reached. Type the label in instead.",
+    "unreadable": "The label could not be read. Retake the photo in good light, or type it in.",
+    "badPhoto": "Use a JPEG, PNG or WebP photo under 5 MB.",
+    "failed": "Could not read the label. Try again, or type it in."
   }
 }
