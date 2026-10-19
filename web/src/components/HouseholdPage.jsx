@@ -12,6 +12,7 @@ import { buildInviteUrl, createInvite } from '../lib/invites.js';
 import { useActingMember } from '../lib/actingMember.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import AiSpendPanel from './AiSpendPanel.jsx';
+import ApproverSetting from './ApproverSetting.jsx';
 import SharingSetting from './SharingSetting.jsx';
 
 export default function HouseholdPage({ user }) {
@@ -83,6 +84,7 @@ function MemberList({ household, onChanged }) {
       )}
       <AiSpendPanel client={supabase} />
       {household.myRole === 'owner' && <InviteLink householdId={household.id} />}
+      {household.myRole === 'owner' && <ApproverSetting />}
       {household.myRole === 'owner' && (
         <DependentsEditor household={household} onChanged={onChanged} />
       )}

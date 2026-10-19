@@ -12,6 +12,8 @@ vi.mock('../lib/plan.js', () => ({
   loadPlanWeek: vi.fn(),
   loadSlotMealTimes: vi.fn(),
   loadRecipeChoices: vi.fn(),
+  loadCanApprove: vi.fn(),
+  approvePlan: vi.fn(),
   addCook: vi.fn(),
   deleteCook: vi.fn(),
   setPortion: vi.fn(),
@@ -75,6 +77,7 @@ const slots = [
 function setupMocks() {
   for (const fn of Object.values(plan)) fn.mockReset();
   vi.mocked(plan.loadSlotMealTimes).mockResolvedValue(slots);
+  vi.mocked(plan.loadCanApprove).mockResolvedValue(false);
   vi.mocked(plan.loadRecipeChoices).mockResolvedValue([
     { id: 5, name: 'Pasta bake' },
     { id: 6, name: 'Chili' },

@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 import {
   addCook,
+  approvePlan,
   deleteCook,
+  loadCanApprove,
   loadPlanWeek,
   loadRecipeChoices,
   loadSlotMealTimes,
@@ -11,6 +13,7 @@ import {
   setPortion,
 } from '../lib/plan.js';
 import {
+  approveAction,
   buildPlanGrid,
   planMove,
   planPlacement,
@@ -45,6 +48,7 @@ export default function PlanPage() {
   const [start, setStart] = useState(() => weekStartKey(todayKey));
   const [filter, setFilter] = useState('all');
   const [state, setState] = useState(LOADING);
+  const [canApprove, setCanApprove] = useState(false);
   const [recipes, setRecipes] = useState([]);
   const [newCook, setNewCook] = useState({ recipeId: '', day: '' });
   const [editor, setEditor] = useState(null);
@@ -74,6 +78,20 @@ export default function PlanPage() {
       })
       .catch(() => {
         if (active) setRecipes([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadCanApprove(supabase)
+      .then((allowed) => {
+        if (active) setCanApprove(allowed === true);
+      })
+      .catch(() => {
+        if (active) setCanApprove(false);
       });
     return () => {
       active = false;
@@ -158,10 +176,24 @@ export default function PlanPage() {
       );
     }
 
+    const approveKind = approveAction(data.plan, canApprove);
+
     body = (
       <>
         {grid.changedSinceApproval ? (
           <p className="plan-changed">{t('plan.changedSinceApproval')}</p>
+        ) : null}
+
+        {approveKind ? (
+          <p className="plan-approve">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => save(() => approvePlan(supabase, data.plan.id))}
+            >
+              {busy ? t('plan.approving') : t(`plan.${approveKind}Button`)}
+            </button>
+          </p>
         ) : null}
 
         <form

@@ -113,3 +113,16 @@ export const movePortion = (client, portionId, mealTimeId, eatDate) =>
 
 export const removePortion = (client, portionId) =>
   call(client, 'plan_remove_portion', { p_portion_id: portionId });
+
+// Approve (migration 041). The Owner always may; Members only when the Owner allowed them.
+// The database checks it too, so hiding the button is a convenience, not the rule.
+export async function loadCanApprove(client) {
+  const { data, error } = await client.rpc('plan_can_approve');
+  if (error) throw error;
+  return data === true;
+}
+
+// Approves the plan. Safe to call twice: the second call changes nothing, and approving an
+// edited approved plan again clears its "changed since approval" mark. Approval is what builds
+// the Shopping list (ticket 46 hooks in on the database side, inside plan_approve()).
+export const approvePlan = (client, planId) => call(client, 'plan_approve', { p_plan_id: planId });
