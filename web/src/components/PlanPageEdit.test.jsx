@@ -10,6 +10,8 @@ vi.mock('../lib/plan.js', () => ({
   loadPlanWeek: vi.fn(),
   loadSlotMealTimes: vi.fn(),
   loadRecipeChoices: vi.fn(),
+  loadCanApprove: vi.fn(),
+  approvePlan: vi.fn(),
   addCook: vi.fn(),
   deleteCook: vi.fn(),
   setPortion: vi.fn(),
@@ -85,6 +87,8 @@ describe('PlanPage editing', () => {
     for (const fn of Object.values(plan)) fn.mockReset();
     vi.mocked(plan.loadPlanWeek).mockResolvedValue(makePlan());
     vi.mocked(plan.loadSlotMealTimes).mockResolvedValue(slots);
+    vi.mocked(plan.loadCanApprove).mockResolvedValue(false);
+    vi.mocked(plan.approvePlan).mockResolvedValue({ status: 'approved' });
     vi.mocked(plan.loadRecipeChoices).mockResolvedValue([
       { id: 5, name: 'Pasta bake' },
       { id: 6, name: 'Chili' },
@@ -232,5 +236,46 @@ describe('PlanPage editing', () => {
     renderPage();
     await screen.findByText('Approved plan');
     expect(screen.queryByText(/changed since/)).not.toBeInTheDocument();
+  });
+
+  it('shows no Approve button to someone who may not approve', async () => {
+    renderPage();
+    await screen.findByText('Oat bowl');
+    expect(screen.queryByRole('button', { name: /^Approve/ })).not.toBeInTheDocument();
+  });
+
+  it('shows Approve to someone allowed, and approves then reads the week again', async () => {
+    vi.mocked(plan.loadCanApprove).mockResolvedValue(true);
+    vi.mocked(plan.loadPlanWeek)
+      .mockResolvedValueOnce(makePlan())
+      .mockResolvedValue(makePlan('approved', false));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Approve plan' }));
+    expect(plan.approvePlan).toHaveBeenCalledWith({}, 1);
+    expect(await screen.findByText('Approved plan')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Approve/ })).not.toBeInTheDocument();
+  });
+
+  it('offers to approve again when an approved plan was changed', async () => {
+    vi.mocked(plan.loadCanApprove).mockResolvedValue(true);
+    vi.mocked(plan.loadPlanWeek).mockResolvedValue(makePlan('approved', true));
+    renderPage();
+    expect(await screen.findByRole('button', { name: 'Approve the changes' })).toBeInTheDocument();
+  });
+
+  it('shows no Approve button on an approved plan that is untouched', async () => {
+    vi.mocked(plan.loadCanApprove).mockResolvedValue(true);
+    vi.mocked(plan.loadPlanWeek).mockResolvedValue(makePlan('approved', false));
+    renderPage();
+    await screen.findByText('Approved plan');
+    expect(screen.queryByRole('button', { name: /^Approve/ })).not.toBeInTheDocument();
+  });
+
+  it('says so when approving fails', async () => {
+    vi.mocked(plan.loadCanApprove).mockResolvedValue(true);
+    vi.mocked(plan.approvePlan).mockRejectedValue(new Error('no'));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Approve plan' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not save that change');
   });
 });

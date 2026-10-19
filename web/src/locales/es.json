@@ -873,7 +873,10 @@
     "moveError": {
       "noSlot": "Un miembro de ahí no comparte ese horario de comida ese día.",
       "occupied": "Un miembro ya tiene una Porción en ese horario de comida."
-    }
+    },
+    "approveButton": "Aprobar el plan",
+    "approving": "Aprobando...",
+    "approveAgainButton": "Aprobar los cambios"
   },
   "preferences": {
     "heading": "Preferencias",
@@ -1008,5 +1011,14 @@
     "account": "Cuenta",
     "signedInAs": "Sesión iniciada como {{email}}",
     "signOut": "Cerrar sesión"
+  },
+  "approve": {
+    "heading": "Quién puede aprobar el plan",
+    "hint": "Tú siempre puedes aprobar el Plan de comidas. Marca a un Miembro para que también pueda aprobarlo.",
+    "loading": "Cargando...",
+    "loadError": "No se pudo cargar quién puede aprobar. Inténtalo de nuevo.",
+    "none": "Aún no hay otros Miembros adultos.",
+    "allow": "Dejar que {{name}} apruebe el plan",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo."
   }
 }

@@ -169,3 +169,6 @@
   align-items: center;
   gap: var(--space-1);
 }
+.plan-approve {
+  margin: 0 0 var(--space-2);
+}

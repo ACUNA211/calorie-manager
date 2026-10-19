@@ -296,3 +296,15 @@ export function servingsMadeFor(servingsMade, portionServings) {
   const total = portionServings.reduce((sum, servings) => sum + servings, 0);
   return Math.max(servingsMade ?? 0, total);
 }
+
+// Which Approve button the Plan page shows (ticket 45). Only someone allowed to approve (the
+// Owner, or a Member the Owner allowed) sees one; the database enforces it too.
+//   'approve'       the plan is a draft
+//   'approveAgain'  the plan was approved and has been edited since
+//   null            nothing to approve: no plan, already approved and unchanged, or not allowed
+export function approveAction(plan, canApprove) {
+  if (!canApprove || !plan) return null;
+  if (plan.status === 'draft') return 'approve';
+  if (plan.status === 'approved' && plan.changed_since_approval) return 'approveAgain';
+  return null;
+}

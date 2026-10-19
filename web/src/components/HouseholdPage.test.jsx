@@ -21,6 +21,10 @@ vi.mock('../lib/supabase.js', () => ({
     },
   },
 }));
+vi.mock('../lib/approvers.js', () => ({
+  loadApprovers: vi.fn(async () => []),
+  setMemberCanApprove: vi.fn(),
+}));
 vi.mock('../lib/sharing.js', () => ({
   currentUserId: vi.fn(async () => null),
   loadHouseholdWeeks: vi.fn(async () => []),
@@ -259,6 +263,17 @@ describe('HouseholdPage Dependents', () => {
 
     expect(await screen.findByRole('heading', { name: 'Acuna home' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Dependents' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Who may approve the plan' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows the Owner who may approve the plan', async () => {
+    render(<HouseholdPage user={user} />, { wrapper: I18nProvider });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Who may approve the plan' })
+    ).toBeInTheDocument();
   });
 
   it('adds a Dependent, trimmed, then reloads the list', async () => {

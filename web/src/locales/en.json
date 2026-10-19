@@ -873,7 +873,10 @@
     "moveError": {
       "noSlot": "A Member there does not share that Meal Time on that day.",
       "occupied": "A Member already has a Portion at that Meal Time."
-    }
+    },
+    "approveButton": "Approve plan",
+    "approving": "Approving...",
+    "approveAgainButton": "Approve the changes"
   },
   "preferences": {
     "heading": "Preferences",
@@ -1008,5 +1011,14 @@
     "account": "Account",
     "signedInAs": "Signed in as {{email}}",
     "signOut": "Sign out"
+  },
+  "approve": {
+    "heading": "Who may approve the plan",
+    "hint": "You can always approve the Meal Plan. Tick a Member to let them approve it too.",
+    "loading": "Loading...",
+    "loadError": "Could not load who may approve. Try again.",
+    "none": "No other adult Members yet.",
+    "allow": "Let {{name}} approve the plan",
+    "saveError": "Could not save that. Try again."
   }
 }
