@@ -79,6 +79,8 @@ export function lineFromRow(row) {
         ? null
         : Number(row.measure_count),
     addedAt: row.created_at || null,
+    clientId: row.client_id || null,
+    pending: null,
   };
 }
 
@@ -163,4 +165,83 @@ export function pantryAfterUndo(held, delta) {
 // The list with one line marked ticked (or unticked again, for Undo).
 export function withTicked(lines, lineId, purchased) {
   return lines.map((line) => (line.id === lineId ? { ...line, purchased } : line));
+}
+
+// ---- Hand-added lines and offline ticking (ticket 48) ----
+
+// The queue items. A tick is keyed by its line, so ticking the same line twice on one phone is one
+// item (the first tick wins). An add is keyed by the id the phone made for the line.
+export function queuedTick({ lineId, kind, grams = null }) {
+  return { clientId: `tick:${lineId}`, row: { op: 'tick', lineId, kind, grams } };
+}
+
+export function queuedAdd({ clientId, name, foodId = null, grams = null, text = null }) {
+  return { clientId, row: { op: 'add', clientId, name, foodId, grams, text } };
+}
+
+// The list with the queue laid over it: a line with a queued tick shows as ticked, and a queued add
+// that the database does not have yet shows as a new line. Both carry `pending` so the screen can
+// mark them "Not synced". An add the database already has (it was sent but the list has not been
+// reloaded yet) is not shown twice.
+export function withQueued(lines, items) {
+  const known = new Set(lines.map((line) => line.clientId).filter(Boolean));
+  const ticks = new Map();
+  for (const item of items) {
+    if (item.row?.op === 'tick') ticks.set(item.row.lineId, item);
+  }
+  const out = lines.map((line) => {
+    const item = ticks.get(line.id);
+    if (!item) return line;
+    return { ...line, purchased: true, pending: item.status };
+  });
+  for (const item of items) {
+    if (item.row?.op !== 'add' || known.has(item.row.clientId)) continue;
+    out.push({
+      id: item.row.clientId,
+      clientId: item.row.clientId,
+      name: item.row.name,
+      foodId: item.row.foodId,
+      source: 'hand',
+      purchased: false,
+      grams: item.row.grams,
+      needGrams: null,
+      text: item.row.text || '',
+      storeSection: 'Other',
+      measureKind: null,
+      measureLabel: null,
+      measureCount: null,
+      addedAt: item.queuedAt,
+      pending: item.status,
+    });
+  }
+  return out;
+}
+
+export const HAND_NAME_MAX = 120;
+
+// Checks the add form. `food` is a Food Library result or null; `amount` is typed text in the
+// Member's units; `parseMass` reads it (units.parseMass). With a food the amount is a weight and
+// is kept as grams; without one it is free text ("one roll"). Returns
+// { ok: true, name, foodId, grams, text } or { ok: false, error } with a translation key.
+export function validateHandLine({ name, food = null, amount = '', parseMass, formatMass }) {
+  const typed = String(name ?? '').trim();
+  const label = typed || (food ? String(food.name ?? '') : '');
+  if (label === '') return { ok: false, error: 'shopping.add.errors.name' };
+  if (label.length > HAND_NAME_MAX) return { ok: false, error: 'shopping.add.errors.tooLong' };
+  const text = String(amount ?? '').trim();
+  if (text === '') {
+    return { ok: true, name: label, foodId: food?.id ?? null, grams: null, text: null };
+  }
+  if (text.length > HAND_NAME_MAX) return { ok: false, error: 'shopping.add.errors.tooLong' };
+  if (!food) return { ok: true, name: label, foodId: null, grams: null, text };
+  const parsed = parseMass(text);
+  if (!parsed.ok) return { ok: false, error: 'shopping.add.errors.amount' };
+  if (parsed.grams > PANTRY_MAX_GRAMS) return { ok: false, error: 'shopping.add.errors.amount' };
+  return {
+    ok: true,
+    name: label,
+    foodId: food.id,
+    grams: parsed.grams,
+    text: formatMass(parsed.grams),
+  };
 }

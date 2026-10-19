@@ -97,7 +97,10 @@ function renderPage() {
 }
 
 describe('ShoppingPage', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.localStorage.clear();
+  });
   afterEach(cleanup);
 
   it('groups lines by store section in shopping order', async () => {
@@ -105,7 +108,7 @@ describe('ShoppingPage', () => {
     renderPage();
     await screen.findByText('Apple');
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['Produce', 'Canned & dry goods', 'Other', 'Done']);
+    expect(headings).toEqual(['Add a line', 'Produce', 'Canned & dry goods', 'Other', 'Done']);
   });
 
   it('shows the shopping measure and the date each line was added', async () => {
@@ -248,7 +251,7 @@ describe('ShoppingPage', () => {
 
     it('puts the line back and says so when the tick fails', async () => {
       fakeList(rows);
-      supabase.rpc.mockResolvedValue({ data: null, error: { message: 'down' } });
+      supabase.rpc.mockResolvedValue({ data: null, error: { message: 'down', code: '42501' } });
       renderPage();
       await screen.findByText('Apple');
       fireEvent.click(screen.getByRole('button', { name: 'Bought: Apple' }));

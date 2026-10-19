@@ -15,6 +15,9 @@ import { rankLibrary } from './foods.js';
 
 export const QUEUE_KEY = 'calorie-manager.offline-log';
 export const FOOD_CACHE_KEY = 'calorie-manager.offline-foods';
+// The Shopping list's queue (ticket #48): the same items, rules and syncQueue, kept under its own
+// key so the Calorie Log's sender never sees a shopping row.
+export const SHOPPING_QUEUE_KEY = 'calorie-manager.offline-shopping';
 // Most Food Library results kept on the phone. Searches add to it and it never grows past this.
 export const FOOD_CACHE_LIMIT = 2000;
 
@@ -75,6 +78,12 @@ export function queuedItem({ memberId, row, queuedAt }) {
   };
 }
 
+// A queued item that is not a Calorie Log entry (ticket #48). `row` is whatever the sender
+// needs, `clientId` is the id that keeps a repeat from being queued twice.
+export function queuedOp({ clientId, row, queuedAt }) {
+  return { clientId, memberId: null, logDate: null, queuedAt, row, status: 'queued', error: null };
+}
+
 // Pure list operations. Each returns a new array and leaves the old one as it was.
 export function addItem(items, item) {
   if (items.some((existing) => existing.clientId === item.clientId)) return items;
@@ -115,7 +124,7 @@ export function isNetworkError(error) {
   return !(error && typeof error.code === 'string' && error.code !== '');
 }
 
-// Sends the queue in order, once. `store` is a jsonStore for the queue. `send(row)` stores one
+// Sends the queue in order, once. `store` is a jsonStore for the queue. `send(row, item)` stores one
 // row and resolves when the server has it (including the case where a resend was already
 // stored). Rules:
 // - a network error stops the run; everything still queued waits for the next run;
@@ -133,7 +142,7 @@ export async function syncQueue({ store, send }) {
       break;
     }
     try {
-      await send(item.row);
+      await send(item.row, item);
     } catch (error) {
       if (isNetworkError(error)) {
         result.stopped = 'network';

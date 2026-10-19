@@ -562,11 +562,39 @@
       "plain": "{{name}} ticked.",
       "undo": "Undo",
       "tickFailed": "Could not tick that line. Try again.",
-      "undoFailed": "Could not undo that tick."
+      "undoFailed": "Could not undo that tick.",
+      "queued": "{{name}} ticked. Kept on this phone and sent when you are back online."
     },
     "measure": {
       "serving": "{{count}} × {{label}} ({{mass}})",
       "package": "{{count}} × package ({{mass}})"
+    },
+    "add": {
+      "heading": "Add a line",
+      "nameLabel": "What to buy",
+      "findFood": "Find in the Food Library",
+      "usingFood": "Using {{name}} from the Food Library.",
+      "noFoods": "No foods like that in the Food Library on this phone.",
+      "pickFood": "Use {{name}}",
+      "amountLabel": "Amount (optional)",
+      "amountFoodLabel": "Amount in {{unit}} (optional)",
+      "button": "Add to the list",
+      "added": "Added {{name}} to the list.",
+      "queued": "{{name}} is kept on this phone and will be added when you are back online.",
+      "errors": {
+        "name": "Type what to buy, or pick a food.",
+        "tooLong": "That is too long. Keep it under 120 characters.",
+        "amount": "Enter the amount as a number, such as 500 or 2 lb.",
+        "failed": "Could not add that line. Try again."
+      }
+    },
+    "offline": {
+      "notice": "No connection. Ticks and new lines are kept on this phone and sent when you are back online.",
+      "notSynced": "Not synced",
+      "failed": "{{name}} could not be sent: {{error}}",
+      "aTick": "A tick",
+      "retry": "Try again",
+      "discard": "Discard"
     }
   },
   "today": {

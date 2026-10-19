@@ -562,11 +562,39 @@
       "plain": "{{name}} marcado.",
       "undo": "Deshacer",
       "tickFailed": "No se pudo marcar esa línea. Inténtalo de nuevo.",
-      "undoFailed": "No se pudo deshacer esa marca."
+      "undoFailed": "No se pudo deshacer esa marca.",
+      "queued": "{{name}} marcado. Se guarda en este teléfono y se envía cuando vuelvas a tener conexión."
     },
     "measure": {
       "serving": "{{count}} × {{label}} ({{mass}})",
       "package": "{{count}} × paquete ({{mass}})"
+    },
+    "add": {
+      "heading": "Agregar una línea",
+      "nameLabel": "Qué comprar",
+      "findFood": "Buscar en la Biblioteca de alimentos",
+      "usingFood": "Usando {{name}} de la Biblioteca de alimentos.",
+      "noFoods": "No hay alimentos así en la Biblioteca de alimentos de este teléfono.",
+      "pickFood": "Usar {{name}}",
+      "amountLabel": "Cantidad (opcional)",
+      "amountFoodLabel": "Cantidad en {{unit}} (opcional)",
+      "button": "Agregar a la lista",
+      "added": "{{name}} agregado a la lista.",
+      "queued": "{{name}} se guarda en este teléfono y se agregará cuando vuelvas a tener conexión.",
+      "errors": {
+        "name": "Escribe qué comprar o elige un alimento.",
+        "tooLong": "Es demasiado largo. Usa menos de 120 caracteres.",
+        "amount": "Escribe la cantidad como un número, por ejemplo 500 o 2 lb.",
+        "failed": "No se pudo agregar esa línea. Inténtalo de nuevo."
+      }
+    },
+    "offline": {
+      "notice": "Sin conexión. Las marcas y las líneas nuevas se guardan en este teléfono y se envían cuando vuelvas a tener conexión.",
+      "notSynced": "Sin sincronizar",
+      "failed": "No se pudo enviar {{name}}: {{error}}",
+      "aTick": "Una marca",
+      "retry": "Intentar de nuevo",
+      "discard": "Descartar"
     }
   },
   "today": {
