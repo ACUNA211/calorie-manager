@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 45 (Approve), 25 (Pantry page)
+**Blocked by:** 45 (Approve), 25 (Pantry page), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you to run `supabase db reset` then `supabase test db` on a local stack, which checks migration 044 and shopping_list_test.sql, then tick the three database boxes)
 
