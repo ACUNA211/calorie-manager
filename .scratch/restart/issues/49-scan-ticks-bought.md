@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 47 (Bought / Have it), 18 (Scan finds a food)
+**Blocked by:** 47 (Bought / Have it), 18 (Scan finds a food), 105 (Phone check: scanning on the Shopping list)
 
 **Status:** done (awaiting phone test)
 
