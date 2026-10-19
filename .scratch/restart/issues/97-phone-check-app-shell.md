@@ -1,4 +1,4 @@
-# 97: Phone check: app shell
+# 97: Phone check: app shell and screen layouts
 
 **Type:** your task (not for an agent)
 
@@ -10,12 +10,17 @@
 4. The tab bar sits clear of the home indicator (this relies on `viewport-fit=cover` in `web/index.html`).
 5. Turn on airplane mode and open the app: it still opens (ticket 03's check).
 
-Tick the matching boxes in ticket 89, and note anything off in its Comments.
+6. Ticket 90 re-laid-out Today, Week, Meal Times, Recipes, Foods and Pantry, checked at 375 px only against made-up data. With real data, in English and in Spanish, open the Recipe editor, the paste flow, the Log food panel and the Edit entry panel, and full Foods and Pantry lists; note anything cramped or cut off in ticket 90's Comments.
+7. Delete two stray files the ticket 90 agent left outside the repo: `D:\tmp_baseline.txt` and `D:\scratch_vite.log`.
+
+Tick the matching boxes in ticket 89, and note anything off in its Comments (or ticket 90's for screen layouts).
 
 **Blocked by:** None (can start immediately)
 
 **Status:** ready-for-human
 
-**Unblocks:** 89
+**Unblocks:** 89, 90
 
-- [ ] All five checks pass, or what failed is noted in ticket 89
+- [ ] Checks 1–5 pass, or what failed is noted in ticket 89
+- [ ] Check 6 done, anything off noted in ticket 90
+- [ ] Stray files deleted

@@ -14,7 +14,7 @@ Behaviour stays as built: this is layout and style on top of the existing compon
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 89 (App shell and navigation)
+**Blocked by:** 89 (App shell and navigation), 97 (Phone check: app shell and screen layouts)
 
 **Status:** done (awaiting review)
 
