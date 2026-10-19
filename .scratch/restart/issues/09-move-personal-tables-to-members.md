@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Meal Times, Portions and Calorie Log rows each have a Member; current rows belong to the Owner
 - [ ] The one-row settings table is replaced by one settings row per Member, with the current Calorie Target and Planning band kept

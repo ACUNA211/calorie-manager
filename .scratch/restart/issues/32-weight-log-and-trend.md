@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 31 (Week view), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Log, edit and delete a weight entry
 - [x] The Week view shows a trend line over the last 12 weeks

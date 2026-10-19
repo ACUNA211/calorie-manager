@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 02 (App skeleton and sign-in), 79 (Review Release 1 work and push it)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] No user-facing string is hard-coded in components (a lint rule or test checks this)
 - [x] A language switch changes every visible string between English and Spanish without reloading

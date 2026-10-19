@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 73 (Deploy the app to Cloudflare Pages)
 
-**Status:** done except deploy (awaiting review)
+**Status:** done except deploy (73)
 
 - [x] `npm run dev`, `npm run build`, `npm test` and a lint command all work
 - [ ] A deployed Cloudflare Pages URL shows a sign-in form; signing in shows "Hi, <email>"; sign-out returns to the form

@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 09 (Move personal tables to Members), 72 (Decide: when do two Meal Times overlap?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] A Member can add, edit and delete Meal Times and toggle weekdays
 - [x] Set needs one calorie number; Planned and If room need a range

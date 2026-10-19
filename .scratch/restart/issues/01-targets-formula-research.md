@@ -4,7 +4,7 @@
 
 **Blocked by:** 70 (Decide: a minimum in suggested Targets?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 ## What to cover
 

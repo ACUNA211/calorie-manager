@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 21 (Meal Times page), 69 (Run the database tests locally), 72 (Decide: when do two Meal Times overlap?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Editing a Meal Time has a Members picker; the creator is always included
 - [x] A shared Meal Time shows on each sharing Member's grid, marked as shared

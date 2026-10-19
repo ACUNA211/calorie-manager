@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 13 (Macros in the Food Library), 04 (English/Spanish switch), 81 (Decide: show macros on USDA search results?), 86 (Set a real USDA API key)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Results show Food Library matches first, then USDA
 - [ ] Each result shows calories and macros per serving and per 100 g, in the Member's units

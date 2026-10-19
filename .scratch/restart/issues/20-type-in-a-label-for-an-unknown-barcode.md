@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 18 (Scan finds a food), 69 (Run the database tests locally), 75 (Phone check: barcode reads), 81 (Decide: show macros on USDA search results?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] The form converts per-serving values to per 100 g correctly (tested)
 - [ ] The saved food has the scanned barcode, and scanning it again finds it straight away

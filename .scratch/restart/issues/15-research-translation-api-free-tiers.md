@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 76 (Get API keys and run the research tests)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] A short markdown report in `.scratch/restart/research/` with a cited table and a pick (`.scratch/restart/research/translation-apis.md`)
 - [ ] Test 20 real food names from the Food Library on the top two options and include the outputs (pending a key: reference renderings are in the report, and `scripts/translate-test.mjs` is ready to run)

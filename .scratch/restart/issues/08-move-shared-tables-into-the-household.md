@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 05 (Households and Members), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Each shared table has a non-null `household_id` and Household policies
 - [ ] Every existing row belongs to the Owner's Household after the migration

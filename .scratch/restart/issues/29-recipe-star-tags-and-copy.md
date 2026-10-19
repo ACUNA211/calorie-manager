@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 28 (Recipes page), 69 (Run the database tests locally), 80 (Decide: Recipe servings, save and delete rules)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Star and Meal Time tags save and show in the Recipes list (with a starred filter)
 - [x] Copy makes a new Recipe with the same ingredients and a link back to the original

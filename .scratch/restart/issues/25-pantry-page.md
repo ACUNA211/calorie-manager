@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 14 (Food search page), 08 (Move shared tables into the Household), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Every Member of the Household sees and edits the same Pantry
 - [x] Adding the same food twice adds to its amount instead of a second row

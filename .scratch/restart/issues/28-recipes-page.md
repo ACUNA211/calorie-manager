@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 13 (Macros in the Food Library), 08 (Move shared tables into the Household), 80 (Decide: Recipe servings, save and delete rules)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] A Member can add, edit and delete a Recipe and its ingredients
 - [x] Per-serving calories and macros update as ingredients change

@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 10 (Targets by hand), 14 (Food search page), 21 (Meal Times page), 69 (Run the database tests locally), 84 (Decide: Today logging rules)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Logging a food adds an entry with calories and macros at the right Meal Time
 - [x] The day bar updates straight away and shows calories and macros left

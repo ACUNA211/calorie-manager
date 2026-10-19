@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 02 (App skeleton and sign-in), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Creating a Household makes the creator its Owner and only Member
 - [x] A person belongs to at most one Household (enforced in the database)

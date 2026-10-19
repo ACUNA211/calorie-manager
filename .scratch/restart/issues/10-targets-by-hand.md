@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 09 (Move personal tables to Members), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] A Member can save, edit and clear each Target; carbs and fat can be left empty
 - [x] Invalid values are refused with a message (band low above high, negative grams, etc.)

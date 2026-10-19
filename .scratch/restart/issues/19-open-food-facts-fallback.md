@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 18 (Scan finds a food), 69 (Run the database tests locally), 83 (Deploy the Edge Functions and set their secrets), 85 (Decide: how are Open Food Facts foods logged and stocked?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [ ] A product missing from USDA but present in OFF is found and can be used like any food
 - [ ] OFF rows live in their own table, never merged or edited into the Food Library

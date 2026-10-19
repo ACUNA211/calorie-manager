@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 31 (Week view), 69 (Run the database tests locally), 87 (Decide: what does "share everything" show?)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Another Member sees only flags for your days unless you share everything (policy tests)
 - [ ] Turning on "share everything" shows them your Week view and log

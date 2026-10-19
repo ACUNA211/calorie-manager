@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 23 (Today: log a food), 79 (Review Release 1 work and push it)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Each day shows calories vs Target and band, and macros vs Targets
 - [x] Days under and the weekly average are correct (unit-tested on sample data)

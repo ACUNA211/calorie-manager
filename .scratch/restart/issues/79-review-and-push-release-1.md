@@ -8,15 +8,16 @@ While reviewing, open the app in a browser at phone width (`npm run dev` in `web
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done except deleting D:/x
 
 **Unblocks:** 04, 24, 28, 31
 
-- [ ] Work reviewed
-- [ ] Spanish overlap question (21) approved or corrected
-- [ ] Spanish sharer strings (22) approved or corrected
-- [ ] Branch pushed or PR opened
+- [x] Work reviewed
+- [x] Spanish overlap question (21) approved or corrected
+- [x] Spanish sharer strings (22) approved or corrected
+- [x] Branch pushed or PR opened
 
 ## Comments
 
 - 2026-10-18: Review started on the local stack (`supabase db reset` 001–033, `supabase test db` 22 files / 387 tests pass; web tests 934 pass, lint and build clean). Findings so far, each now its own Release 1 ticket: no front end (every screen on one unstyled page) → 89, 90, 91; Today needs a reload after creating a Household → 92; macros show in oz with US units → 93.
+- 2026-10-18: Sergio reviewed and approved ("looks fine"), including the Spanish strings for 21 and 22 as written. Every "done (awaiting review)" ticket is now "done"; ones still waiting on a phone check, key or deploy keep that note. `restart` pushed to `origin/claude/stoic-hypatia-1fwdiw`. Left for Sergio: delete the empty folder `D:/x` by hand (an automated delete was blocked as too risky).

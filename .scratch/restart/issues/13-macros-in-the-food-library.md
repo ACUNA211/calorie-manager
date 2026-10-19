@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 08 (Move shared tables into the Household), 69 (Run the database tests locally)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Saving a USDA food stores all six macros when USDA has them; missing values stay empty, never zero
 - [ ] Existing USDA foods are backfilled (a one-off script or function, rate-limited under 1,000 requests an hour)

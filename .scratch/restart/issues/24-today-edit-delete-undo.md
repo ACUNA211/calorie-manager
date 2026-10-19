@@ -6,7 +6,7 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 23 (Today: log a food), 84 (Decide: Today logging rules)
 
-**Status:** done (awaiting review)
+**Status:** done
 
 - [x] Editing an entry's amount recalculates calories and macros
 - [ ] Deleting shows Undo; Undo restores the entry exactly
