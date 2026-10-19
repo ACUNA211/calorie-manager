@@ -31,6 +31,7 @@ import LogFoodPanel from './LogFoodPanel.jsx';
 import EditEntryPanel from './EditEntryPanel.jsx';
 import Toast from './Toast.jsx';
 import TodayScan from './TodayScan.jsx';
+import VoiceCapture from './VoiceCapture.jsx';
 
 const LOADING = { status: 'loading', entries: [] };
 
@@ -345,6 +346,7 @@ export default function TodayPage({ day: openDay = null }) {
             online={offline.online}
             onEaten={handleScanEaten}
           />
+          <VoiceCapture />
         </div>
       ) : null}
     </div>

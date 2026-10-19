@@ -983,5 +983,18 @@
     "recipes": {
       "makes": "Cuánto rinde"
     }
+  },
+  "voice": {
+    "heading": "Voz",
+    "start": "Hablar",
+    "stop": "Detener",
+    "listening": "Escuchando…",
+    "nothing": "No se escuchó nada.",
+    "retry": "Intentar de nuevo",
+    "error": {
+      "denied": "El micrófono está bloqueado. Permite el acceso al micrófono para este sitio en los ajustes del navegador y vuelve a intentarlo.",
+      "noSpeech": "No escuché nada. Toca Intentar de nuevo y habla.",
+      "other": "La captura de voz no funcionó. Inténtalo de nuevo."
+    }
   }
 }
