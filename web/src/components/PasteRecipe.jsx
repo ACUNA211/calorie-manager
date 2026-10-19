@@ -120,12 +120,14 @@ export default function PasteRecipe({ onDone, onManual, onCancel }) {
         <p role="alert">
           {phase === 'cap' ? t('recipes.paste.capReached') : t('recipes.paste.failed')}
         </p>
-        <button type="button" onClick={() => setPhase('input')}>
-          {t('recipes.paste.back')}
-        </button>{' '}
-        <button type="button" onClick={onManual}>
-          {t('recipes.paste.manual')}
-        </button>
+        <div className="actions">
+          <button type="button" onClick={() => setPhase('input')}>
+            {t('recipes.paste.back')}
+          </button>
+          <button type="button" onClick={onManual}>
+            {t('recipes.paste.manual')}
+          </button>
+        </div>
       </section>
     );
   }
@@ -153,17 +155,19 @@ export default function PasteRecipe({ onDone, onManual, onCancel }) {
             {t(`recipes.paste.errors.${inputError}`)}
           </p>
         )}
-        <button type="submit">{t('recipes.paste.read')}</button>
+        <button type="submit" className="btn-primary">
+          {t('recipes.paste.read')}
+        </button>
       </form>
 
-      <p>
-        <button type="button" onClick={onManual}>
+      <div className="actions">
+        <button type="button" className="btn-quiet" onClick={onManual}>
           {t('recipes.paste.manual')}
-        </button>{' '}
-        <button type="button" onClick={onCancel}>
+        </button>
+        <button type="button" className="btn-quiet" onClick={onCancel}>
           {t('recipes.paste.cancel')}
         </button>
-      </p>
+      </div>
     </section>
   );
 }

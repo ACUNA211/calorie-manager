@@ -216,14 +216,16 @@ export default function MealTimesPage({ user, memberId }) {
   return (
     <section aria-labelledby="meal-times-heading">
       <h2 id="meal-times-heading">{t('mealTimes.heading')}</h2>
-      <p>{targetLine}</p>
-      <p>{t('mealTimes.targets.readOnly')}</p>
+      <div className="toolbar">
+        <p className="grow">{targetLine}</p>
+        <p className="mute small">{t('mealTimes.targets.readOnly')}</p>
+      </div>
 
       {meals.length === 0 ? (
         <p>{t('mealTimes.empty')}</p>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table>
+        <div className="grid-scroll">
+          <table className="week-grid">
             <thead>
               <tr>
                 <th scope="col">{t('mealTimes.grid.timeHeader')}</th>
@@ -238,11 +240,15 @@ export default function MealTimesPage({ user, memberId }) {
               {meals.map((meal) => (
                 <tr key={meal.id}>
                   <th scope="row">
-                    <button type="button" onClick={() => setEditor({ draft: draftFromMeal(meal) })}>
+                    <button
+                      type="button"
+                      className="btn-quiet row-name"
+                      onClick={() => setEditor({ draft: draftFromMeal(meal) })}
+                    >
                       {meal.name}
                     </button>{' '}
-                    <span>{normalizeTime(meal.time_of_day)}</span>{' '}
-                    <span>
+                    <span className="num">{normalizeTime(meal.time_of_day)}</span>{' '}
+                    <span className="small mute">
                       {t(`mealTimes.kinds.${meal.kind}`)} ·{' '}
                       {needsCalories(meal)
                         ? t('mealTimes.calories.missing')
@@ -256,7 +262,7 @@ export default function MealTimesPage({ user, memberId }) {
                               })}
                     </span>
                     {sharedWithOthers(meal, viewerId).length > 0 && (
-                      <span>
+                      <span className="small mute">
                         {' '}
                         {t('mealTimes.shared', {
                           names: sharedWithOthers(meal, viewerId).join(', '),
@@ -270,6 +276,7 @@ export default function MealTimesPage({ user, memberId }) {
                       <td key={day}>
                         <button
                           type="button"
+                          className="cell"
                           aria-pressed={on}
                           aria-label={t('mealTimes.grid.toggleLabel', {
                             name: meal.name,
@@ -292,8 +299,8 @@ export default function MealTimesPage({ user, memberId }) {
                 {WEEKDAYS.map((day) => {
                   const totals = dayTotals(meals, day, targets);
                   return (
-                    <td key={day}>
-                      <div>
+                    <td key={day} className="totals">
+                      <div className="num">
                         {t('mealTimes.totals.range', {
                           floor: cal(totals.floor),
                           ceiling: cal(totals.ceiling),
@@ -307,7 +314,10 @@ export default function MealTimesPage({ user, memberId }) {
                           })}
                         </div>
                       )}
-                      <div role={totals.status === 'over' ? 'alert' : undefined}>
+                      <div
+                        className={totals.status === 'over' ? 'over' : undefined}
+                        role={totals.status === 'over' ? 'alert' : undefined}
+                      >
                         {t(`mealTimes.totals.${totals.status}`)}
                       </div>
                     </td>
@@ -350,6 +360,7 @@ export default function MealTimesPage({ user, memberId }) {
       ) : (
         <button
           type="button"
+          className="btn-primary"
           disabled={busy}
           onClick={() =>
             setEditor({
@@ -363,6 +374,13 @@ export default function MealTimesPage({ user, memberId }) {
     </section>
   );
 }
+
+// The "Every day / Mon-Fri / Weekend" shortcuts above the day boxes (0 = Sunday).
+const DAY_SHORTCUTS = [
+  { key: 'everyDay', days: [0, 1, 2, 3, 4, 5, 6] },
+  { key: 'weekdays', days: [1, 2, 3, 4, 5] },
+  { key: 'weekend', days: [0, 6] },
+];
 
 function ClashPrompt({ clash, busy, onReplace, onKeep, onCancel, dayLabel }) {
   const { t } = useI18n();
@@ -378,15 +396,17 @@ function ClashPrompt({ clash, busy, onReplace, onKeep, onCancel, dayLabel }) {
           })}
         </p>
       ))}
-      <button type="button" disabled={busy} onClick={onReplace}>
-        {t('mealTimes.clash.replace')}
-      </button>{' '}
-      <button type="button" disabled={busy} onClick={onKeep}>
-        {t('mealTimes.clash.keepBoth')}
-      </button>{' '}
-      <button type="button" disabled={busy} onClick={onCancel}>
-        {t('mealTimes.clash.cancel')}
-      </button>
+      <div className="actions">
+        <button type="button" className="btn-primary" disabled={busy} onClick={onReplace}>
+          {t('mealTimes.clash.replace')}
+        </button>
+        <button type="button" disabled={busy} onClick={onKeep}>
+          {t('mealTimes.clash.keepBoth')}
+        </button>
+        <button type="button" disabled={busy} onClick={onCancel}>
+          {t('mealTimes.clash.cancel')}
+        </button>
+      </div>
     </section>
   );
 }
@@ -458,22 +478,24 @@ function MealTimeEditor({
   const errorMessages = [...new Set(Object.values(errors))];
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="meal-time-form-heading">
+    <form onSubmit={handleSubmit} aria-labelledby="meal-time-form-heading" className="panel">
       <h3 id="meal-time-form-heading">
         {isNew
           ? t('mealTimes.form.addHeading')
           : t('mealTimes.form.editHeading', { name: initial.name })}
       </h3>
 
-      <label>
-        {t('mealTimes.form.name')}
-        <input type="text" value={draft.name} onChange={(e) => update('name', e.target.value)} />
-      </label>
+      <div className="fields">
+        <label>
+          {t('mealTimes.form.name')}
+          <input type="text" value={draft.name} onChange={(e) => update('name', e.target.value)} />
+        </label>
 
-      <label>
-        {t('mealTimes.form.time')}
-        <input type="time" value={draft.time} onChange={(e) => update('time', e.target.value)} />
-      </label>
+        <label>
+          {t('mealTimes.form.time')}
+          <input type="time" value={draft.time} onChange={(e) => update('time', e.target.value)} />
+        </label>
+      </div>
 
       <fieldset>
         <legend>{t('mealTimes.form.kind')}</legend>
@@ -494,16 +516,30 @@ function MealTimeEditor({
 
       <fieldset>
         <legend>{t('mealTimes.form.days')}</legend>
-        {WEEKDAYS.map((day) => (
-          <label key={day}>
-            <input
-              type="checkbox"
-              checked={draft.weekdays.includes(day)}
-              onChange={() => toggleWeekday(day)}
-            />{' '}
-            {dayLabel(day, 'long')}
-          </label>
-        ))}
+        <div className="row">
+          {DAY_SHORTCUTS.map((shortcut) => (
+            <button
+              key={shortcut.key}
+              type="button"
+              className="chip"
+              onClick={() => setDraft((current) => ({ ...current, weekdays: shortcut.days }))}
+            >
+              {t(`layout.mealTimes.${shortcut.key}`)}
+            </button>
+          ))}
+        </div>
+        <div className="days">
+          {WEEKDAYS.map((day) => (
+            <label key={day}>
+              <input
+                type="checkbox"
+                checked={draft.weekdays.includes(day)}
+                onChange={() => toggleWeekday(day)}
+              />{' '}
+              {dayLabel(day, 'long')}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
       {members.length > 0 && (
@@ -608,13 +644,13 @@ function MealTimeEditor({
         </ul>
       )}
 
-      <div>
-        <button type="submit" disabled={busy}>
+      <div className="actions">
+        <button type="submit" className="btn-primary" disabled={busy}>
           {t('mealTimes.form.save')}
-        </button>{' '}
+        </button>
         <button type="button" disabled={busy} onClick={onCancel}>
           {t('mealTimes.form.cancel')}
-        </button>{' '}
+        </button>
         {!isNew &&
           (confirmDelete ? (
             <>
@@ -623,14 +659,24 @@ function MealTimeEditor({
                   ? t('mealTimes.form.confirmDelete', { name: initial.name })
                   : t('mealTimes.form.confirmLeave', { name: initial.name })}
               </span>{' '}
-              <button type="button" disabled={busy} onClick={() => onDelete(initial)}>
+              <button
+                type="button"
+                className="btn-danger"
+                disabled={busy}
+                onClick={() => onDelete(initial)}
+              >
                 {isCreator
                   ? t('mealTimes.form.confirmDeleteButton')
                   : t('mealTimes.form.confirmLeaveButton')}
               </button>
             </>
           ) : (
-            <button type="button" disabled={busy} onClick={() => setConfirmDelete(true)}>
+            <button
+              type="button"
+              className="btn-danger"
+              disabled={busy}
+              onClick={() => setConfirmDelete(true)}
+            >
               {isCreator ? t('mealTimes.form.delete') : t('mealTimes.form.leave')}
             </button>
           ))}

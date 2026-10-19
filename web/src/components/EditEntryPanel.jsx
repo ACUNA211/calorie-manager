@@ -89,24 +89,26 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
       <p>{t('today.edit.food', { name: entry.description })}</p>
 
       <form onSubmit={handleSave}>
-        <label>
-          {t('today.log.amount')}{' '}
-          <input
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-          />
-        </label>{' '}
-        {initial.servingGrams > 0 ? (
+        <div className="fields">
           <label>
-            {t('today.log.unit')}{' '}
-            <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-              <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
-              <option value="servings">{t('today.log.unitServings')}</option>
-            </select>
+            {t('today.log.amount')}{' '}
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+            />
           </label>
-        ) : null}
+          {initial.servingGrams > 0 ? (
+            <label>
+              {t('today.log.unit')}{' '}
+              <select value={unit} onChange={(event) => setUnit(event.target.value)}>
+                <option value="grams">{t('today.log.unitGrams', { unit: units.massUnit })}</option>
+                <option value="servings">{t('today.log.unitServings')}</option>
+              </select>
+            </label>
+          ) : null}
+        </div>
         <p>
           <label>
             {t('today.log.mealTime')}{' '}
@@ -138,15 +140,17 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
           </div>
         ) : null}
         {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={busy}>
-          {busy ? t('today.log.saving') : t('today.edit.save')}
-        </button>{' '}
-        <button type="button" onClick={onCancel} disabled={busy}>
-          {t('today.log.cancel')}
-        </button>{' '}
-        <button type="button" onClick={handleDelete} disabled={busy}>
-          {t('today.edit.delete')}
-        </button>
+        <div className="actions">
+          <button type="submit" className="btn-primary" disabled={busy}>
+            {busy ? t('today.log.saving') : t('today.edit.save')}
+          </button>
+          <button type="button" onClick={onCancel} disabled={busy}>
+            {t('today.log.cancel')}
+          </button>
+          <button type="button" className="btn-danger" onClick={handleDelete} disabled={busy}>
+            {t('today.edit.delete')}
+          </button>
+        </div>
       </form>
     </section>
   );

@@ -12,9 +12,9 @@ export default function PantryList({ groups, onChanged }) {
   return (
     <>
       {groups.map((group) => (
-        <section key={group.section}>
+        <section key={group.section} className="store-section">
           <h3>{t(`pantry.sections.${group.key}`)}</h3>
-          <ul>
+          <ul className="rows">
             {group.items.map((item) => (
               <PantryRow key={item.id} item={item} onChanged={onChanged} />
             ))}
@@ -56,19 +56,21 @@ function PantryRow({ item, onChanged }) {
   }
 
   return (
-    <li>
-      <p>
+    <li className="pantry-row">
+      <p className="pantry-line">
         <strong>{item.name}</strong>
         {item.brand ? ` · ${item.brand}` : ''}{' '}
         <span>{t('pantry.grams', { value: units.formatMass(item.grams) })}</span>
       </p>
-      <button type="button" disabled={busy} onClick={() => correct('used_up')}>
-        {t('pantry.correct.usedUp')}
-      </button>{' '}
-      <button type="button" disabled={busy} onClick={() => correct('half')}>
-        {t('pantry.correct.half')}
-      </button>
-      <form onSubmit={handleSet}>
+      <div className="actions">
+        <button type="button" disabled={busy} onClick={() => correct('used_up')}>
+          {t('pantry.correct.usedUp')}
+        </button>
+        <button type="button" disabled={busy} onClick={() => correct('half')}>
+          {t('pantry.correct.half')}
+        </button>
+      </div>
+      <form onSubmit={handleSet} className="set-form">
         <label>
           {t('pantry.correct.setLabel', { name: item.name, unit: units.massUnit })}
           <input

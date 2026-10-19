@@ -98,20 +98,34 @@ export default function RecipesPage() {
 
   return (
     <section aria-labelledby="recipes-heading">
-      <h2 id="recipes-heading">{t('recipes.heading')}</h2>
+      <div className="row head-row">
+        <h2 id="recipes-heading" className="grow">
+          {t('recipes.heading')}
+        </h2>
+        <button type="button" className="btn-primary" onClick={() => setEditing({ recipe: null })}>
+          {t('recipes.addButton')}
+        </button>
+        <button type="button" onClick={() => setEditing({ paste: true })}>
+          {t('recipes.paste.button')}
+        </button>
+      </div>
       {state.recipes.length === 0 ? (
         <p>{t('recipes.empty')}</p>
       ) : (
         <>
-          <label htmlFor="recipes-search">{t('recipes.searchLabel')}</label>
-          <input
-            id="recipes-search"
-            type="search"
-            value={query}
-            autoComplete="off"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <div>
+          <div className="search-stack">
+            <label htmlFor="recipes-search" className="small mute">
+              {t('recipes.searchLabel')}
+            </label>
+            <input
+              id="recipes-search"
+              type="search"
+              value={query}
+              autoComplete="off"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <div className="row chip-row">
             <input
               id="recipes-starred-only"
               type="checkbox"
@@ -121,7 +135,7 @@ export default function RecipesPage() {
             <label htmlFor="recipes-starred-only">{t('recipes.filters.starredOnly')}</label>
           </div>
           {shown.length === 0 && <p>{t('recipes.noMatches')}</p>}
-          <ul>
+          <ul className="rows">
             {shown.map((recipe) => {
               const totals = recipeTotals(recipe);
               const kcal = totals.kcal.perServing;
@@ -130,11 +144,15 @@ export default function RecipesPage() {
               const originalName = namesById.get(recipe.copied_from);
               return (
                 <li key={recipe.id}>
-                  <button type="button" onClick={() => setEditing({ recipe })}>
+                  <button
+                    type="button"
+                    className="row-button"
+                    onClick={() => setEditing({ recipe })}
+                  >
                     {recipe.starred && <span aria-label={t('recipes.starred')}>★ </span>}
                     <strong>{recipe.name}</strong>
                   </button>
-                  <div>
+                  <div className="small mute">
                     {t('recipes.makes', { count: formatNumber(recipe.servings) })}
                     {' · '}
                     {kcal === null
@@ -143,9 +161,9 @@ export default function RecipesPage() {
                           kcal: formatNumber(kcal, { maximumFractionDigits: 0 }),
                         })}
                   </div>
-                  {tags && <div>{tags}</div>}
+                  {tags && <div className="small mute">{tags}</div>}
                   {hasOriginal && (
-                    <div>
+                    <div className="small mute">
                       {originalName
                         ? t('recipes.copy.original', { name: originalName })
                         : t('recipes.copy.originalMissing')}
@@ -157,12 +175,6 @@ export default function RecipesPage() {
           </ul>
         </>
       )}
-      <button type="button" onClick={() => setEditing({ recipe: null })}>
-        {t('recipes.addButton')}
-      </button>{' '}
-      <button type="button" onClick={() => setEditing({ paste: true })}>
-        {t('recipes.paste.button')}
-      </button>
     </section>
   );
 }

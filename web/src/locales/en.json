@@ -808,5 +808,19 @@
       "recipes": "Recipes",
       "more": "More"
     }
+  },
+  "layout": {
+    "today": {
+      "nextMeal": "Next meal",
+      "logForMeal": "Log food for {{name}}"
+    },
+    "mealTimes": {
+      "everyDay": "Every day",
+      "weekdays": "Mon–Fri",
+      "weekend": "Weekend"
+    },
+    "recipes": {
+      "makes": "How much it makes"
+    }
   }
 }

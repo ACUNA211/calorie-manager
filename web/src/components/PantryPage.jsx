@@ -35,7 +35,7 @@ export default function PantryPage() {
   return (
     <section>
       <h2>{t('pantry.heading')}</h2>
-      <p>{t('pantry.intro')}</p>
+      <p className="mute small">{t('pantry.intro')}</p>
       <PantryScan onAdded={refresh} />
       <PantryAddForm onAdded={refresh} />
       {pantry.status === 'loading' && <p>{t('pantry.loading')}</p>}

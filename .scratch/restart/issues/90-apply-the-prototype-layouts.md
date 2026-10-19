@@ -16,17 +16,19 @@ Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
 **Blocked by:** 89 (App shell and navigation)
 
-**Status:** ready-for-agent
+**Status:** done (awaiting review)
 
-- [ ] Today follows layout B: header, counter and bar, due meal, rest of the day, log box
-- [ ] Meal Times follows prototype 03
-- [ ] Recipes (list, editor, paste) follows prototype 04
-- [ ] Week follows the resolution of old ticket 09
-- [ ] Foods and Pantry use the same patterns and read well at 375 px
-- [ ] Spanish screens still fit (Spanish strings run longer)
-- [ ] Existing Vitest suites pass; queries changed only where the markup had to change
-- [ ] A comment lists anything in the prototypes left out because it isn't built
+- [x] Today follows layout B: header, counter and bar, due meal, rest of the day, log box
+- [x] Meal Times follows prototype 03
+- [x] Recipes (list, editor, paste) follows prototype 04
+- [x] Week follows the resolution of old ticket 09
+- [x] Foods and Pantry use the same patterns and read well at 375 px
+- [x] Spanish screens still fit (Spanish strings run longer)
+- [x] Existing Vitest suites pass; queries changed only where the markup had to change
+- [x] A comment lists anything in the prototypes left out because it isn't built
 
 ## Comments
 
 - 2026-10-18: Written during the ticket 79 review, with 89 and 91. Belongs to Release 1.
+- 2026-10-19: Done on branch restart-t90. Layout and style only, on the existing behaviour; new strings are under `layout`. Checked in a browser at 375 px against a stand-in data client (not the real database): Today, Week, Foods, Pantry, Recipes and More showed no sideways page scroll in English or Spanish; Meal Times (More) and Week were looked at in Spanish. Not looked at on screen: the Recipe editor, paste flow, log and edit panels, and the Foods and Pantry result lists with real data. Meal Times grid scrolls sideways inside itself with the Meal Time column pinned (seven 44 px day buttons do not fit at 375 px).
+  Left out of the prototypes because it is not built: planned meals, "Ate as planned" and its 1/2, 3/4, 1 1/4 buttons (Release 2); the Rebalance button and "if the rest goes as planned" line (Release 3); one-tap "as set" and "Different amount" on Set meals; the search-as-you-type box with typed amounts, "and" splitting and AI estimate; the "Other time" picker on the confirm card beyond what Log food has; hatched "still planned" on the bar; past-day "not logged" catch-up; Meal Times: per-day bars under the grid, the grid previewing an unsaved edit, editing Calorie Target in a toolbar (read-only, ticket 91) and the 45-minute overlap wording is as built; Recipes: Recipe Facts per 100 g, per gram and batch lines, the stacked ingredient-share bar, % of total column and unit picker, "Weigh the pot", "I weigh / It makes N servings" choice, the Starred chip as a button (still a checkbox) and Meal Time tags as chips (still checkboxes styled as pills); Week: bars are per-day rows with the aim shaded, not a seven-column chart. Today's due card also adds a "Log food for <meal>" button that opens Log food on that Meal Time.

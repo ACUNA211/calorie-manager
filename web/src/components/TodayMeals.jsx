@@ -6,39 +6,92 @@ import { normalizeTime } from '../lib/mealTimesLogic.js';
 // an entry calls onEdit with it. An entry still on the phone (`pending`, ticket #34) is marked
 // "not synced" and cannot be edited; a failed one offers Try again and Discard through
 // onRetry and onDiscard, each called with the entry's id.
-export default function TodayMeals({ sections, other, onEdit, onRetry, onDiscard }) {
+//
+// Layout B (next meal first): the Meal Time that is due, `dueId`, is lifted into its own card
+// with a button (`onLogDue`, called with the Meal Time) that opens Log food for it; the rest of
+// the day follows as a compact list. `dueId` is null on days that have no meal due.
+export default function TodayMeals({
+  sections,
+  other,
+  dueId = null,
+  onLogDue,
+  onEdit,
+  onRetry,
+  onDiscard,
+}) {
   const { t, formatNumber } = useI18n();
   const number = (value) => formatNumber(value, { maximumFractionDigits: 0 });
+  const due = dueId == null ? null : sections.find(({ meal }) => meal.id === dueId) || null;
+  const rest = due ? sections.filter((section) => section !== due) : sections;
 
   return (
-    <section aria-labelledby="today-meals-heading">
-      <h2 id="today-meals-heading">{t('today.meals.heading')}</h2>
-      {sections.length === 0 && other.entries.length === 0 ? <p>{t('today.meals.empty')}</p> : null}
-
-      {sections.map(({ meal, entries, kcal }) => (
-        <article key={meal.id}>
-          <h3>
-            {meal.name} {normalizeTime(meal.time_of_day)}
-          </h3>
-          <p>{calorieRangeText(meal, t, number)}</p>
-          <p>{t('today.meals.sectionKcal', { kcal: number(kcal) })}</p>
-          <EntryList entries={entries} onEdit={onEdit} onRetry={onRetry} onDiscard={onDiscard} />
-        </article>
-      ))}
-
-      {other.entries.length > 0 ? (
-        <article>
-          <h3>{t('today.otherTime')}</h3>
-          <p>{t('today.meals.sectionKcal', { kcal: number(other.kcal) })}</p>
+    <>
+      {due ? (
+        <section className="meal-due" aria-labelledby="today-due-heading">
+          <p className="eyebrow" id="today-due-heading">
+            {t('layout.today.nextMeal')}
+          </p>
+          <div className="meal-head">
+            <h3>{due.meal.name}</h3>
+            <span className="num mute">{normalizeTime(due.meal.time_of_day)}</span>
+          </div>
+          <p className="mute small">{calorieRangeText(due.meal, t, number)}</p>
+          <p className="num">{t('today.meals.sectionKcal', { kcal: number(due.kcal) })}</p>
           <EntryList
-            entries={other.entries}
+            entries={due.entries}
             onEdit={onEdit}
             onRetry={onRetry}
             onDiscard={onDiscard}
           />
-        </article>
+          {onLogDue ? (
+            <div className="actions">
+              <button type="button" className="btn-primary" onClick={() => onLogDue(due.meal)}>
+                {t('layout.today.logForMeal', { name: due.meal.name })}
+              </button>
+            </div>
+          ) : null}
+        </section>
       ) : null}
-    </section>
+
+      <section aria-labelledby="today-meals-heading">
+        <h2 id="today-meals-heading">{t('today.meals.heading')}</h2>
+        {sections.length === 0 && other.entries.length === 0 ? (
+          <p>{t('today.meals.empty')}</p>
+        ) : null}
+
+        <div className="meal-list">
+          {rest.map(({ meal, entries, kcal }) => (
+            <article key={meal.id}>
+              <div className="meal-head">
+                <h3>{meal.name}</h3>
+                <span className="num mute">{normalizeTime(meal.time_of_day)}</span>
+              </div>
+              <p className="mute small">{calorieRangeText(meal, t, number)}</p>
+              <p className="num">{t('today.meals.sectionKcal', { kcal: number(kcal) })}</p>
+              <EntryList
+                entries={entries}
+                onEdit={onEdit}
+                onRetry={onRetry}
+                onDiscard={onDiscard}
+              />
+            </article>
+          ))}
+
+          {other.entries.length > 0 ? (
+            <article>
+              <h3>{t('today.otherTime')}</h3>
+              <p className="num">{t('today.meals.sectionKcal', { kcal: number(other.kcal) })}</p>
+              <EntryList
+                entries={other.entries}
+                onEdit={onEdit}
+                onRetry={onRetry}
+                onDiscard={onDiscard}
+              />
+            </article>
+          ) : null}
+        </div>
+      </section>
+    </>
   );
 }
 

@@ -123,7 +123,7 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
       <h3 id="weight-heading">{t('weight.heading')}</h3>
 
       {/* noValidate: the checks here give the messages, not the browser's own pop-ups. */}
-      <form noValidate onSubmit={handleSave}>
+      <form noValidate onSubmit={handleSave} className="weight-form">
         <label>
           {t('weight.dateLabel')}{' '}
           <input
@@ -146,10 +146,10 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
             }
           />
         </label>
-        <button type="submit" disabled={busy}>
+        <button type="submit" className="btn-primary" disabled={busy}>
           {t('weight.save')}
         </button>
-        <p>{t('weight.replaces')}</p>
+        <p className="small mute">{t('weight.replaces')}</p>
         {formErrorKey ? <p role="alert">{t(formErrorKey, bounds)}</p> : null}
       </form>
 
@@ -165,7 +165,7 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
           <WeightTrend trend={trend} layout={layout} />
           <h4>{t('weight.entriesHeading')}</h4>
           {listed.length === 0 ? <p>{t('weight.none')}</p> : null}
-          <ul>
+          <ul className="plain weight-list">
             {listed.map((entry) => {
               const date = formatDate(parseDateKey(entry.log_date));
               if (editing && editing.id === entry.id) {

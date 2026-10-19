@@ -17,46 +17,59 @@ export default function DayBar({ dateKey, todayKey, bar, macros, onPrevious, onN
 
   return (
     <section aria-labelledby="today-day-heading">
-      <div>
+      <div className="pager">
         <button type="button" aria-label={t('today.previousDay')} onClick={onPrevious}>
-          {'<'}
+          {'‹'}
         </button>
         <h2 id="today-day-heading">
           {label}
           {isToday ? ` (${t('today.todayTag')})` : ''}
         </h2>
         <button type="button" aria-label={t('today.nextDay')} onClick={onNext}>
-          {'>'}
+          {'›'}
         </button>
-        {isToday ? null : (
-          <button type="button" onClick={onToday}>
-            {t('today.backToToday')}
-          </button>
-        )}
       </div>
+      {isToday ? null : (
+        <button type="button" className="btn-quiet back-link" onClick={onToday}>
+          {t('today.backToToday')}
+        </button>
+      )}
 
       {bar.status === 'noTarget' ? (
         <p>{t('today.bar.noTarget')}</p>
       ) : (
-        <div>
-          <progress max="1" value={bar.fraction} />
-          <p>
+        <div className="counter">
+          <p className={bar.left < 0 ? 'big over' : 'big'}>
+            {bar.left < 0
+              ? t('today.bar.over', { over: number(-bar.left) })
+              : t('today.bar.left', { left: number(bar.left) })}
+          </p>
+          <div className={bar.left < 0 ? 'meter over' : 'meter'}>
+            <progress max="1" value={bar.fraction} />
+            <span
+              className="aim"
+              aria-hidden="true"
+              style={{
+                left: `${Math.round((bar.aimLow / bar.target) * 100)}%`,
+                width: `${Math.max(0, Math.round(((bar.aimHigh - bar.aimLow) / bar.target) * 100))}%`,
+              }}
+            />
+            <span className="goal" aria-hidden="true" />
+          </div>
+          <p className="small">
             {t('today.bar.eaten', {
               eaten: number(bar.eaten),
               target: number(bar.target),
             })}
           </p>
-          <p>
-            {bar.left < 0
-              ? t('today.bar.over', { over: number(-bar.left) })
-              : t('today.bar.left', { left: number(bar.left) })}
+          <p className="small mute">
+            {t('today.bar.aim', { low: number(bar.aimLow), high: number(bar.aimHigh) })}
           </p>
-          <p>{t('today.bar.aim', { low: number(bar.aimLow), high: number(bar.aimHigh) })}</p>
           <p>{t(`today.bar.status.${bar.status}`)}</p>
         </div>
       )}
 
-      <ul>
+      <ul className="macros">
         <MacroLine name={t('today.macro.protein')} status={macros.protein} kind="protein" />
         <MacroLine name={t('today.macro.carbs')} status={macros.carbs} kind="range" />
         <MacroLine name={t('today.macro.fat')} status={macros.fat} kind="range" />

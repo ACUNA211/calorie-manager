@@ -808,5 +808,19 @@
       "recipes": "Recetas",
       "more": "Más"
     }
+  },
+  "layout": {
+    "today": {
+      "nextMeal": "Próxima comida",
+      "logForMeal": "Registrar comida en {{name}}"
+    },
+    "mealTimes": {
+      "everyDay": "Todos los días",
+      "weekdays": "Lun–Vie",
+      "weekend": "Fin de semana"
+    },
+    "recipes": {
+      "makes": "Cuánto rinde"
+    }
   }
 }

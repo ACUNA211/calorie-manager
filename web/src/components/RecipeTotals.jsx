@@ -10,7 +10,7 @@ export default function RecipeTotals({ totals, hasIngredients }) {
 
   if (!hasIngredients) {
     return (
-      <section aria-labelledby="recipe-totals-heading">
+      <section aria-labelledby="recipe-totals-heading" className="facts">
         <h3 id="recipe-totals-heading">{t('recipes.totals.heading')}</h3>
         <p>{t('recipes.totals.none')}</p>
       </section>
@@ -33,11 +33,11 @@ export default function RecipeTotals({ totals, hasIngredients }) {
   });
 
   return (
-    <section aria-labelledby="recipe-totals-heading">
+    <section aria-labelledby="recipe-totals-heading" className="facts">
       <h3 id="recipe-totals-heading">{t('recipes.totals.heading')}</h3>
-      <p>
+      <p className="kcal-line">
         <strong>{t('recipes.totals.kcal')}: </strong>
-        <span>
+        <span className="kcal num">
           {kcal === null
             ? t('recipes.unknown')
             : t('recipes.totals.kcalValue', {
@@ -45,7 +45,7 @@ export default function RecipeTotals({ totals, hasIngredients }) {
               })}
         </span>
       </p>
-      <ul>
+      <ul className="facts-rows">
         {rows.map((row) => (
           <li key={row.key}>
             <strong>{t(`recipes.totals.${row.key}`)}: </strong>

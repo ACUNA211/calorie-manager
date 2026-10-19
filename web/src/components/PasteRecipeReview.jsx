@@ -62,7 +62,7 @@ export default function PasteRecipeReview({
         />
       </div>
 
-      <ul>
+      <ul className="paste-rows">
         {rows.map((row) => (
           <PasteRow
             key={row.key}
@@ -78,10 +78,15 @@ export default function PasteRecipeReview({
       {notice && <p role="alert">{notice}</p>}
       {!check.ok && rows.length > 0 && <p>{t('recipes.paste.noFood')}</p>}
 
-      <div>
-        <button type="button" onClick={onContinue} disabled={busy || !check.ok}>
+      <div className="actions">
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={onContinue}
+          disabled={busy || !check.ok}
+        >
           {t('recipes.paste.continue')}
-        </button>{' '}
+        </button>
         <button type="button" onClick={onBack} disabled={busy}>
           {t('recipes.paste.back')}
         </button>
@@ -110,7 +115,7 @@ function PasteRow({ row, onFood, onGrams, onRemove, onSearch }) {
   const reasonText = row.reason ? t(`recipes.paste.reason.${row.reason}`) : null;
 
   return (
-    <li data-needs-check={needsCheck ? 'true' : 'false'}>
+    <li data-needs-check={needsCheck ? 'true' : 'false'} className="paste-row">
       <p>
         <strong>{row.text}</strong>{' '}
         {needsCheck && <span className="field-error">{t('recipes.paste.checkThis')}</span>}
@@ -170,7 +175,7 @@ function PasteRow({ row, onFood, onGrams, onRemove, onSearch }) {
         {reasonText && <p>{reasonText}</p>}
       </div>
 
-      <button type="button" onClick={() => onRemove(row.key)}>
+      <button type="button" className="btn-quiet" onClick={() => onRemove(row.key)}>
         {t('recipes.paste.remove', { name: row.name })}
       </button>
       {row.food && row.food.kcalPer100g != null && (
