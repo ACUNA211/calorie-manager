@@ -541,6 +541,22 @@
       "amountZero": "Escribe más de cero para añadir un alimento."
     }
   },
+  "shopping": {
+    "heading": "Lista de compras",
+    "intro": "Lo que necesita el Plan de comidas aprobado, menos lo que hay en la Despensa. Todo tu Hogar ve la misma lista.",
+    "loading": "Cargando tu lista de compras…",
+    "loadError": "No se pudo cargar tu lista de compras.",
+    "empty": "Todavía no hay nada que comprar. Aprueba el Plan de comidas para armar la lista.",
+    "allDone": "Todo lo de la lista está hecho.",
+    "done": "Hecho",
+    "open": "Abrir la lista de compras",
+    "added": "Agregado el {{date}}",
+    "extra": "+",
+    "measure": {
+      "serving": "{{count}} × {{label}} ({{mass}})",
+      "package": "{{count}} × paquete ({{mass}})"
+    }
+  },
   "today": {
     "heading": "Hoy",
     "loading": "Cargando el día...",

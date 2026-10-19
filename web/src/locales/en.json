@@ -541,6 +541,22 @@
       "amountZero": "Type more than zero to add a food."
     }
   },
+  "shopping": {
+    "heading": "Shopping list",
+    "intro": "What the approved Meal Plan needs, minus what the Pantry holds. Everyone in your Household sees the same list.",
+    "loading": "Loading your Shopping list…",
+    "loadError": "Could not load your Shopping list.",
+    "empty": "Nothing to buy yet. Approve the Meal Plan to build the list.",
+    "allDone": "Everything on the list is done.",
+    "done": "Done",
+    "open": "Open the Shopping list",
+    "added": "Added {{date}}",
+    "extra": "+",
+    "measure": {
+      "serving": "{{count}} × {{label}} ({{mass}})",
+      "package": "{{count}} × package ({{mass}})"
+    }
+  },
   "today": {
     "heading": "Today",
     "loading": "Loading the day...",

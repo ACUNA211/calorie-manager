@@ -23,6 +23,7 @@ import {
 import { shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic.js';
 import { dateKey, parseDateKey } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
+import ShoppingLink from './ShoppingLink.jsx';
 import './PlanPage.css';
 
 const LOADING = { key: null, status: 'loading', data: null };
@@ -195,6 +196,8 @@ export default function PlanPage() {
             </button>
           </p>
         ) : null}
+
+        <ShoppingLink />
 
         <form
           className="plan-addcook"

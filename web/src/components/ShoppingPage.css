@@ -1,0 +1,16 @@
+/* Shopping list page. Uses the shared tokens from styles.css. */
+.shopping-line p {
+  margin: 0;
+}
+.shopping-amount {
+  color: var(--ink);
+}
+.shopping-date {
+  margin-top: var(--space-1);
+}
+.shopping-done {
+  opacity: 0.75;
+}
+.shopping-link {
+  margin: var(--space-2) 0;
+}

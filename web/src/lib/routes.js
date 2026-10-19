@@ -2,7 +2,7 @@
 
 export const ROUTES = ['today', 'week', 'foods', 'pantry', 'recipes', 'more'];
 // Screens with a path but no tab (opened from More).
-export const EXTRA_ROUTES = ['plan', 'preferences'];
+export const EXTRA_ROUTES = ['plan', 'preferences', 'shopping'];
 export const DEFAULT_ROUTE = 'today';
 
 export function pathFor(route) {
