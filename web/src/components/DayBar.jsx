@@ -68,7 +68,7 @@ export default function DayBar({ dateKey, todayKey, bar, macros, onPrevious, onN
 // One macro: what has been eaten, against its Target when there is one.
 function MacroLine({ name, status, kind }) {
   const { t } = useI18n();
-  const { formatMass: mass } = useUnits();
+  const { formatMacro: mass } = useUnits();
 
   let detail;
   let state;

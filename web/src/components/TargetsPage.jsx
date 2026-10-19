@@ -40,7 +40,7 @@ export default function TargetsPage({ user, memberId }) {
         if (id === null || id === undefined) throw new Error('no Member');
         const row = await loadTargets(supabase, id);
         if (!active) return;
-        setForm(rowToForm(row, units.units));
+        setForm(rowToForm(row));
         setErrors({});
         setNotice(null);
         setLoaded({ key: requestKey, status: 'ready', memberId: id });
@@ -52,7 +52,7 @@ export default function TargetsPage({ user, memberId }) {
     return () => {
       active = false;
     };
-  }, [user.id, targetMemberId, requestKey, units.units]);
+  }, [user.id, targetMemberId, requestKey]);
 
   const state = loaded.key === requestKey ? loaded : { status: 'loading', memberId: null };
 
@@ -65,7 +65,7 @@ export default function TargetsPage({ user, memberId }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setNotice(null);
-    const result = validateTargets(form, units.units);
+    const result = validateTargets(form);
     setErrors(result.errors);
     if (!result.ok) return;
 
@@ -86,7 +86,7 @@ export default function TargetsPage({ user, memberId }) {
   const aim = aimText();
 
   function aimText() {
-    const check = validateTargets(form, units.units);
+    const check = validateTargets(form);
     const calorieTarget = check.values.calorie_target;
     const aimOk = !check.errors.calorieTarget && !check.errors.bandLow && !check.errors.bandHigh;
     if (!aimOk) return t('targets.aimInvalid');
@@ -108,7 +108,7 @@ export default function TargetsPage({ user, memberId }) {
     return (
       <div>
         <label>
-          {t(labelKey, { unit: units.massUnit })}
+          {t(labelKey, { unit: units.macroUnit })}
           <input
             type="text"
             inputMode="numeric"
@@ -138,12 +138,12 @@ export default function TargetsPage({ user, memberId }) {
         <p>{aim}</p>
         {field('proteinFloor', 'targets.proteinFloorLabel')}
         <fieldset>
-          <legend>{t('targets.carbsLegend', { unit: units.massUnit })}</legend>
+          <legend>{t('targets.carbsLegend', { unit: units.macroUnit })}</legend>
           {field('carbLow', 'targets.carbLowLabel')}
           {field('carbHigh', 'targets.carbHighLabel')}
         </fieldset>
         <fieldset>
-          <legend>{t('targets.fatLegend', { unit: units.massUnit })}</legend>
+          <legend>{t('targets.fatLegend', { unit: units.macroUnit })}</legend>
           {field('fatLow', 'targets.fatLowLabel')}
           {field('fatHigh', 'targets.fatHighLabel')}
         </fieldset>

@@ -129,9 +129,9 @@ export default function EditEntryPanel({ entry, meals, onSaved, onDeleted, onCan
             <p>
               {preview.protein_g != null && preview.carbs_g != null && preview.fat_g != null
                 ? t('today.log.previewMacros', {
-                    protein: units.formatMass(preview.protein_g),
-                    carbs: units.formatMass(preview.carbs_g),
-                    fat: units.formatMass(preview.fat_g),
+                    protein: units.formatMacro(preview.protein_g),
+                    carbs: units.formatMacro(preview.carbs_g),
+                    fat: units.formatMacro(preview.fat_g),
                   })
                 : t('today.log.previewNoMacros')}
             </p>

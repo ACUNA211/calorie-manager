@@ -13,8 +13,10 @@ export function unitsFor(system, locale) {
   return {
     units: system,
     massUnit: unitsLib.massUnitName(system),
+    macroUnit: 'g',
     weightUnit: unitsLib.weightUnitName(system),
     basisLabel: unitsLib.basisLabel(system),
+    formatMacro: (grams) => unitsLib.formatMacro(grams, locale),
     formatMass: (grams) => unitsLib.formatMass(grams, system, locale),
     formatWeight: (kg) => unitsLib.formatWeight(kg, system, locale),
     perBasis: (per100g) => unitsLib.perBasis(per100g, system),

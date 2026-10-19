@@ -294,9 +294,9 @@ export default function LogFoodPanel({
               <p>
                 {nutrition.protein != null && nutrition.carbs != null && nutrition.fat != null
                   ? t('today.log.previewMacros', {
-                      protein: units.formatMass(nutrition.protein),
-                      carbs: units.formatMass(nutrition.carbs),
-                      fat: units.formatMass(nutrition.fat),
+                      protein: units.formatMacro(nutrition.protein),
+                      carbs: units.formatMacro(nutrition.carbs),
+                      fat: units.formatMacro(nutrition.fat),
                     })
                   : t('today.log.previewNoMacros')}
               </p>

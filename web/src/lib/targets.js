@@ -1,9 +1,8 @@
 // Targets for one Member, stored in member_settings. The validation functions are pure:
 // they return translation keys, not text, so the screen shows them through t().
 // Data access takes the Supabase client as its first argument so tests can pass a fake.
-// The protein floor and the carb and fat ranges are grams stored as whole numbers; the form
-// shows and reads them in the Member's units (units.js). Calories and the band are unaffected.
-import { parseMass, toInputMass } from './units.js';
+// The protein floor and the carb and fat ranges are grams stored as whole numbers, and the form
+// shows and reads them in grams whatever the Member's display units (ticket 93).
 
 export const TARGET_COLUMNS =
   'calorie_target, protein_floor_g, carb_low_g, carb_high_g, fat_low_g, fat_high_g, band_low_pct, band_high_pct';
@@ -27,17 +26,16 @@ export function emptyForm() {
 
 const orEmpty = (value) => (value === null || value === undefined ? '' : String(value));
 
-// A stored row (or none, for a Member with no settings row yet) becomes form strings. Grams
-// are shown in the Member's units.
-export function rowToForm(row, units = 'metric') {
+// A stored row (or none, for a Member with no settings row yet) becomes form strings.
+export function rowToForm(row) {
   if (!row) return emptyForm();
   return {
     calorieTarget: orEmpty(row.calorie_target),
-    proteinFloor: toInputMass(row.protein_floor_g, units),
-    carbLow: toInputMass(row.carb_low_g, units),
-    carbHigh: toInputMass(row.carb_high_g, units),
-    fatLow: toInputMass(row.fat_low_g, units),
-    fatHigh: toInputMass(row.fat_high_g, units),
+    proteinFloor: orEmpty(row.protein_floor_g),
+    carbLow: orEmpty(row.carb_low_g),
+    carbHigh: orEmpty(row.carb_high_g),
+    fatLow: orEmpty(row.fat_low_g),
+    fatHigh: orEmpty(row.fat_high_g),
     bandLow: orEmpty(row.band_low_pct ?? DEFAULT_BAND.low),
     bandHigh: orEmpty(row.band_high_pct ?? DEFAULT_BAND.high),
   };
@@ -52,24 +50,12 @@ export function parseWhole(text) {
   return { ok: true, value: Number(trimmed) };
 }
 
-// A gram Target typed in the Member's units, as whole grams. Empty is null (cleared). In metric
-// it is a whole number of grams; in US it is ounces (or a number with a unit name, see
-// units.js), rounded to the nearest gram for storage.
-export function parseGramTarget(text, units = 'metric') {
-  const trimmed = String(text ?? '').trim();
-  if (trimmed === '') return { ok: true, value: null };
-  if (units === 'us') {
-    const parsed = parseMass(trimmed, 'us');
-    if (parsed.ok) return { ok: true, value: Math.round(parsed.grams) };
-    if (/^0+([.,]0+)?$/.test(trimmed)) return { ok: true, value: 0 };
-    return { ok: false, error: 'targets.errors.whole' };
-  }
-  return parseWhole(trimmed);
-}
+// A gram Target typed as a whole number of grams. Empty is null (cleared).
+export const parseGramTarget = parseWhole;
 
 // Checks one gram Target against a minimum and the maximum grams allowed.
-function checkGrams(text, min, minError, units) {
-  const parsed = parseGramTarget(text, units);
+function checkGrams(text, min, minError) {
+  const parsed = parseGramTarget(text);
   if (!parsed.ok) return parsed;
   if (parsed.value === null) return parsed;
   if (parsed.value < min) return { ok: false, error: minError };
@@ -89,7 +75,7 @@ function checkWhole(text, min, minError) {
 
 // Validates the whole form. Returns { ok, values, errors }. values holds the columns to
 // save (null for a cleared Target). errors maps a form field to a translation key.
-export function validateTargets(form, units = 'metric') {
+export function validateTargets(form) {
   const errors = {};
   const values = {};
 
@@ -106,13 +92,13 @@ export function validateTargets(form, units = 'metric') {
   put(
     'proteinFloor',
     'protein_floor_g',
-    checkGrams(form.proteinFloor, 0, 'targets.errors.notNegative', units)
+    checkGrams(form.proteinFloor, 0, 'targets.errors.notNegative')
   );
 
   // Carb and fat ranges are both empty or both filled, with low at or below high.
   const range = (lowField, highField, lowColumn, highColumn) => {
-    const low = checkGrams(form[lowField], 0, 'targets.errors.notNegative', units);
-    const high = checkGrams(form[highField], 0, 'targets.errors.notNegative', units);
+    const low = checkGrams(form[lowField], 0, 'targets.errors.notNegative');
+    const high = checkGrams(form[highField], 0, 'targets.errors.notNegative');
     put(lowField, lowColumn, low);
     put(highField, highColumn, high);
     if (!low.ok || !high.ok) return;
