@@ -1170,5 +1170,22 @@
       "minutes": "Escribe de 0 a 600 minutos.",
       "floor": "Escribe un número entero de 500 a 5000, o déjalo vacío."
     }
+  },
+  "weightSuggest": {
+    "heading": "¿Actualizar tus objetivos?",
+    "explain": "Con tu nuevo peso, tus respuestas del cuestionario inicial ahora sugieren:",
+    "change": "{{label}}: {{from}} → {{to}}",
+    "notSet": "sin definir",
+    "calorie": "Objetivo de calorías (kcal)",
+    "protein": "Mínimo de proteína (g)",
+    "carbLow": "Carbohidratos mínimo (g)",
+    "carbHigh": "Carbohidratos máximo (g)",
+    "fatLow": "Grasa mínimo (g)",
+    "fatHigh": "Grasa máximo (g)",
+    "yes": "Sí, actualizar mis objetivos",
+    "no": "No, mantener mis objetivos",
+    "saved": "Objetivos actualizados.",
+    "kept": "Tus objetivos se quedan como están.",
+    "saveError": "No se pudieron actualizar tus objetivos. Inténtalo de nuevo."
   }
 }

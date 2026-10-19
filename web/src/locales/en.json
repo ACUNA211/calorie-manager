@@ -1170,5 +1170,22 @@
       "minutes": "Enter 0 to 600 minutes.",
       "floor": "Enter a whole number from 500 to 5000, or leave it empty."
     }
+  },
+  "weightSuggest": {
+    "heading": "Update your Targets?",
+    "explain": "With your new weight, your Intake answers now suggest:",
+    "change": "{{label}}: {{from}} → {{to}}",
+    "notSet": "not set",
+    "calorie": "Calorie Target (kcal)",
+    "protein": "Protein floor (g)",
+    "carbLow": "Carbs low (g)",
+    "carbHigh": "Carbs high (g)",
+    "fatLow": "Fat low (g)",
+    "fatHigh": "Fat high (g)",
+    "yes": "Yes, update my Targets",
+    "no": "No, keep my Targets",
+    "saved": "Targets updated.",
+    "kept": "Your Targets stay as they are.",
+    "saveError": "Could not update your Targets. Try again."
   }
 }

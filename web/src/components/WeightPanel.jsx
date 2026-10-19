@@ -13,6 +13,8 @@ import {
 import { parseDateKey } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { useUnits } from '../lib/useUnits.jsx';
+import { useActingMember } from '../lib/actingMember.jsx';
+import TargetsSuggestion from './TargetsSuggestion.jsx';
 import WeightTrend from './WeightTrend.jsx';
 
 const CHART = { width: 320, height: 140, pad: 12 };
@@ -24,6 +26,7 @@ const LOADING = { key: null, status: 'loading', entries: [] };
 export default function WeightPanel({ memberId, weekStart, todayKey }) {
   const { t, formatDate } = useI18n();
   const units = useUnits();
+  const { actingIsDependent } = useActingMember();
   const { startKey, endKey, fetchFromKey } = trendWindow(weekStart);
   const [version, setVersion] = useState(0);
   const [loaded, setLoaded] = useState(LOADING);
@@ -31,6 +34,8 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
   const [editing, setEditing] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
+  // The weight just logged, for the "Update your Targets?" offer (ticket 65).
+  const [justLogged, setJustLogged] = useState(null);
 
   // The state records which request it answers, so a new Member or week shows the loading
   // line until its own weights arrive.
@@ -72,6 +77,17 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
     setBusy(true);
     try {
       await saveWeight(supabase, memberId, check.values.log_date, check.values.kg);
+      // Only the newest weight can change the Targets: not a back-dated entry, and not one
+      // logged while looking at a past week.
+      const latest = view.entries.reduce(
+        (max, entry) => (entry.log_date > max ? entry.log_date : max),
+        ''
+      );
+      setJustLogged({
+        id: (justLogged ? justLogged.id : 0) + 1,
+        kg: check.values.kg,
+        isLatest: endKey >= todayKey && check.values.log_date >= latest,
+      });
       setForm((current) => ({ ...current, weight: '', error: null }));
       setNotice('saved');
       setVersion((count) => count + 1);
@@ -154,6 +170,16 @@ export default function WeightPanel({ memberId, weekStart, todayKey }) {
       </form>
 
       {notice === 'saved' ? <p role="status">{t('weight.saved')}</p> : null}
+      {justLogged ? (
+        <TargetsSuggestion
+          key={justLogged.id}
+          memberId={memberId}
+          kg={justLogged.kg}
+          isLatest={justLogged.isLatest}
+          isDependent={actingIsDependent}
+          todayKey={todayKey}
+        />
+      ) : null}
       {notice === 'saveError' ? <p role="alert">{t('weight.saveError')}</p> : null}
       {notice === 'deleteError' ? <p role="alert">{t('weight.deleteError')}</p> : null}
 
