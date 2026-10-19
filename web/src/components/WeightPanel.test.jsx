@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import WeightPanel from './WeightPanel.jsx';
 import { deleteWeight, loadWeight, saveWeight } from '../lib/weight.js';
+import { loadIntake } from '../lib/intake.js';
+import { loadTargets } from '../lib/targets.js';
 import { MetricProvider } from '../test/metricUnits.jsx';
 
 vi.mock('../lib/supabase.js', () => ({ supabase: {} }));
@@ -10,6 +12,12 @@ vi.mock('../lib/weight.js', () => ({
   loadWeight: vi.fn(),
   saveWeight: vi.fn(),
   deleteWeight: vi.fn(),
+}));
+
+vi.mock('../lib/intake.js', () => ({ loadIntake: vi.fn() }));
+vi.mock('../lib/targets.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadTargets: vi.fn(),
 }));
 
 // The week shown is Sunday 11 to Saturday 17 October 2026; today is the Saturday.
@@ -39,6 +47,8 @@ describe('WeightPanel', () => {
     loadWeight.mockResolvedValue(entries);
     saveWeight.mockResolvedValue(undefined);
     deleteWeight.mockResolvedValue(undefined);
+    loadIntake.mockResolvedValue(null);
+    loadTargets.mockResolvedValue(null);
   });
 
   it('loads the 12 weeks that end with the week shown, and draws the trend with its entries', async () => {
@@ -66,6 +76,30 @@ describe('WeightPanel', () => {
     await waitFor(() => expect(saveWeight).toHaveBeenCalledWith({}, 4, TODAY, 72.4));
     expect(await screen.findByText('Weight saved.')).toBeInTheDocument();
     expect(loadWeight).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers to update the Targets after a new weight when the Intake formula now differs', async () => {
+    loadIntake.mockResolvedValue({
+      sex: 'female',
+      birth_date: '1990-05-17',
+      height_cm: 165,
+      work: 'sitting',
+      exercise_sessions: null,
+      exercise_minutes: null,
+      goal: 'maintain',
+      pace_kcal: null,
+      floor_on: true,
+      floor_kcal: null,
+    });
+    loadTargets.mockResolvedValue({ calorie_target: 1500, protein_floor_g: 90 });
+    renderPanel();
+    await screen.findByText(/Sun, Oct 11: 72\.5 kg/);
+
+    await userEvent.type(screen.getByLabelText('Weight (kg)'), '70');
+    await userEvent.click(screen.getByRole('button', { name: 'Save weight' }));
+
+    expect(await screen.findByText('Update your Targets?')).toBeInTheDocument();
+    expect(screen.getByText(/Calorie Target \(kcal\): 1,500 → 1,668/)).toBeInTheDocument();
   });
 
   it('refuses a weight for a future day and saves nothing', async () => {
