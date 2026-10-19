@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
-import { loadPlanWeek } from '../lib/plan.js';
-import { buildPlanGrid } from '../lib/planLogic.js';
+import {
+  addCook,
+  deleteCook,
+  loadPlanWeek,
+  loadRecipeChoices,
+  loadSlotMealTimes,
+  movePortion,
+  removePortion,
+  setPortion,
+} from '../lib/plan.js';
+import {
+  buildPlanGrid,
+  planMove,
+  planPlacement,
+  servingsMadeFor,
+  stepServings,
+} from '../lib/planLogic.js';
 import { shiftWeek, weekEndKey, weekStartKey } from '../lib/weekLogic.js';
 import { dateKey, parseDateKey } from '../lib/todayLogic.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
@@ -9,20 +24,37 @@ import './PlanPage.css';
 
 const LOADING = { key: null, status: 'loading', data: null };
 
-// The Plan grid for the Household, read only: Meal Times down the side, Sunday to Saturday
-// across, each Cook coloured with the Portion each Member eats and its calories. Under the
-// grid, each Member's total per day against their Planning band. A Member filter shows one
-// Member or everyone; the week arrows move 7 days. Editing is ticket 40.
+// The week as the grid reads it: the plan plus every Meal Time of the Household (empty slots).
+async function fetchWeek(start) {
+  const [week, slots] = await Promise.all([
+    loadPlanWeek(supabase, start),
+    loadSlotMealTimes(supabase),
+  ]);
+  return { ...week, slots };
+}
+
+// The Plan grid for the Household: Meal Times down the side, Sunday to Saturday across, each
+// Cook coloured with the Portion each Member eats and its calories. Under the grid, each
+// Member's total per day against their Planning band. A Member filter shows one Member or
+// everyone; the week arrows move 7 days. Editing saves straight away: add a Cook, place it at a
+// Meal Time (every Member who shares it gets a Portion sized from their remaining band), resize
+// a Portion by quarter servings, move it, remove it, delete the Cook.
 export default function PlanPage() {
   const { t, formatDate, formatNumber } = useI18n();
   const [todayKey] = useState(() => dateKey(new Date()));
   const [start, setStart] = useState(() => weekStartKey(todayKey));
   const [filter, setFilter] = useState('all');
   const [state, setState] = useState(LOADING);
+  const [recipes, setRecipes] = useState([]);
+  const [newCook, setNewCook] = useState({ recipeId: '', day: '' });
+  const [editor, setEditor] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     let active = true;
-    loadPlanWeek(supabase, start)
+    fetchWeek(start)
       .then((data) => {
         if (active) setState({ key: start, status: 'ready', data });
       })
@@ -34,9 +66,40 @@ export default function PlanPage() {
     };
   }, [start]);
 
+  useEffect(() => {
+    let active = true;
+    loadRecipeChoices(supabase)
+      .then((list) => {
+        if (active) setRecipes(list);
+      })
+      .catch(() => {
+        if (active) setRecipes([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const current = state.key === start ? state : LOADING;
-  const number = (value) => formatNumber(value, { maximumFractionDigits: 1 });
+  const number = (value) => formatNumber(value, { maximumFractionDigits: 2 });
   const dayLabel = (key) => formatDate(parseDateKey(key));
+
+  // Runs one edit, then reads the week again so the grid shows what the database holds.
+  async function save(action) {
+    setBusy(true);
+    setSaveError(null);
+    try {
+      await action();
+      const data = await fetchWeek(start);
+      setState({ key: start, status: 'ready', data });
+      setEditor(null);
+      setConfirmDelete(null);
+    } catch {
+      setSaveError(t('plan.saveError'));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   let body;
   if (current.status === 'error') {
@@ -51,8 +114,107 @@ export default function PlanPage() {
       : null;
     const grid = buildPlanGrid(data, start, memberId);
 
+    const recipeId = newCook.recipeId || String(recipes[0]?.id ?? '');
+    const cookDay = grid.days.includes(newCook.day)
+      ? newCook.day
+      : grid.days.includes(todayKey)
+        ? todayKey
+        : start;
+
+    const portionsOf = (cookId) => data.portions.filter((portion) => portion.cookId === cookId);
+
+    function placeCook(row, day, cookId) {
+      const placements = planPlacement(data, cookId, row.mealTimes, day, memberId);
+      return save(async () => {
+        for (const placement of placements) {
+          await setPortion(supabase, { cookId, eatDate: day, ...placement });
+        }
+      });
+    }
+
+    function moveCook(portions, form) {
+      const target = grid.rows.find((row) => row.key === form.rowKey);
+      const result = planMove(data, portions, target?.mealTimes ?? [], form.day);
+      if (!result.ok) {
+        setSaveError(t(`plan.moveError.${result.reason}`));
+        return undefined;
+      }
+      return save(async () => {
+        for (const move of result.moves) {
+          await movePortion(supabase, move.portionId, move.mealTimeId, move.eatDate);
+        }
+      });
+    }
+
+    function resize(cookId, day, portion, direction) {
+      return save(() =>
+        setPortion(supabase, {
+          cookId,
+          memberId: portion.memberId,
+          mealTimeId: portion.mealTimeId,
+          eatDate: day,
+          servings: stepServings(portion.servings, direction),
+        })
+      );
+    }
+
     body = (
       <>
+        {grid.changedSinceApproval ? (
+          <p className="plan-changed">{t('plan.changedSinceApproval')}</p>
+        ) : null}
+
+        <form
+          className="plan-addcook"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (recipeId) save(() => addCook(supabase, start, Number(recipeId), cookDay));
+          }}
+        >
+          <h3>{t('plan.addCookHeading')}</h3>
+          {recipes.length === 0 ? (
+            <p>{t('plan.noRecipes')}</p>
+          ) : (
+            <>
+              <label>
+                {t('plan.recipe')}
+                <select
+                  value={recipeId}
+                  onChange={(event) =>
+                    setNewCook((value) => ({ ...value, recipeId: event.target.value }))
+                  }
+                >
+                  {recipes.map((recipe) => (
+                    <option key={recipe.id} value={String(recipe.id)}>
+                      {recipe.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t('plan.cookDay')}
+                <select
+                  value={cookDay}
+                  onChange={(event) =>
+                    setNewCook((value) => ({ ...value, day: event.target.value }))
+                  }
+                >
+                  {grid.days.map((key) => (
+                    <option key={key} value={key}>
+                      {dayLabel(key)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" disabled={busy}>
+                {t('plan.addCook')}
+              </button>
+            </>
+          )}
+        </form>
+
+        {saveError ? <p role="alert">{saveError}</p> : null}
+
         {data.members.length > 1 ? (
           <label className="plan-filter">
             {t('plan.filterLabel')}
@@ -102,26 +264,199 @@ export default function PlanPage() {
                           <span className="plan-shared">{t('plan.shared')}</span>
                         ) : null}
                       </th>
-                      {row.cells.map((cell, index) => (
-                        <td key={grid.days[index]}>
-                          {cell.map((cook) => (
-                            <div className={`plan-cook plan-cook-${cook.colour}`} key={cook.cookId}>
-                              <strong>{cook.recipeName}</strong>
-                              <ul>
-                                {cook.portions.map((portion) => (
-                                  <li key={portion.id}>
-                                    {t('plan.portion', {
-                                      name: portion.memberName,
-                                      servings: number(portion.servings),
-                                      kcal: number(portion.kcal),
-                                    })}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </td>
-                      ))}
+                      {row.cells.map((cell, index) => {
+                        const day = grid.days[index];
+                        const editing =
+                          editor && editor.rowKey === row.key && editor.day === day ? editor : null;
+                        return (
+                          <td key={day}>
+                            {cell.map((cook) => (
+                              <div
+                                className={`plan-cook plan-cook-${cook.colour}`}
+                                key={cook.cookId}
+                              >
+                                <strong>{cook.recipeName}</strong>
+                                <ul>
+                                  {cook.portions.map((portion) => (
+                                    <li key={portion.id}>
+                                      <span>
+                                        {t('plan.portion', {
+                                          name: portion.memberName,
+                                          servings: number(portion.servings),
+                                          kcal: number(portion.kcal),
+                                        })}
+                                      </span>
+                                      <span className="plan-portion-buttons">
+                                        <button
+                                          type="button"
+                                          disabled={busy || portion.servings <= 0.25}
+                                          aria-label={t('plan.smallerAria', {
+                                            recipe: cook.recipeName,
+                                            name: portion.memberName,
+                                          })}
+                                          onClick={() => resize(cook.cookId, day, portion, -1)}
+                                        >
+                                          {t('plan.smaller')}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={busy}
+                                          aria-label={t('plan.biggerAria', {
+                                            recipe: cook.recipeName,
+                                            name: portion.memberName,
+                                          })}
+                                          onClick={() => resize(cook.cookId, day, portion, 1)}
+                                        >
+                                          {t('plan.bigger')}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={busy}
+                                          aria-label={t('plan.removeAria', {
+                                            recipe: cook.recipeName,
+                                            name: portion.memberName,
+                                          })}
+                                          onClick={() =>
+                                            save(() => removePortion(supabase, portion.id))
+                                          }
+                                        >
+                                          {t('plan.remove')}
+                                        </button>
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  aria-label={t('plan.moveAria', { recipe: cook.recipeName })}
+                                  onClick={() =>
+                                    setEditor({
+                                      type: 'move',
+                                      rowKey: row.key,
+                                      day,
+                                      cookId: cook.cookId,
+                                      target: { rowKey: row.key, day },
+                                    })
+                                  }
+                                >
+                                  {t('plan.move')}
+                                </button>
+                                {editing?.type === 'move' && editing.cookId === cook.cookId ? (
+                                  <div className="plan-editor">
+                                    <label>
+                                      {t('plan.moveDay')}
+                                      <select
+                                        value={editing.target.day}
+                                        onChange={(event) =>
+                                          setEditor({
+                                            ...editing,
+                                            target: { ...editing.target, day: event.target.value },
+                                          })
+                                        }
+                                      >
+                                        {grid.days.map((key) => (
+                                          <option key={key} value={key}>
+                                            {dayLabel(key)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <label>
+                                      {t('plan.moveMeal')}
+                                      <select
+                                        value={editing.target.rowKey}
+                                        onChange={(event) =>
+                                          setEditor({
+                                            ...editing,
+                                            target: {
+                                              ...editing.target,
+                                              rowKey: event.target.value,
+                                            },
+                                          })
+                                        }
+                                      >
+                                        {grid.rows.map((option) => (
+                                          <option key={option.key} value={option.key}>
+                                            {option.name} {option.time}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        moveCook(cook.portions, {
+                                          rowKey: editing.target.rowKey,
+                                          day: editing.target.day,
+                                        })
+                                      }
+                                    >
+                                      {t('plan.moveHere')}
+                                    </button>
+                                    <button type="button" onClick={() => setEditor(null)}>
+                                      {t('plan.cancel')}
+                                    </button>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                            {editing?.type === 'add' ? (
+                              <div className="plan-editor">
+                                <label>
+                                  {t('plan.pickCook')}
+                                  <select
+                                    value={editing.cookId}
+                                    onChange={(event) =>
+                                      setEditor({ ...editing, cookId: event.target.value })
+                                    }
+                                  >
+                                    {data.cooks.map((cook) => (
+                                      <option key={cook.id} value={String(cook.id)}>
+                                        {t('plan.cookOption', {
+                                          recipe: cook.recipeName,
+                                          day: dayLabel(cook.cookDate),
+                                        })}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => placeCook(row, day, Number(editing.cookId))}
+                                >
+                                  {t('plan.place')}
+                                </button>
+                                <button type="button" onClick={() => setEditor(null)}>
+                                  {t('plan.cancel')}
+                                </button>
+                              </div>
+                            ) : row.addable[index] && !editing ? (
+                              <button
+                                type="button"
+                                className="plan-add"
+                                disabled={busy}
+                                aria-label={t('plan.addAria', {
+                                  meal: row.name,
+                                  day: dayLabel(day),
+                                })}
+                                onClick={() =>
+                                  setEditor({
+                                    type: 'add',
+                                    rowKey: row.key,
+                                    day,
+                                    cookId: String(data.cooks[0].id),
+                                  })
+                                }
+                              >
+                                {t('plan.add')}
+                              </button>
+                            ) : null}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
@@ -158,6 +493,58 @@ export default function PlanPage() {
             </div>
           </>
         )}
+
+        {data.cooks.length > 0 ? (
+          <section className="plan-cooks" aria-labelledby="plan-cooks-heading">
+            <h3 id="plan-cooks-heading">{t('plan.cooksHeading')}</h3>
+            <ul>
+              {data.cooks.map((cook) => {
+                const planned = portionsOf(cook.id).reduce((sum, p) => sum + p.servings, 0);
+                return (
+                  <li key={cook.id}>
+                    <span>
+                      {t('plan.cookSummary', {
+                        recipe: cook.recipeName,
+                        day: dayLabel(cook.cookDate),
+                        made: number(
+                          servingsMadeFor(
+                            cook.servingsMade,
+                            portionsOf(cook.id).map((p) => p.servings)
+                          )
+                        ),
+                        planned: number(planned),
+                      })}
+                    </span>
+                    {confirmDelete === cook.id ? (
+                      <span className="plan-confirm">
+                        {t('plan.deleteConfirm', { recipe: cook.recipeName })}
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => save(() => deleteCook(supabase, cook.id))}
+                        >
+                          {t('plan.deleteYes')}
+                        </button>
+                        <button type="button" onClick={() => setConfirmDelete(null)}>
+                          {t('plan.keep')}
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        aria-label={t('plan.deleteCookAria', { recipe: cook.recipeName })}
+                        onClick={() => setConfirmDelete(cook.id)}
+                      >
+                        {t('plan.deleteCook')}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
       </>
     );
   }
@@ -169,7 +556,11 @@ export default function PlanPage() {
         <button
           type="button"
           aria-label={t('plan.previousWeek')}
-          onClick={() => setStart((value) => shiftWeek(value, -1))}
+          onClick={() => {
+            setEditor(null);
+            setSaveError(null);
+            setStart((value) => shiftWeek(value, -1));
+          }}
         >
           {'<'}
         </button>
@@ -177,7 +568,11 @@ export default function PlanPage() {
         <button
           type="button"
           aria-label={t('plan.nextWeek')}
-          onClick={() => setStart((value) => shiftWeek(value, 1))}
+          onClick={() => {
+            setEditor(null);
+            setSaveError(null);
+            setStart((value) => shiftWeek(value, 1));
+          }}
         >
           {'>'}
         </button>
