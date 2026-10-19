@@ -4,7 +4,7 @@
 
 Read `CONTEXT.md` (vocabulary) and ADRs 0002 and 0003 before starting.
 
-**Blocked by:** 39 (Plan grid (view))
+**Blocked by:** 39 (Plan grid (view)), 98 (Run the database tests for migrations 035 onward)
 
 **Status:** done (awaiting you: run the database tests with `supabase test db`, push migration 039, then try add, place, move, remove and delete on /plan with real data)
 
