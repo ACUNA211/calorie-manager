@@ -13,6 +13,7 @@ import LanguageSwitch from './i18n/LanguageSwitch.jsx';
 import TopBar from './components/shell/TopBar.jsx';
 import TabBar from './components/shell/TabBar.jsx';
 import PreferencesPage from './components/PreferencesPage.jsx';
+import IntakePage from './components/IntakePage.jsx';
 import MorePage from './components/shell/MorePage.jsx';
 import { useActingMember } from './lib/actingMember.jsx';
 import { useLocation } from './lib/useLocation.js';
@@ -112,12 +113,15 @@ export default function App() {
           {route === 'recipes' && <RecipesPage />}
           {route === 'plan' && <PlanPage />}
           {route === 'preferences' && <PreferencesPage user={session.user} />}
+          {route === 'intake' && <IntakePage user={session.user} />}
           {route === 'more' && (
             <MorePage user={session.user} onNavigate={(next) => navigate(pathFor(next))} />
           )}
         </div>
         <TabBar
-          current={route === 'preferences' || route === 'plan' ? 'more' : route}
+          current={
+            route === 'preferences' || route === 'plan' || route === 'intake' ? 'more' : route
+          }
           onNavigate={(next) => navigate(pathFor(next))}
         />
       </div>

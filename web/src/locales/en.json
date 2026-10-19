@@ -1033,5 +1033,91 @@
       "noSpeech": "I did not hear anything. Tap Try again and speak.",
       "other": "Voice capture did not work. Try again."
     }
+  },
+  "intake": {
+    "heading": "Intake",
+    "loading": "Loading your Intake…",
+    "loadError": "Could not load your Intake.",
+    "intro": "Answer these questions and the app suggests Targets. Nothing is saved until you accept or edit and save them. The suggestion is a starting point, about 10 to 20 percent off for a typical person; your weight trend over 3 to 4 weeks is the real check.",
+    "dependent": "The Intake form is for adults. {{name}} has no suggested Targets; set them by hand on the Targets screen.",
+    "formLabel": "Intake questions",
+    "choose": "Choose…",
+    "sex": {
+      "label": "Sex, as the formula uses it",
+      "hint": "The formula uses this because resting energy differs by sex.",
+      "female": "Female",
+      "male": "Male"
+    },
+    "birthDate": "Date of birth",
+    "height": {
+      "cm": "Height (cm)",
+      "feet": "Height (feet)",
+      "inches": "Inches"
+    },
+    "weight": "Weight ({{unit}})",
+    "work": {
+      "label": "Your work",
+      "sitting": "Mostly sitting",
+      "on_feet": "Mostly standing or walking",
+      "heavy": "Physically heavy work"
+    },
+    "exercise": {
+      "legend": "Planned exercise",
+      "hint": "Count sessions you plan each week, not how active you feel. Leave empty for none.",
+      "sessions": "Sessions a week",
+      "minutes": "Minutes per session"
+    },
+    "goal": {
+      "label": "Goal",
+      "lose": "Lose weight",
+      "maintain": "Maintain weight",
+      "hand": "Something else: I will set Targets by hand"
+    },
+    "pace": {
+      "label": "Pace",
+      "option": "{{kcal}} kcal a day below your needs"
+    },
+    "pregnant": "I am pregnant or breastfeeding",
+    "floor": {
+      "legend": "Suggestion floor",
+      "hint": "A suggested Calorie Target never goes below this. It does not apply to Targets you type yourself.",
+      "on": "Use a suggestion floor",
+      "kcal": "Floor (kcal a day)",
+      "default": "Left empty, the floor is {{kcal}} kcal."
+    },
+    "suggestButton": "Suggest Targets",
+    "noSuggestion": {
+      "dependent": "Dependents get no suggested Targets. Set them by hand.",
+      "underage": "Suggestions are for adults, 18 and over. Set Targets by hand.",
+      "pregnant": "No suggestion during pregnancy or breastfeeding. Set Targets by hand.",
+      "hand": "You chose to set Targets by hand. Use the Targets screen.",
+      "missing": "Fill in every question above to get a suggestion."
+    },
+    "targets": {
+      "heading": "Suggested Targets",
+      "formLabel": "Suggested Targets",
+      "explain": "Resting energy {{rmr}} kcal, with activity {{tdee}} kcal, less {{deficit}} kcal a day.",
+      "notSaved": "Not saved yet. Edit any number, then save.",
+      "calorie": "Calorie Target (kcal per day)",
+      "protein": "Protein floor (g per day)",
+      "carbLow": "Carbs low (g)",
+      "carbHigh": "Carbs high (g)",
+      "fatLow": "Fat low (g)",
+      "fatHigh": "Fat high (g)",
+      "saveButton": "Save these Targets",
+      "saving": "Saving…",
+      "saved": "Targets saved.",
+      "saveError": "Could not save your Targets."
+    },
+    "errors": {
+      "sex": "Choose female or male.",
+      "birthDate": "Enter a real date of birth.",
+      "heightNumber": "Enter your height as a number.",
+      "heightRange": "That height looks wrong. Check it.",
+      "goal": "Choose a goal.",
+      "sessions": "Enter 0 to 21 sessions.",
+      "minutes": "Enter 0 to 600 minutes.",
+      "floor": "Enter a whole number from 500 to 5000, or leave it empty."
+    }
   }
 }
