@@ -1150,6 +1150,18 @@
       "denied": "El micrófono está bloqueado. Permite el acceso al micrófono para este sitio en los ajustes del navegador y vuelve a intentarlo.",
       "noSpeech": "No escuché nada. Toca Intentar de nuevo y habla.",
       "other": "La captura de voz no funcionó. Inténtalo de nuevo."
+    },
+    "shopping": {
+      "offline": "Los comandos de voz necesitan conexión.",
+      "deciding": "Entendiendo lo que dijiste…",
+      "pick": "¿Quisiste decir?",
+      "cardsLabel": "Lo que quizá quisiste decir",
+      "tickCard": "Comprado: {{name}}",
+      "addCard": "Añadir {{name}} a la lista",
+      "addCardAmount": "Añadir {{name}} ({{amount}}) a la lista",
+      "none": "Eso no sonó a un comando de la lista de compras. Inténtalo de nuevo, por ejemplo \"marca la leche\" o \"añade pan\".",
+      "failed": "No funcionó. Inténtalo de nuevo o usa los botones de la lista.",
+      "cap": "Se alcanzó el límite de IA de este mes. Usa los botones de la lista."
     }
   },
   "intake": {

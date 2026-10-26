@@ -21,3 +21,15 @@
   color: var(--warn);
   font-size: var(--text-small);
 }
+.voice-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.voice-cards p {
+  margin: 0;
+}
+.voice-card {
+  min-height: var(--tap);
+  text-align: left;
+}

@@ -12,6 +12,7 @@ import {
 import { useOfflineShopping } from '../lib/useOfflineShopping.js';
 import ShoppingAddForm from './ShoppingAddForm.jsx';
 import ShoppingScan from './ShoppingScan.jsx';
+import ShoppingVoice from './ShoppingVoice.jsx';
 import Toast from './Toast.jsx';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { useUnits } from '../lib/useUnits.jsx';
@@ -24,6 +25,7 @@ import './ShoppingPage.css';
 // there; Undo on the toast takes the latest tick back for a few seconds. Any Member can add a line
 // by hand. With no signal, ticks and adds are kept on the phone (the queue of ticket 34) and sent
 // when it is back online; a line ticked twice, by two Members, still adds to the Pantry once.
+// Voice commands ("tick off the milk", "add bread") offer option cards that use the same tick and add.
 export default function ShoppingPage() {
   const { t, formatDate } = useI18n();
   const units = useUnits();
@@ -218,6 +220,12 @@ export default function ShoppingPage() {
         lines={withQueued(state.lines, shopping.items)}
         online={shopping.online}
         onTick={(line, grams) => tick(line, 'bought', grams)}
+      />
+      <ShoppingVoice
+        lines={withQueued(state.lines, shopping.items)}
+        online={shopping.online}
+        onTick={(line) => tick(line, 'bought')}
+        onAdd={addLine}
       />
       <ShoppingAddForm online={shopping.online} onAdd={addLine} />
       {open.map((group) => (

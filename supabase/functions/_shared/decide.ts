@@ -19,7 +19,8 @@ import {
 export const DEFAULT_PROVIDER_ORDER = ["jev", "openai", "haiku"] as const;
 export const LANGS = ["en", "es"] as const;
 export const MAX_QUESTIONS = 12;
-export const MAX_OPTIONS = 12;
+// 40 lets a Voice command offer a whole Shopping list (ticket 61).
+export const MAX_OPTIONS = 40;
 export const MAX_STATE_CHARS = 8000;
 export const MAX_INSTRUCTION_CHARS = 1000;
 export const AI_LIMIT_MESSAGE = "AI limit reached this month";

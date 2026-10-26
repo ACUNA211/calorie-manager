@@ -1150,6 +1150,18 @@
       "denied": "The microphone is blocked. Allow microphone access for this site in your browser settings, then try again.",
       "noSpeech": "I did not hear anything. Tap Try again and speak.",
       "other": "Voice capture did not work. Try again."
+    },
+    "shopping": {
+      "offline": "Voice commands need a connection.",
+      "deciding": "Working out what you meant…",
+      "pick": "Did you mean:",
+      "cardsLabel": "What you might have meant",
+      "tickCard": "Bought: {{name}}",
+      "addCard": "Add {{name}} to the list",
+      "addCardAmount": "Add {{name}} ({{amount}}) to the list",
+      "none": "That did not sound like a Shopping list command. Try again, for example \"tick off the milk\" or \"add bread\".",
+      "failed": "That did not work. Try again, or use the buttons on the list.",
+      "cap": "AI limit reached this month. Use the buttons on the list."
     }
   },
   "intake": {
