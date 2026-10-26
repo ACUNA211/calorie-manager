@@ -21,11 +21,15 @@ Ticket 30 (Paste a Recipe) added two more. Write these answers in ticket 30's Co
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
 **Unblocks:** 28, 29, 30, 50
 
-- [ ] Three answers written in ticket 28's Comments
-- [ ] Three answers written in ticket 29's Comments
-- [ ] Two answers written in ticket 30's Comments
-- [ ] CONTEXT.md's Recipe entry updated if rule 1 changes
+- [x] Three answers written in ticket 28's Comments
+- [x] Three answers written in ticket 29's Comments
+- [x] Two answers written in ticket 30's Comments
+- [x] CONTEXT.md's Recipe entry updated if rule 1 changes
+
+## Comments
+
+2026-10-25: Decided. Keep 1, 5, 6, 7 and 8 as built. Yes to 2 (save in one database function). 3: detach the Cook. 4: drop the old column. The work for 2, 3 and 4 is ticket 106. Rule 1 is unchanged, so CONTEXT.md needs no edit.
