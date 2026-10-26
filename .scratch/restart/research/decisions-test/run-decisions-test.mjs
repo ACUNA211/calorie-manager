@@ -4,14 +4,15 @@
 // Usage:
 //   node run-decisions-test.mjs --dry-run                 check messages.json, no network, no spend (default)
 //   node run-decisions-test.mjs --provider openai         live run, needs OPENAI_API_KEY
-//   node run-decisions-test.mjs --provider jev            live run, needs TYPESAFE_API_KEY and JEV_URL
+//   node run-decisions-test.mjs --provider jev            live run, needs TYPESAFE_API_KEY (JEV_URL, JEV_MODEL optional)
 //   node run-decisions-test.mjs --provider clef           live run, needs CLOUDFLARE_API_TOKEN, CLEF_URL
 //   add --limit 2 to run only the first 2 messages (a cheap smoke test before the full run)
 //
 // Keys come only from environment variables. Nothing here prints a key.
 // Status (2026-10-17): no keys have been supplied, so no live run has happened.
-// Jev and Clef endpoints are NOT confirmed on the vendor pages (see jev-vs-openai.md);
-// those adapters refuse to run until JEV_URL / CLEF_URL are set by hand.
+// Jev endpoint and request shape confirmed 2026-10-25 at docs.typesafe.ai/api.md:
+// POST https://api.typesafe.ai/v1/systemone with { model, state, questions }.
+// The Clef endpoint is NOT confirmed; that adapter refuses to run until CLEF_URL is set by hand.
 // The OpenAI adapter follows the public-beta page at developers.openai.com; confirm the
 // response envelope on a --limit 1 run before trusting the full run.
 
@@ -76,14 +77,15 @@ function openaiQuestion(q) {
 }
 
 // Jev (and Clef, which is described as Jev-compatible): questions as an object keyed by name.
-// Shape taken from docs.typesafe.ai/models ("noul" type seen; choice/score shapes unconfirmed).
+// Shape from docs.typesafe.ai/api.md: choice criteria is { value: description }, score criteria
+// is an ordered list of level labels, noul has no criteria.
 function jevQuestions(qs) {
   const out = {};
   for (const q of qs) {
     const type = q.type === "yes_no" ? "noul" : q.type;
     const entry = { type, instructions: q.instructions };
-    if (q.type === "choice") entry.choices = q.choices.map((c) => c.value);
-    if (q.type === "score") entry.levels = q.levels.map((l) => l.label);
+    if (q.type === "choice") entry.criteria = Object.fromEntries(q.choices.map((c) => [c.value, c.description ?? c.value]));
+    if (q.type === "score") entry.criteria = q.levels.map((l) => l.label);
     out[q.name] = entry;
   }
   return out;
@@ -107,10 +109,13 @@ function safeParse(s) {
 function scoreAnswer(q, expected, ans) {
   if (!ans) return { value: null, confidence: null, correct: false };
   if (q.type === "choice") {
-    const probs = ans.probabilities ?? [];
-    let best = 0;
-    probs.forEach((p, i) => { if (p > probs[best]) best = i; });
-    const value = q.choices[best]?.value ?? null;
+    let value = ans.choice ?? null;
+    if (value == null) {
+      const probs = ans.probabilities ?? [];
+      let best = 0;
+      probs.forEach((p, i) => { if (p > probs[best]) best = i; });
+      value = q.choices[best]?.value ?? null;
+    }
     return { value, confidence: ans.confidence ?? null, correct: value === expected };
   }
   if (q.type === "score") {
@@ -144,7 +149,7 @@ async function callJevLike(m, url, key, label) {
   if (!url) throw new Error(`${label} endpoint not set (unconfirmed on vendor page; set env var)`);
   if (!key) throw new Error(`${label} key not set`);
   const qs = data.question_sets[m.kind];
-  const body = { input: m.text, questions: jevQuestions(qs) };
+  const body = { model: process.env.JEV_MODEL || "jev-latest", state: m.text, questions: jevQuestions(qs) };
   const res = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -159,7 +164,7 @@ const adapters = {
   openai: { key: "OPENAI_API_KEY", call: callOpenAI },
   jev: {
     key: "TYPESAFE_API_KEY",
-    call: (m) => callJevLike(m, process.env.JEV_URL, process.env.TYPESAFE_API_KEY, "Jev"),
+    call: (m) => callJevLike(m, process.env.JEV_URL || "https://api.typesafe.ai/v1/systemone", process.env.TYPESAFE_API_KEY, "Jev"),
   },
   clef: {
     key: "CLOUDFLARE_API_TOKEN",
@@ -199,7 +204,10 @@ for (const m of messages) {
   try {
     const { json, usage } = await adapter.call(m);
     const ms = Date.now() - t0;
-    const answers = findAnswers(json) ?? [];
+    // Jev returns answers keyed by question name; OpenAI's envelope is searched for an array.
+    const answers = json?.answers && !Array.isArray(json.answers)
+      ? qs.map((q) => json.answers[q.name])
+      : findAnswers(json) ?? [];
     const scored = {};
     qs.forEach((q, i) => { scored[q.name] = scoreAnswer(q, m.expected[q.name], answers[i]); });
     rows.push({ id: m.id, lang: m.lang, kind: m.kind, ms, usage, scored, raw: json });

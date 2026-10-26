@@ -1,6 +1,6 @@
 # Jev vs OpenAI Decisions vs Cloudflare Clef: test design and vendor check
 
-Ticket 35. Date: 2026-10-17. Spend so far: $0. No API keys were available, so no live run has happened and there are no accuracy, speed or cost results yet.
+Ticket 35. Test design 2026-10-17; Jev live run 2026-10-25 (results file dated 2026-10-26 UTC). Total spend: about $0.0012 (Jev only). OpenAI Decisions and Clef were not run. **Pick: Jev for English and for Spanish** (see Results).
 
 ## What the test is for
 
@@ -58,18 +58,42 @@ File: `decisions-test/run-decisions-test.mjs` (Node 18+, no dependencies).
 
 - `node run-decisions-test.mjs` or `--dry-run`: validates `messages.json` (ids, kinds, expected values in range) and prints the counts. No network, no spend. Run this now: it passes (50 messages: 25 EN, 25 ES, 25 Rebalance, 25 Voice).
 - `--provider openai --limit 1`: a one-message smoke test. Use it first to confirm the response envelope, since the runner reads the first `answers` array it finds.
-- `--provider openai` / `jev` / `clef`: full run. Each needs its key in the environment: `OPENAI_API_KEY`, `TYPESAFE_API_KEY`, `CLOUDFLARE_API_TOKEN`. Jev and Clef also need `JEV_URL` and `CLEF_URL`, which are not confirmed and must be set by hand. Without the key the script exits with "Pending keys" and spends nothing.
+- `--provider openai` / `jev` / `clef`: full run. Each needs its key in the environment: `OPENAI_API_KEY`, `TYPESAFE_API_KEY`, `CLOUDFLARE_API_TOKEN`. Jev's endpoint is built in (`https://api.typesafe.ai/v1/systemone`, confirmed 2026-10-25 at docs.typesafe.ai/api.md; `JEV_URL` and `JEV_MODEL` override it, model defaults to `jev-latest`). Clef needs `CLEF_URL` set by hand. Without the key the script exits with "Pending keys" and spends nothing.
 - Output: `decisions-test/results/<provider>-<date>.json` with each message's raw answer, the scored value, confidence and latency. Accuracy is worked out from that file, not typed into the report.
 
 Scoring: `choice` is correct when the highest probability matches the expected value. `score` is correct when the rounded score equals the expected level index. `yes_no` is correct when the probability is above 0.5 and matches. Confidence is saved so that confidence can be compared with correctness.
 
-## What is still needed
+## Results: Jev (run 2026-10-25)
 
-1. **API keys (the user must supply):** an OpenAI API key with Decisions access; a TypeSafe Jev key (and the Jev endpoint, `JEV_URL`, from docs.typesafe.ai); optionally a Cloudflare API token and Workers AI endpoint for Clef, once Cloudflare's own page is found. Keys go in environment variables only, never in files.
-2. **Live runs (pending keys):** run the smoke test, then the full test per provider. Record accuracy, confidence against correctness, latency and cost from the results files. Cost is roughly input tokens times the price above (Jev $0.042 per million; gpt-6-luna $0.10 per million; Clef unconfirmed).
-3. **Clarify:** whether the user wants to spend the test budget (expected under $1 for 50 messages times 3 providers, by my arithmetic: each message is a few hundred tokens).
-4. **Vendor confirmations still open:** Jev's Choice and Score request shape, maximum questions and options, endpoint URL; Clef's existence and price on a Cloudflare page; Jev access status.
+Source: `decisions-test/results/jev-2026-10-26.json`. Model answered as `jev-1.14.0`. 50 messages, 150 scored answers, 0 errors.
 
-## Accuracy, speed and cost
+**Accuracy by question and language**
 
-Not measured. No numbers are given here. The per-language pick for ticket 58 is not made.
+| Question | English | Spanish |
+|---|---|---|
+| Rebalance `meal` (choice) | 12/13 (92%) | 10/12 (83%) |
+| Rebalance `fix` (choice) | 12/13 (92%) | 11/12 (92%) |
+| Rebalance `gave_number` (yes/no) | 13/13 (100%) | 12/12 (100%) |
+| Rebalance `over_by` (score, 5 levels) | 6/13 (46%) | 6/12 (50%) |
+| Voice `action` (choice) | 11/12 (92%) | 10/13 (77%) |
+| Voice `has_amount` (yes/no) | 12/12 (100%) | 13/13 (100%) |
+| **All** | **66/76 (87%)** | **62/74 (84%)** |
+
+**`over_by` is weak, but in the way that matters least.** 24 of its 25 answers are within one level of the label. Only 2 of the 9 messages that state a number were exact, but ticket 59 uses the stated number instead of the score. On the 16 messages with no number (the only case where the score is used), it got 10 exact and 15 within one level. Part of the problem is the test, not the model: the levels are percentages of a Calorie Target that the message never gives, so "600 over" can't be placed by percent. Ticket 58/59 should put the Member's Calorie Target and today's total in `state`, or use fewer, coarser levels.
+
+**Confidence works as a gate.** For the choice questions, every answer below 0.6 confidence was wrong (0 right, 7 wrong), and 66 of 68 answers at 0.6 or above were right. Ticket 59's "low confidence asks one clarifying choice" can start with 0.6 as its threshold. Average confidence was 0.91 on right answers and 0.46 on wrong ones.
+
+**The misses are mostly ambiguous messages or missing context:**
+- "Brunch" was labelled lunch, and Jev said breakfast (both languages, low confidence).
+- "Log the chicken salad for lunch" (EN and ES) was labelled `log_planned_portion`, and Jev said `log_other`. Without the day's Plan in `state`, Jev can't know the salad was planned, so ticket 58 should pass the Meal Times' Planned Portions as state.
+- "Marca el arroz como terminado" became `log_other` at 0.23 confidence, which the gate would catch.
+
+**Speed and cost.** Median 128 ms per request (all questions in one request), 90th percentile 164 ms, max 352 ms. 28,993 input and 6,389 output tokens, so about $0.0012 for 50 messages at $0.042 per million input tokens (output is free). That's about $0.000024 per Rebalance or Voice command, small enough to ignore against the $5 a month budget.
+
+**Pick for ticket 58:** Jev (`jev-latest`, currently 1.14.0) for **English and Spanish**. Spanish is slightly weaker on Voice `action`, but its misses are low-confidence or need Plan context, which ticket 58 will provide. OpenAI Decisions stays the fallback named in ADR 0002. A comparison run (`--provider openai`) is optional and can be done later with an `OPENAI_API_KEY`.
+
+## Still open
+
+- OpenAI Decisions and Clef were not run, so there's no head-to-head comparison.
+- Clef still isn't confirmed on a Cloudflare page.
+- Labels to revisit if the test is re-run: brunch → lunch, and the `over_by` levels without a Calorie Target.

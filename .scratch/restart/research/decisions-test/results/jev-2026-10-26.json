@@ -1,0 +1,3457 @@
+{
+  "provider": "jev",
+  "date": "2026-10-26",
+  "limit": 50,
+  "rows": [
+    {
+      "id": "R-EN-01",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 352,
+      "usage": {
+        "input_tokens": 685,
+        "output_tokens": 156
+      },
+      "scored": {
+        "over_by": {
+          "value": 4,
+          "raw": 3.97,
+          "confidence": 0.99,
+          "correct": true
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 0.4,
+          "correct": false
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.03,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.97,
+            "confidence": 0.99,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 0.01,
+              "4": 0.99
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 0.4,
+            "probabilities": {
+              "lighter_later_today": 0.55,
+              "lighter_tomorrow": 0.01,
+              "drop_if_room_meal": 0.01,
+              "no_preference": 0.43
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.03
+          }
+        },
+        "usage": {
+          "input_tokens": 685,
+          "output_tokens": 156
+        }
+      }
+    },
+    {
+      "id": "R-EN-02",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 130,
+      "usage": {
+        "input_tokens": 692,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 1,
+          "raw": 0.69,
+          "confidence": 0.55,
+          "correct": false
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.64,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.69,
+            "confidence": 0.55,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.43,
+              "1": 0.47000000000000003,
+              "2": 0.09,
+              "3": 0.01,
+              "4": 0
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.99,
+            "probabilities": {
+              "lighter_later_today": 0.01,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.99
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.64
+          }
+        },
+        "usage": {
+          "input_tokens": 692,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-EN-03",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 200,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 2.04,
+          "confidence": 0.88,
+          "correct": true
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_tomorrow",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 2.04,
+            "confidence": 0.88,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.02,
+              "1": 0.02,
+              "2": 0.91,
+              "3": 0.01,
+              "4": 0.04
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 0.99,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0.01,
+              "snack": 0.99,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_tomorrow",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 0,
+              "lighter_tomorrow": 1,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 694,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-EN-04",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 118,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 0,
+          "raw": 0.3,
+          "confidence": 0.77,
+          "correct": true
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 0.97,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.03,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.3,
+            "confidence": 0.77,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.81,
+              "1": 0.1,
+              "2": 0.07,
+              "3": 0.01,
+              "4": 0
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 1,
+              "lunch": 0,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 0.97,
+            "probabilities": {
+              "lighter_later_today": 0.98,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.02
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.03
+          }
+        },
+        "usage": {
+          "input_tokens": 694,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-EN-05",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 120,
+      "usage": {
+        "input_tokens": 693,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 1.92,
+          "confidence": 0.42,
+          "correct": false
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_tomorrow",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.97,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.92,
+            "confidence": 0.42,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.06,
+              "1": 0.27,
+              "2": 0.41,
+              "3": 0.21,
+              "4": 0.05
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_tomorrow",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 0,
+              "lighter_tomorrow": 1,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.97
+          }
+        },
+        "usage": {
+          "input_tokens": 693,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-EN-06",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 136,
+      "usage": {
+        "input_tokens": 685,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 0,
+          "raw": 0.01,
+          "confidence": 1,
+          "correct": true
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.88,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.01,
+            "confidence": 1,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 1,
+              "1": 0,
+              "2": 0,
+              "3": 0,
+              "4": 0
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.88,
+            "probabilities": {
+              "lighter_later_today": 0.09,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.91
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 685,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-EN-07",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 152,
+      "usage": {
+        "input_tokens": 685,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 4,
+          "raw": 3.77,
+          "confidence": 0.82,
+          "correct": false
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.81,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.03,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.77,
+            "confidence": 0.82,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 0.21,
+              "4": 0.79
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.81,
+            "probabilities": {
+              "lighter_later_today": 0.05,
+              "lighter_tomorrow": 0.09,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.86
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.03
+          }
+        },
+        "usage": {
+          "input_tokens": 685,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-EN-08",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 139,
+      "usage": {
+        "input_tokens": 698,
+        "output_tokens": 156
+      },
+      "scored": {
+        "over_by": {
+          "value": 1,
+          "raw": 1.35,
+          "confidence": 0,
+          "correct": false
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 0.95,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.92,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.35,
+            "confidence": 0,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.29,
+              "1": 0.29,
+              "2": 0.26,
+              "3": 0.09,
+              "4": 0.07
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0,
+              "snack": 1,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 0.95,
+            "probabilities": {
+              "lighter_later_today": 0.96,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.04
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.92
+          }
+        },
+        "usage": {
+          "input_tokens": 698,
+          "output_tokens": 156
+        }
+      }
+    },
+    {
+      "id": "R-EN-09",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 107,
+      "usage": {
+        "input_tokens": 692,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 4,
+          "raw": 3.75,
+          "confidence": 0.77,
+          "correct": false
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.85,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.04,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.75,
+            "confidence": 0.77,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.01,
+              "2": 0.02,
+              "3": 0.16,
+              "4": 0.8
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.85,
+            "probabilities": {
+              "lighter_later_today": 0.11,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.89
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.04
+          }
+        },
+        "usage": {
+          "input_tokens": 692,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-EN-10",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 113,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 156
+      },
+      "scored": {
+        "over_by": {
+          "value": 4,
+          "raw": 3.8,
+          "confidence": 0.81,
+          "correct": true
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 0.3,
+          "correct": false
+        },
+        "fix": {
+          "value": "drop_if_room_meal",
+          "confidence": 0.87,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.8,
+            "confidence": 0.81,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.02,
+              "1": 0.02,
+              "2": 0.02,
+              "3": 0.05,
+              "4": 0.89
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 0.3,
+            "probabilities": {
+              "breakfast": 0.44,
+              "lunch": 0.18,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0.38
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "drop_if_room_meal",
+            "confidence": 0.87,
+            "probabilities": {
+              "lighter_later_today": 0.03,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0.9,
+              "no_preference": 0.07
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 695,
+          "output_tokens": 156
+        }
+      }
+    },
+    {
+      "id": "R-EN-11",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 118,
+      "usage": {
+        "input_tokens": 689,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 1.59,
+          "confidence": 0.39,
+          "correct": false
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 0.97,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.94,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.59,
+            "confidence": 0.39,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.1,
+              "1": 0.37,
+              "2": 0.4,
+              "3": 0.1,
+              "4": 0.03
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 0.97,
+            "probabilities": {
+              "breakfast": 0.98,
+              "lunch": 0.01,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0.01
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 1,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.94
+          }
+        },
+        "usage": {
+          "input_tokens": 689,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-EN-12",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 135,
+      "usage": {
+        "input_tokens": 690,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 0,
+          "raw": 0.06,
+          "confidence": 0.93,
+          "correct": true
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 0.95,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.83,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.03,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.06,
+            "confidence": 0.93,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.97,
+              "1": 0,
+              "2": 0.01,
+              "3": 0.01,
+              "4": 0.01
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 0.95,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0.01,
+              "snack": 0.96,
+              "other": 0.03
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.83,
+            "probabilities": {
+              "lighter_later_today": 0.11,
+              "lighter_tomorrow": 0.01,
+              "drop_if_room_meal": 0.01,
+              "no_preference": 0.87
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.03
+          }
+        },
+        "usage": {
+          "input_tokens": 690,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-EN-13",
+      "lang": "en",
+      "kind": "rebalance",
+      "ms": 155,
+      "usage": {
+        "input_tokens": 691,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 3,
+          "raw": 2.73,
+          "confidence": 0.49,
+          "correct": false
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_tomorrow",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.97,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 2.73,
+            "confidence": 0.49,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.05,
+              "2": 0.31,
+              "3": 0.46,
+              "4": 0.17
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_tomorrow",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 0,
+              "lighter_tomorrow": 1,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.97
+          }
+        },
+        "usage": {
+          "input_tokens": 691,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "V-EN-01",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 139,
+      "usage": {
+        "input_tokens": 462,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 0.9,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.12,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 0.9,
+            "probabilities": {
+              "tick_shopping_line": 0.92,
+              "add_shopping_item": 0.02,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0.06,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.12
+          }
+        },
+        "usage": {
+          "input_tokens": 462,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-EN-02",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 143,
+      "usage": {
+        "input_tokens": 467,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "add_shopping_item",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.99,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "add_shopping_item",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 1,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.99
+          }
+        },
+        "usage": {
+          "input_tokens": 467,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-EN-03",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 100,
+      "usage": {
+        "input_tokens": 464,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.46,
+          "correct": false
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.04,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.46,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.45,
+              "log_other": 0.55,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.04
+          }
+        },
+        "usage": {
+          "input_tokens": 464,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-EN-04",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 109,
+      "usage": {
+        "input_tokens": 467,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.14,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.99,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.01,
+              "log_other": 0.99,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.14
+          }
+        },
+        "usage": {
+          "input_tokens": 467,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-EN-05",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 119,
+      "usage": {
+        "input_tokens": 464,
+        "output_tokens": 100
+      },
+      "scored": {
+        "action": {
+          "value": "mark_pantry_used",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.1,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "mark_pantry_used",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 1,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.1
+          }
+        },
+        "usage": {
+          "input_tokens": 464,
+          "output_tokens": 100
+        }
+      }
+    },
+    {
+      "id": "V-EN-06",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 142,
+      "usage": {
+        "input_tokens": 465,
+        "output_tokens": 100
+      },
+      "scored": {
+        "action": {
+          "value": "mark_pantry_used",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.97,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "mark_pantry_used",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 1,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.97
+          }
+        },
+        "usage": {
+          "input_tokens": 465,
+          "output_tokens": 100
+        }
+      }
+    },
+    {
+      "id": "V-EN-07",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 164,
+      "usage": {
+        "input_tokens": 464,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "add_shopping_item",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "add_shopping_item",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 1,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 464,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-EN-08",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 143,
+      "usage": {
+        "input_tokens": 465,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.2,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 0.99,
+            "probabilities": {
+              "tick_shopping_line": 0.99,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0.01,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.2
+          }
+        },
+        "usage": {
+          "input_tokens": 465,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-EN-09",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 142,
+      "usage": {
+        "input_tokens": 468,
+        "output_tokens": 100
+      },
+      "scored": {
+        "action": {
+          "value": "start_rebalance",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.11,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "start_rebalance",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 1
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.11
+          }
+        },
+        "usage": {
+          "input_tokens": 468,
+          "output_tokens": 100
+        }
+      }
+    },
+    {
+      "id": "V-EN-10",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 149,
+      "usage": {
+        "input_tokens": 469,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.82,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.99,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.82,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.15,
+              "log_other": 0.85,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.99
+          }
+        },
+        "usage": {
+          "input_tokens": 469,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-EN-11",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 107,
+      "usage": {
+        "input_tokens": 465,
+        "output_tokens": 102
+      },
+      "scored": {
+        "action": {
+          "value": "log_planned_portion",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.05,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_planned_portion",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 1,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.05
+          }
+        },
+        "usage": {
+          "input_tokens": 465,
+          "output_tokens": 102
+        }
+      }
+    },
+    {
+      "id": "V-EN-12",
+      "lang": "en",
+      "kind": "voice",
+      "ms": 147,
+      "usage": {
+        "input_tokens": 462,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 0.66,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.13,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 0.66,
+            "probabilities": {
+              "tick_shopping_line": 0.72,
+              "add_shopping_item": 0.03,
+              "log_planned_portion": 0.04,
+              "log_other": 0.02,
+              "mark_pantry_used": 0.19,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.13
+          }
+        },
+        "usage": {
+          "input_tokens": 462,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "R-ES-01",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 115,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 3,
+          "raw": 3.31,
+          "confidence": 0.43,
+          "correct": false
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.75,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.31,
+            "confidence": 0.43,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0,
+              "1": 0.02,
+              "2": 0.13,
+              "3": 0.37,
+              "4": 0.48
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.75,
+            "probabilities": {
+              "lighter_later_today": 0.17,
+              "lighter_tomorrow": 0.02,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.81
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 695,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-ES-02",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 102,
+      "usage": {
+        "input_tokens": 696,
+        "output_tokens": 153
+      },
+      "scored": {
+        "over_by": {
+          "value": 1,
+          "raw": 0.7,
+          "confidence": 0.43,
+          "correct": false
+        },
+        "meal": {
+          "value": "other",
+          "confidence": 0.4,
+          "correct": false
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.87,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.88,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.7,
+            "confidence": 0.43,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.5,
+              "1": 0.36,
+              "2": 0.11,
+              "3": 0.02,
+              "4": 0.01
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "other",
+            "confidence": 0.4,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0.03,
+              "dinner": 0.4,
+              "snack": 0.05,
+              "other": 0.52
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.87,
+            "probabilities": {
+              "lighter_later_today": 0.08,
+              "lighter_tomorrow": 0.02,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.9
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.88
+          }
+        },
+        "usage": {
+          "input_tokens": 696,
+          "output_tokens": 153
+        }
+      }
+    },
+    {
+      "id": "R-ES-03",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 154,
+      "usage": {
+        "input_tokens": 698,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 1.8,
+          "confidence": 0.55,
+          "correct": true
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 0.87,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_tomorrow",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.8,
+            "confidence": 0.55,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.35,
+              "2": 0.49,
+              "3": 0.13,
+              "4": 0.02
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 0.87,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0.09,
+              "snack": 0.9,
+              "other": 0.01
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_tomorrow",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 0,
+              "lighter_tomorrow": 1,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 698,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-ES-04",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 121,
+      "usage": {
+        "input_tokens": 699,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 1,
+          "raw": 0.76,
+          "confidence": 0.35,
+          "correct": false
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.76,
+            "confidence": 0.35,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.42,
+              "1": 0.42,
+              "2": 0.13,
+              "3": 0.02,
+              "4": 0.01
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 1,
+              "lunch": 0,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 0.99,
+            "probabilities": {
+              "lighter_later_today": 0.99,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.01
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 699,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-ES-05",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 131,
+      "usage": {
+        "input_tokens": 696,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 2.03,
+          "confidence": 0.22,
+          "correct": false
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_tomorrow",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 2.03,
+            "confidence": 0.22,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.13,
+              "1": 0.19,
+              "2": 0.36,
+              "3": 0.16,
+              "4": 0.16
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_tomorrow",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 0,
+              "lighter_tomorrow": 1,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 696,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-ES-06",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 111,
+      "usage": {
+        "input_tokens": 692,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 0,
+          "raw": 0.01,
+          "confidence": 0.99,
+          "correct": true
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.93,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.01,
+            "confidence": 0.99,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.99,
+              "1": 0.01,
+              "2": 0,
+              "3": 0,
+              "4": 0
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.93,
+            "probabilities": {
+              "lighter_later_today": 0.05,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.95
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 692,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-ES-07",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 123,
+      "usage": {
+        "input_tokens": 688,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 3,
+          "raw": 2.83,
+          "confidence": 0.66,
+          "correct": true
+        },
+        "meal": {
+          "value": "dinner",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.85,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 2.83,
+            "confidence": 0.66,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.06,
+              "2": 0.15,
+              "3": 0.67,
+              "4": 0.11
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "dinner",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 1,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.85,
+            "probabilities": {
+              "lighter_later_today": 0.03,
+              "lighter_tomorrow": 0.08,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.89
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 688,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-ES-08",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 131,
+      "usage": {
+        "input_tokens": 700,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 1.53,
+          "confidence": 0.38,
+          "correct": true
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.76,
+          "correct": false
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.61,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.53,
+            "confidence": 0.38,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.1,
+              "1": 0.42,
+              "2": 0.33,
+              "3": 0.13,
+              "4": 0.02
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 0.99,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0,
+              "snack": 0.99,
+              "other": 0.01
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.76,
+            "probabilities": {
+              "lighter_later_today": 0.14,
+              "lighter_tomorrow": 0.04,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.82
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.61
+          }
+        },
+        "usage": {
+          "input_tokens": 700,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-ES-09",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 137,
+      "usage": {
+        "input_tokens": 691,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 4,
+          "raw": 3.76,
+          "confidence": 0.82,
+          "correct": false
+        },
+        "meal": {
+          "value": "lunch",
+          "confidence": 1,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.83,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.04,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 3.76,
+            "confidence": 0.82,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 0.22,
+              "4": 0.78
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "lunch",
+            "confidence": 1,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 1,
+              "dinner": 0,
+              "snack": 0,
+              "other": 0
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.83,
+            "probabilities": {
+              "lighter_later_today": 0.13,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0.87
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.04
+          }
+        },
+        "usage": {
+          "input_tokens": 691,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "R-ES-10",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 120,
+      "usage": {
+        "input_tokens": 699,
+        "output_tokens": 156
+      },
+      "scored": {
+        "over_by": {
+          "value": 2,
+          "raw": 2.42,
+          "confidence": 0.35,
+          "correct": false
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 0.49,
+          "correct": false
+        },
+        "fix": {
+          "value": "drop_if_room_meal",
+          "confidence": 0.83,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 2.42,
+            "confidence": 0.35,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.02,
+              "1": 0.14,
+              "2": 0.39,
+              "3": 0.3,
+              "4": 0.15
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 0.49,
+            "probabilities": {
+              "breakfast": 0.59,
+              "lunch": 0.05,
+              "dinner": 0,
+              "snack": 0.01,
+              "other": 0.35
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "drop_if_room_meal",
+            "confidence": 0.83,
+            "probabilities": {
+              "lighter_later_today": 0.12,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0.87,
+              "no_preference": 0.01
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 699,
+          "output_tokens": 156
+        }
+      }
+    },
+    {
+      "id": "R-ES-11",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 119,
+      "usage": {
+        "input_tokens": 698,
+        "output_tokens": 157
+      },
+      "scored": {
+        "over_by": {
+          "value": 1,
+          "raw": 1.21,
+          "confidence": 0,
+          "correct": true
+        },
+        "meal": {
+          "value": "breakfast",
+          "confidence": 0.65,
+          "correct": true
+        },
+        "fix": {
+          "value": "lighter_later_today",
+          "confidence": 1,
+          "correct": true
+        },
+        "gave_number": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 1.21,
+            "confidence": 0,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.41,
+              "1": 0.21,
+              "2": 0.23,
+              "3": 0.06,
+              "4": 0.09
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "breakfast",
+            "confidence": 0.65,
+            "probabilities": {
+              "breakfast": 0.72,
+              "lunch": 0.13,
+              "dinner": 0,
+              "snack": 0.04,
+              "other": 0.11
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "lighter_later_today",
+            "confidence": 1,
+            "probabilities": {
+              "lighter_later_today": 1,
+              "lighter_tomorrow": 0,
+              "drop_if_room_meal": 0,
+              "no_preference": 0
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 698,
+          "output_tokens": 157
+        }
+      }
+    },
+    {
+      "id": "R-ES-12",
+      "lang": "es",
+      "kind": "rebalance",
+      "ms": 119,
+      "usage": {
+        "input_tokens": 693,
+        "output_tokens": 154
+      },
+      "scored": {
+        "over_by": {
+          "value": 0,
+          "raw": 0.48,
+          "confidence": 0.62,
+          "correct": true
+        },
+        "meal": {
+          "value": "snack",
+          "confidence": 0.96,
+          "correct": true
+        },
+        "fix": {
+          "value": "no_preference",
+          "confidence": 0.8,
+          "correct": true
+        },
+        "gave_number": {
+          "value": false,
+          "raw": 0.02,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "over_by": {
+            "type": "score",
+            "score": 0.48,
+            "confidence": 0.62,
+            "legend": {
+              "0": "Just a bit over",
+              "1": "Somewhat over",
+              "2": "Clearly over",
+              "3": "Far over",
+              "4": "Way over"
+            },
+            "probabilities": {
+              "0": 0.79,
+              "1": 0.09,
+              "2": 0.05,
+              "3": 0.02,
+              "4": 0.05
+            }
+          },
+          "meal": {
+            "type": "choice",
+            "choice": "snack",
+            "confidence": 0.96,
+            "probabilities": {
+              "breakfast": 0,
+              "lunch": 0,
+              "dinner": 0,
+              "snack": 0.97,
+              "other": 0.03
+            }
+          },
+          "fix": {
+            "type": "choice",
+            "choice": "no_preference",
+            "confidence": 0.8,
+            "probabilities": {
+              "lighter_later_today": 0.13,
+              "lighter_tomorrow": 0.01,
+              "drop_if_room_meal": 0.01,
+              "no_preference": 0.85
+            }
+          },
+          "gave_number": {
+            "type": "noul",
+            "noul": 0.02
+          }
+        },
+        "usage": {
+          "input_tokens": 693,
+          "output_tokens": 154
+        }
+      }
+    },
+    {
+      "id": "V-ES-01",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 120,
+      "usage": {
+        "input_tokens": 464,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.04,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 0.99,
+            "probabilities": {
+              "tick_shopping_line": 0.99,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0.01,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.04
+          }
+        },
+        "usage": {
+          "input_tokens": 464,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-ES-02",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 103,
+      "usage": {
+        "input_tokens": 471,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "add_shopping_item",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.99,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "add_shopping_item",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 1,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.99
+          }
+        },
+        "usage": {
+          "input_tokens": 471,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-ES-03",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 122,
+      "usage": {
+        "input_tokens": 470,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.68,
+          "correct": false
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.05,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.68,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.27,
+              "log_other": 0.73,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.05
+          }
+        },
+        "usage": {
+          "input_tokens": 470,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-ES-04",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 108,
+      "usage": {
+        "input_tokens": 470,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.99,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.41,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.99,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.01,
+              "log_other": 0.99,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.41
+          }
+        },
+        "usage": {
+          "input_tokens": 470,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-ES-05",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 117,
+      "usage": {
+        "input_tokens": 463,
+        "output_tokens": 98
+      },
+      "scored": {
+        "action": {
+          "value": "log_other",
+          "confidence": 0.23,
+          "correct": false
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.03,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_other",
+            "confidence": 0.23,
+            "probabilities": {
+              "tick_shopping_line": 0.21,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.1,
+              "log_other": 0.36,
+              "mark_pantry_used": 0.32,
+              "start_rebalance": 0.01
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.03
+          }
+        },
+        "usage": {
+          "input_tokens": 463,
+          "output_tokens": 98
+        }
+      }
+    },
+    {
+      "id": "V-ES-06",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 202,
+      "usage": {
+        "input_tokens": 467,
+        "output_tokens": 100
+      },
+      "scored": {
+        "action": {
+          "value": "mark_pantry_used",
+          "confidence": 0.98,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "mark_pantry_used",
+            "confidence": 0.98,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.01,
+              "log_other": 0.01,
+              "mark_pantry_used": 0.98,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 467,
+          "output_tokens": 100
+        }
+      }
+    },
+    {
+      "id": "V-ES-07",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 215,
+      "usage": {
+        "input_tokens": 467,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "add_shopping_item",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "add_shopping_item",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 1,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 467,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-ES-08",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 128,
+      "usage": {
+        "input_tokens": 467,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.11,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 1,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.11
+          }
+        },
+        "usage": {
+          "input_tokens": 467,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-ES-09",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 137,
+      "usage": {
+        "input_tokens": 472,
+        "output_tokens": 100
+      },
+      "scored": {
+        "action": {
+          "value": "start_rebalance",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.1,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "start_rebalance",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 1
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.1
+          }
+        },
+        "usage": {
+          "input_tokens": 472,
+          "output_tokens": 100
+        }
+      }
+    },
+    {
+      "id": "V-ES-10",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 114,
+      "usage": {
+        "input_tokens": 471,
+        "output_tokens": 102
+      },
+      "scored": {
+        "action": {
+          "value": "log_planned_portion",
+          "confidence": 0.47,
+          "correct": false
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.99,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_planned_portion",
+            "confidence": 0.47,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 0.56,
+              "log_other": 0.44,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.99
+          }
+        },
+        "usage": {
+          "input_tokens": 471,
+          "output_tokens": 102
+        }
+      }
+    },
+    {
+      "id": "V-ES-11",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 110,
+      "usage": {
+        "input_tokens": 470,
+        "output_tokens": 102
+      },
+      "scored": {
+        "action": {
+          "value": "log_planned_portion",
+          "confidence": 1,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.05,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "log_planned_portion",
+            "confidence": 1,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0,
+              "log_planned_portion": 1,
+              "log_other": 0,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.05
+          }
+        },
+        "usage": {
+          "input_tokens": 470,
+          "output_tokens": 102
+        }
+      }
+    },
+    {
+      "id": "V-ES-12",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 139,
+      "usage": {
+        "input_tokens": 466,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "tick_shopping_line",
+          "confidence": 0.71,
+          "correct": true
+        },
+        "has_amount": {
+          "value": false,
+          "raw": 0.08,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "tick_shopping_line",
+            "confidence": 0.71,
+            "probabilities": {
+              "tick_shopping_line": 0.76,
+              "add_shopping_item": 0.02,
+              "log_planned_portion": 0.01,
+              "log_other": 0.05,
+              "mark_pantry_used": 0.15,
+              "start_rebalance": 0.01
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.08
+          }
+        },
+        "usage": {
+          "input_tokens": 466,
+          "output_tokens": 101
+        }
+      }
+    },
+    {
+      "id": "V-ES-13",
+      "lang": "es",
+      "kind": "voice",
+      "ms": 110,
+      "usage": {
+        "input_tokens": 465,
+        "output_tokens": 101
+      },
+      "scored": {
+        "action": {
+          "value": "add_shopping_item",
+          "confidence": 0.95,
+          "correct": true
+        },
+        "has_amount": {
+          "value": true,
+          "raw": 0.98,
+          "confidence": null,
+          "correct": true
+        }
+      },
+      "raw": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "action": {
+            "type": "choice",
+            "choice": "add_shopping_item",
+            "confidence": 0.95,
+            "probabilities": {
+              "tick_shopping_line": 0,
+              "add_shopping_item": 0.96,
+              "log_planned_portion": 0.03,
+              "log_other": 0.01,
+              "mark_pantry_used": 0,
+              "start_rebalance": 0
+            }
+          },
+          "has_amount": {
+            "type": "noul",
+            "noul": 0.98
+          }
+        },
+        "usage": {
+          "input_tokens": 465,
+          "output_tokens": 101
+        }
+      }
+    }
+  ]
+}
