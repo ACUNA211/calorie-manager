@@ -1,0 +1,26 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "action": {
+      "type": "choice",
+      "choice": "tick_shopping_line",
+      "confidence": 0.99,
+      "probabilities": {
+        "tick_shopping_line": 0.99,
+        "add_shopping_item": 0,
+        "log_planned_portion": 0,
+        "log_other": 0,
+        "mark_pantry_used": 0.01,
+        "start_rebalance": 0
+      }
+    },
+    "has_amount": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 464,
+    "output_tokens": 101
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "msg_test",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"over_by\":{\"probabilities\":[0,0.1,0.2,0.5,0.2]},\"meal\":{\"probabilities\":{\"breakfast\":0,\"lunch\":0.9,\"dinner\":0.05,\"snack\":0.05,\"other\":0}},\"fix\":{\"probabilities\":{\"lighter_later_today\":0.2,\"lighter_tomorrow\":0.1,\"drop_if_room_meal\":0.1,\"no_preference\":0.6}},\"gave_number\":{\"probability\":0.1}}"
+    }
+  ],
+  "usage": {
+    "input_tokens": 520,
+    "output_tokens": 90
+  }
+}

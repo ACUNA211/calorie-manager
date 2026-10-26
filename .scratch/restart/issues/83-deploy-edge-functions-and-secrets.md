@@ -38,3 +38,9 @@ Ticket 66 added the `read-label` Edge Function (label photo, Anthropic `claude-h
 - [ ] `off-lookup` deployed; an OFF-only product shows with its credit
 - [ ] `parse-recipe` deployed; a pasted recipe reaches the review screen
 - [ ] Migration 035 applied, bucket test passes, `read-label` deployed
+- [ ] `decide` deployed with `TYPESAFE_API_KEY` set; one Rebalance-style call answers with `provider: "jev"`
+
+Ticket 58 added the `decide` Edge Function (typed decisions for Rebalance and Voice commands):
+1. `supabase secrets set TYPESAFE_API_KEY=<your TypeSafe key>` (optional fallbacks: `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY`, which `parse-recipe` already uses).
+2. `supabase functions deploy decide`.
+3. To change the provider order later without a code change: `supabase secrets set DECISION_PROVIDERS=jev,openai,haiku` (or `DECISION_PROVIDERS_ES=...` for one language).

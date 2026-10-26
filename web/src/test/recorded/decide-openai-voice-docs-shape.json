@@ -1,0 +1,46 @@
+{
+  "model": "gpt-6-luna",
+  "answers": [
+    {
+      "type": "choice",
+      "name": "action",
+      "choice": "add_shopping_item",
+      "probabilities": [
+        {
+          "value": "tick_shopping_line",
+          "probability": 0.05
+        },
+        {
+          "value": "add_shopping_item",
+          "probability": 0.9
+        },
+        {
+          "value": "log_planned_portion",
+          "probability": 0.01
+        },
+        {
+          "value": "log_other",
+          "probability": 0.01
+        },
+        {
+          "value": "mark_pantry_used",
+          "probability": 0.02
+        },
+        {
+          "value": "start_rebalance",
+          "probability": 0.01
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "type": "predicate",
+      "name": "has_amount",
+      "probability": 0.93
+    }
+  ],
+  "usage": {
+    "input_tokens": 410,
+    "output_tokens": 30
+  }
+}

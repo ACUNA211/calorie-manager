@@ -1,0 +1,55 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "over_by": {
+      "type": "score",
+      "score": 3.97,
+      "confidence": 0.99,
+      "legend": {
+        "0": "Just a bit over",
+        "1": "Somewhat over",
+        "2": "Clearly over",
+        "3": "Far over",
+        "4": "Way over"
+      },
+      "probabilities": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0.01,
+        "4": 0.99
+      }
+    },
+    "meal": {
+      "type": "choice",
+      "choice": "lunch",
+      "confidence": 1,
+      "probabilities": {
+        "breakfast": 0,
+        "lunch": 1,
+        "dinner": 0,
+        "snack": 0,
+        "other": 0
+      }
+    },
+    "fix": {
+      "type": "choice",
+      "choice": "lighter_later_today",
+      "confidence": 0.4,
+      "probabilities": {
+        "lighter_later_today": 0.55,
+        "lighter_tomorrow": 0.01,
+        "drop_if_room_meal": 0.01,
+        "no_preference": 0.43
+      }
+    },
+    "gave_number": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 685,
+    "output_tokens": 156
+  }
+}
